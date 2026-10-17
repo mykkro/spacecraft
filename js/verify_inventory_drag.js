@@ -61,3 +61,22 @@ c.save();
 const reload = boot(w.store).model.Colony;
 assert.equal(reload.availableCount('metal'), c.availableCount('metal'));
 console.log('PASS: drag move/merge/swap, half stacks, limits, invalid payloads, non-consuming recipe cells, real drag/drop handlers, equipment compatibility, fuel tank use and save reload. No browser started.');
+
+// The item action must refresh the blueprint immediately, including on Starfox.
+const laserWorld = boot();
+const {Colony: laserCargo, Weapons: laserWeapons, Shipyard} = laserWorld.model;
+Shipyard.choose('starfox');
+assert(laserCargo.addItem('mininglaser', 1));
+const laserSlots = laserWorld.ctx.document.querySelector('#slots');
+const laserButtons = laserCargo.bag.map((_, index) => ({dataset: {slot: String(index)}}));
+laserSlots.querySelectorAll = selector => selector === '[data-slot]' ? laserButtons : [];
+laserCargo.openInventory();
+laserButtons[laserCargo.bag.findIndex(stack => stack?.type === 'mininglaser')].onclick();
+const blueprint = () => laserSlots.innerHTML.split('data-ship-slot="primary"')[1].split('</button>')[0];
+assert(blueprint().includes('Pulse Cannon'));
+laserWorld.ctx.document.querySelector('#equipWeapon').onclick();
+assert.equal(laserWeapons.selected.primary, 'mininglaser');
+assert(blueprint().includes('Enhanced Mining Laser'));
+assert.equal(laserCargo.count('mininglaser'), 1);
+assert.equal(boot(laserWorld.store).model.Weapons.selected.primary, 'mininglaser');
+console.log('PASS: Starfox mining laser equip action refreshes equipment and persists selection.');

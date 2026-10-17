@@ -1671,7 +1671,9 @@ const Colony = (() => {
         def = Weapons.definitions[type];
       $('#slots').insertAdjacentHTML('beforeend', I18n.html(`<div class="equip-row"><span>${ def.name } · T${ def.tier } · ${ def.damage } damage · ${ def.cooldown }s recharge</span><button id="equipWeapon">EQUIP ${ def.channel === 'primary' ? I18n.t('PRIMARY') : I18n.t('MISSILE') }</button></div>`));
       $('#equipWeapon').onclick = () => {
-        Weapons.select(type);
+        if (!Weapons.select(type)) return;
+        save();
+        renderInventory();
         notify(I18n.t(`${ def.name.toUpperCase() } EQUIPPED`));
       };
     }
