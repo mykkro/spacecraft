@@ -7,6 +7,12 @@ const Starbases = (() => {
     engineer: {name: 'Tarek', cost: 110, title: () => tr('Engineer', 'Inženýr'), description: () => tr('20% less flight fuel consumption, including boost.', 'O 20 % nižší spotřeba paliva, včetně zrychlení.')},
     mechanic: {name: 'Ada', cost: 100, title: () => tr('Repair specialist', 'Specialistka oprav'), description: () => tr('Repairs 1% hull per 5 seconds after 8 seconds without damage.', 'Opraví 1 % trupu za 5 sekund po 8 sekundách bez poškození.')}
   };
+  const coreCharacters = {
+    mara:{name:Shipyard.presets.starfox.captain,title:()=>tr('Captain / interceptor pilot','Kapitánka / pilotka stíhače'),description:()=>tr('Mara Voss commands Starfox. A scout and interceptor pilot who relies on speed, agility and precise flying. The core crew of this compact ship consists of its captain.','Mara Voss velí Starfoxu. Průzkumnice a pilotka stíhače spoléhá na rychlost, obratnost a přesné létání. Základní posádku této malé lodi tvoří její kapitánka.')},
+    viktor:{name:Shipyard.presets.nomad.captain,title:()=>tr('Captain / freighter pilot','Kapitán / pilot nákladní lodi'),description:()=>tr('Viktor Vale commands Nomad. An independent freighter captain, explorer and cargo hauler. He starts alone and can recruit station specialists for the expedition.','Viktor Vale velí Nomadu. Nezávislý kapitán nákladní lodi, průzkumník a přepravce. Začíná sám a může najmout specialisty na vesmírných stanicích.')},
+    jegor:{name:Shipyard.presets.kraxna.captain,title:()=>tr('Captain & space garbage man','Kapitán a vesmírný popelář'),description:()=>tr('Jegor Kokotovič commands Kraxna 1. A seasoned space garbage man who runs the salvage hauler alongside repair robot Bobo.','Jegor Kokotovič velí Kraxně 1. Zkušený vesmírný popelář provozuje sběrnou loď spolu s opravárenským robotem Bobem.')},
+    bobo:{name:'Bobo',title:()=>tr('Repair robot','Opravárenský robot'),description:()=>tr('Core crew aboard Kraxna 1. Station hull repairs cost 50% less while Bobo is aboard. Has a separate robot berth.','Člen základní posádky Kraxny 1. S Bobem na palubě stojí opravy trupu ve stanicích o 50 % méně. Má vlastní robotické lůžko.')}
+  };
   const market = {metal: [5, 2], ice: [5, 2], crystal: [15, 7], bulterite: [36, 18], ingot: [12, 5], fuel_cell: [9, 3], ion_cube: [28, 12], ammo_rockbreaker: [8, 3], ammo_piercer: [18, 7], ammo_seismic: [40, 16]};
   let credits = 120, crew = [], discovered = new Set(['0:0']), met = new Set();
   let docked = null, quiet = 0, lastHull = 100, repairClock = 0, returnFocus = null;
@@ -24,7 +30,7 @@ const Starbases = (() => {
     if (!data || typeof data !== 'object') return;
     if (Number.isSafeInteger(data.credits) && data.credits >= 0) credits = Math.min(data.credits, 1e9);
     if (Array.isArray(data.crew)) crew = [...new Set(data.crew.filter(id => Object.hasOwn(roles, id)))];
-    if (Array.isArray(data.met)) met = new Set(data.met.filter(id=>Object.hasOwn(roles,id)||['captain','jegor','bobo'].includes(id)));
+    if (Array.isArray(data.met)) met = new Set(data.met.map(id=>id==='captain'?(Shipyard.current.id==='kraxna'?'viktor':Shipyard.current.captainId):id).filter(id=>Object.hasOwn(roles,id)||Object.hasOwn(coreCharacters,id)));
     crew.forEach(id=>met.add(id));
     if (Array.isArray(data.discovered)) discovered = new Set(['0:0', ...data.discovered.filter(id => typeof id === 'string' && /^-?\d{1,6}:-?\d{1,6}$/.test(id))]);
   }
@@ -40,16 +46,34 @@ const Starbases = (() => {
   }
   const validDock = () => docked && canDock() && currentStation().id === docked.id;
   function commit() { Colony.save(); GameAudio.play('craft'); renderPanel(); }
+  const tradeQuantities = new Map();
+  // Capacity counts compatible stack room as well as empty cargo slots.
+  function maxTrade(type,buying) {
+    if(!validDock()||!Object.hasOwn(market,type))return 0;
+    if(!buying)return Math.min(9999,Colony.availableCount(type),Math.floor((1e9-credits)/market[type][1]));
+    const limit=Colony.items[type].maxStack;
+    const room=Colony.bag.reduce((n,s)=>n+(!s?limit:s.type===type?limit-s.qty:0),0);
+    return Math.min(9999,room,Math.floor(credits/market[type][0]));
+  }
+  function tradeQuantity(type) { return tradeQuantities.get(type) ?? 1; }
+  function refreshTradeRow(type) {
+    const qty=tradeQuantity(type),valid=Number.isSafeInteger(qty)&&qty>=1&&qty<=9999;
+    for(const buying of [true,false]){
+      const action=buying?'buy':'sell',button=$('#stationMarket [data-'+action+'="'+type+'"]');
+      button.disabled=!valid||qty>maxTrade(type,buying);
+      button.textContent=tr(buying?'Buy':'Sell',buying?'Koupit':'Prodat')+' '+(valid?qty:'—')+' · '+(valid?qty*market[type][buying?0:1]:'—')+' cr';
+    }
+  }
   // Cargo and credits mutate together before one save; failed insertions cost nothing.
-  function trade(type, buying) {
-    if (!validDock() || !Object.hasOwn(market, type)) return false;
+  function trade(type, buying, quantity = 1) {
+    if (!validDock() || !Object.hasOwn(market, type) || typeof buying !== 'boolean' || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > maxTrade(type,buying)) return false;
     const [buy, sell] = market[type];
     if (buying) {
-      if (credits < buy || !Colony.addItem(type, 1)) return false;
-      credits -= buy;
+      if (credits < buy * quantity || !Colony.addItem(type, quantity)) return false;
+      credits -= buy * quantity;
     } else {
-      if (credits + sell > 1e9 || !Colony.consumeItem(type, 1, false)) return false;
-      credits += sell;
+      if (credits + sell * quantity > 1e9 || !Colony.consumeItem(type, quantity, false)) return false;
+      credits += sell * quantity;
     }
     commit(); return true;
   }
@@ -66,11 +90,11 @@ const Starbases = (() => {
     return 1 - Math.max(0, ...startingCrew().map(person => person.repairDiscount || 0));
   }
   function captainName() {
-    return Shipyard.current.captain === 'You' ? tr('You', 'Vy') : Shipyard.current.captain;
+    return Shipyard.current.captain;
   }
   function startingCrewSummary(id = Shipyard.current.id) {
     const preset = Shipyard.presets[id];
-    const captain = preset.captain === 'You' ? tr('You', 'Vy') : preset.captain;
+    const captain = preset.captain;
     return `${tr('Captain', 'Kapitán')}: ${captain}` + (preset.startingCrew.length ? ` · Bobo: ${tr('50% cheaper repairs', 'opravy o 50 % levnější')}` : '');
   }
   const repairCost = () => Math.ceil(Math.max(0, 100 - ship.hull) * repairMultiplier());
@@ -92,41 +116,32 @@ const Starbases = (() => {
     docked = null; $('#starbaseOverlay').hidden = true; paused = false; keys.clear(); returnFocus?.focus(); Colony.save();
   }
   // Portrait IDs are stable artwork keys; names/roles remain localized HTML.
-  const portraitIds = {miner: 'rhea', engineer: 'tarek', mechanic: 'ada', bobo: 'bobo', jegor: 'jegor', captain: 'captain'};
+  const portraitIds = {miner: 'rhea', engineer: 'tarek', mechanic: 'ada', bobo: 'bobo', jegor: 'jegor', mara: 'captain', viktor: 'captain', captain: 'captain'};
   function portrait(id) {
     return `<img class="crew-avatar" src="assets/crew/${portraitIds[id]}.png" alt="" width="64" height="64" decoding="async">`;
   }
   function startingCrewPortraits(id = Shipyard.current.id) {
-    return `<span class="starting-crew-portraits" aria-hidden="true">${portrait(id === 'kraxna' ? 'jegor' : 'captain')}${Shipyard.presets[id].startingCrew.map(person => portrait(person.id)).join('')}</span>`;
+    return `<span class="starting-crew-portraits" aria-hidden="true">${portrait(Shipyard.presets[id].captainId)}${Shipyard.presets[id].startingCrew.map(person => portrait(person.id)).join('')}</span>`;
   }
   // Encounters outlive employment and ship changes; only confirmed ships count.
   function rememberCrew() {
     if (!Shipyard.confirmed) return;
-    met.add(Shipyard.current.id === 'kraxna' ? 'jegor' : 'captain');
+    met.add(Shipyard.current.captainId);
     startingCrew().forEach(p=>met.add(p.id));
   }
   function characters() {
-    const known = new Set([...met,...crew]);
-    const aboard = new Set(crew);
-    if (Shipyard.confirmed) {
-      const captain=Shipyard.current.id === 'kraxna' ? 'jegor' : 'captain';
-      known.add(captain); aboard.add(captain);
+    const known=new Set([...met,...crew]),aboard=new Set(crew);
+    if(Shipyard.confirmed){
+      known.add(Shipyard.current.captainId);aboard.add(Shipyard.current.captainId);
       startingCrew().forEach(p=>{known.add(p.id);aboard.add(p.id);});
     }
-    return [...known].map(id=>{
-      const person=roles[id], captain=['jegor','captain'].includes(id);
-      return {id:'character:'+id,category:'characters',
-        name:person ? person.name : id==='jegor' ? Shipyard.presets.kraxna.captain : id==='bobo' ? 'Bobo' : tr('You','Vy'),
-        role:person ? person.title() : captain ? tr('Captain','Kapitán') : tr('Repair robot','Opravárenský robot'),
-        description:person ? person.description() : id==='bobo'
-          ? tr('Repair robot aboard Kraxna 1. Station hull repairs cost 50% less while Bobo is aboard. Has a separate robot berth.',
-               'Opravárenský robot na Kraxně 1. S Bobem na palubě stojí opravy trupu ve stanicích o 50 % méně. Má vlastní robotické lůžko.')
-          : id==='jegor' ? tr('Captain of Kraxna 1, seasoned space garbage man and partner of repair robot Bobo.',
-               'Kapitán Kraxny 1, zkušený vesmírný popelář a parťák opravárenského robota Boba.')
-          : tr('Your expedition captain: explorer, miner and pilot leading the crew into uncharted space.',
-               'Kapitán vaší expedice: průzkumník, horník a pilot vedoucí posádku do neprobádaného vesmíru.'),
-        icon:'assets/crew/'+portraitIds[id]+'.png',
-        status:aboard.has(id) ? (captain ? tr('Current captain','Současný kapitán') : tr('On board','Na palubě')) : tr('Met','Známá postava')};
+    return [...known].filter(id=>Object.hasOwn(roles,id)||Object.hasOwn(coreCharacters,id)).map(id=>{
+      const recruit=roles[id],person=recruit||coreCharacters[id];
+      const captain=Object.values(Shipyard.presets).some(p=>p.captainId===id);
+      return {id:'character:'+id,category:'characters',name:person.name,role:person.title(),description:person.description(),
+        icon:'assets/crew/'+portraitIds[id]+'.png',recruitmentCost:recruit?.cost||0,
+        status:aboard.has(id)?(captain?tr('Current captain','Současný kapitán'):tr('On board','Na palubě')):
+          recruit?tr('Available for hire','K najmutí'):tr('Met','Známá postava')};
     });
   }
 
@@ -139,13 +154,27 @@ const Starbases = (() => {
     $('#stationRepair').title = startingCrew().length ? tr('Bobo: 50% repair discount, rounded up to whole credits.', 'Bobo: sleva 50 % na opravy, cena zaokrouhlená nahoru na celé kredity.') : '';
     $('#stationMarket').innerHTML = Object.entries(market).map(([id, [buy, sell]]) => {
       const item = Colony.items[id];
-      return `<div class="station-row"><img src="assets/items/${item.asset || (item.image || id) + '.png'}" alt="" width="36" height="36"><span>${item.name}<small>${tr('In cargo', 'V nákladu')}: ${Colony.availableCount(id)}</small></span><button data-buy="${id}" ${credits < buy ? 'disabled' : ''}>${tr('Buy', 'Koupit')} ${buy}</button><button data-sell="${id}" ${Colony.availableCount(id) < 1 ? 'disabled' : ''}>${tr('Sell', 'Prodat')} ${sell}</button></div>`;
+      const qty=tradeQuantity(id);
+      return `<div class="station-row market-row"><img src="assets/items/${item.asset || (item.image || id) + '.png'}" alt="" width="36" height="36">
+        <span>${item.name}<small>${tr('In cargo','V nákladu')}: ${Colony.availableCount(id)} · ${buy}/${sell} cr/${tr('unit','kus')}</small></span>
+        <div class="trade-quantity"><button data-trade-step="${id}" data-step="-1" aria-label="${tr('Decrease quantity','Snížit množství')}">−</button>
+          <input data-trade-quantity="${id}" type="number" min="1" max="9999" step="1" value="${Number.isFinite(qty)?qty:''}" aria-label="${tr('Quantity','Množství')} · ${item.name}">
+          <button data-trade-step="${id}" data-step="1" aria-label="${tr('Increase quantity','Zvýšit množství')}">+</button></div>
+        <div class="trade-actions"><button data-buy="${id}"></button><button data-sell="${id}"></button></div></div>`;
     }).join('');
+    $('#stationMarket').querySelectorAll('[data-trade-quantity]').forEach(input=>input.oninput=()=>{
+      tradeQuantities.set(input.dataset.tradeQuantity,Number(input.value));refreshTradeRow(input.dataset.tradeQuantity);
+    });
+    $('#stationMarket').querySelectorAll('[data-trade-step]').forEach(button=>button.onclick=()=>{
+      const id=button.dataset.tradeStep,previous=tradeQuantity(id),qty=Math.max(1,Math.min(9999,(Number.isFinite(previous)?previous:1)+Number(button.dataset.step)));
+      tradeQuantities.set(id,qty);$('#stationMarket [data-trade-quantity="'+id+'"]').value=qty;refreshTradeRow(id);
+    });
+    Object.keys(market).forEach(refreshTradeRow);
     const captainRole = Shipyard.current.id === 'kraxna' ? tr('Captain & space garbage man', 'Kapitán a vesmírný popelář') : tr('Captain', 'Kapitán');
-    const manifest = `<article>${portrait(Shipyard.current.id === 'kraxna' ? 'jegor' : 'captain')}<b>${captainName()} · ${captainRole}</b><p>${tr('Your player character.', 'Vaše hráčská postava.')}</p></article>` + startingCrew().map(person => `<article>${portrait(person.id)}<b>${person.name} · ${tr('Repair robot', 'Opravárenský robot')}</b><p>${tr('Station hull repairs cost 50% less. Built into Kraxna; has a separate robot berth.', 'Opravy trupu ve stanicích jsou o 50 % levnější. Patří ke Kraxně; má vlastní robotické lůžko.')}</p></article>`).join('');
+    const manifest = `<article>${portrait(Shipyard.current.captainId)}<b>${captainName()} · ${captainRole}</b><p>${coreCharacters[Shipyard.current.captainId].description()}</p></article>` + startingCrew().map(person => `<article>${portrait(person.id)}<b>${person.name} · ${tr('Repair robot', 'Opravárenský robot')}</b><p>${tr('Station hull repairs cost 50% less. Built into Kraxna; has a separate robot berth.', 'Opravy trupu ve stanicích jsou o 50 % levnější. Patří ke Kraxně; má vlastní robotické lůžko.')}</p></article>`).join('');
     $('#stationCrew').innerHTML = manifest + `<p>${tr('Three specialist bunks are available; hire each specialist once.', 'Máte tři lůžka pro specialisty; každého lze najmout jednou.')}</p>` + Object.entries(roles).map(([id, person]) => `<article>${portrait(id)}<b>${person.name} · ${person.title()}</b><p>${person.description()}</p><button data-hire="${id}" ${crew.includes(id) || credits < person.cost ? 'disabled' : ''}>${crew.includes(id) ? tr('On board', 'Na palubě') : tr('Hire', 'Najmout') + ' · ' + person.cost + ' cr'}</button></article>`).join('');
-    $('#stationMarket').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { if (!trade(b.dataset.buy, true)) notify(tr('Not enough credits or cargo space.', 'Nedostatek kreditů nebo místa v nákladu.')); });
-    $('#stationMarket').querySelectorAll('[data-sell]').forEach(b => b.onclick = () => trade(b.dataset.sell, false));
+    $('#stationMarket').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { if (!trade(b.dataset.buy, true, tradeQuantity(b.dataset.buy))) notify(tr('Not enough credits or cargo space.', 'Nedostatek kreditů nebo místa v nákladu.')); });
+    $('#stationMarket').querySelectorAll('[data-sell]').forEach(b => b.onclick = () => trade(b.dataset.sell, false, tradeQuantity(b.dataset.sell)));
     $('#stationCrew').querySelectorAll('[data-hire]').forEach(b => b.onclick = () => hire(b.dataset.hire));
   }
   function update(dt) {
@@ -166,6 +195,7 @@ const Starbases = (() => {
     }
   }
   function render(screen) {
+    if (typeof StarbaseArt !== 'undefined') { StarbaseArt.render(currentStation(),screen); return; }
     const s = currentStation(), [x, y] = screen(s.x, s.y);
     if (x < -160 || y < -160 || x > width + 160 || y > height + 160) return;
     disc(x, y, 90, [.22, .65, .77, .05], 40);
@@ -197,7 +227,7 @@ const Starbases = (() => {
   $('#marketLabel').textContent = tr('MARKET', 'OBCHOD');
   $('#crewLabel').textContent = tr('CREW RECRUITMENT', 'NÁBOR POSÁDKY');
   $('#undock').textContent = tr('UNDOCK · ESC', 'ODLETĚT · ESC');
-  $('#stationHint').textContent = tr('Sell minerals to earn credits. Purchases contain one item.', 'Prodejem surovin získáte kredity. Nákupy obsahují jeden kus.');
+  $('#stationHint').textContent = tr('Sell minerals to earn credits. Set a quantity; buttons show total prices.', 'Prodejem surovin získáte kredity. Zvolte množství; tlačítka zobrazují celkové ceny.');
   $('#dockPrompt').setAttribute('aria-label', tr('Dock at starbase', 'Dokovat u stanice'));
   $('#stationContracts').textContent = tr('CONTRACTS', 'ZAKÁZKY');
   $('#stationContracts').onclick = () => QuestLog.openLog();
@@ -207,7 +237,7 @@ const Starbases = (() => {
     if (docked) {
       if (typeof QuestLog !== 'undefined' && QuestLog.isOpen) return;
       if (event.code === 'Tab') {
-        const buttons = [...$('#starbaseOverlay').querySelectorAll('button:not(:disabled)')];
+        const buttons = [...$('#starbaseOverlay').querySelectorAll('button:not(:disabled),input')];
         const index = buttons.indexOf(document.activeElement);
         event.preventDefault();
         buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus();
@@ -216,6 +246,6 @@ const Starbases = (() => {
       event.stopImmediatePropagation();
     } else if (event.code === 'KeyH' && !event.repeat && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) { event.preventDefault(); openDock(); }
   }, true);
-  return {characters, refreshDock: renderPanel, addCredits, isDockedAt: id => !!validDock() && docked.id === id, station, currentStation, known, snapshot, restore, repairCost, crewCount, crewCapacity, startingCrewSummary, startingCrewPortraits, canDock, openDock, closeDock, trade, hire, repair, update, render, drawMarker, drawRadar,
+  return {characters, refreshDock: renderPanel, addCredits, isDockedAt: id => !!validDock() && docked.id === id, station, currentStation, known, snapshot, restore, repairCost, crewCount, crewCapacity, startingCrewSummary, startingCrewPortraits, canDock, openDock, closeDock, trade, maxTrade, hire, repair, update, render, drawMarker, drawRadar,
     get isOpen() { return !!docked; }, get miningMultiplier() { return crew.includes('miner') ? 1.25 : 1; }, get fuelMultiplier() { return crew.includes('engineer') ? .8 : 1; }};
 })();

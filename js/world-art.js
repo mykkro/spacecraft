@@ -171,5 +171,82 @@ const WorldArt = (() => {
     disc(port[0], port[1], 1.1 * scale, [1, .25, .18, alpha], 5);
     disc(starboard[0], starboard[1], 1.1 * scale, [.25, 1, .55, alpha], 5);
   }
-  return {drawRock, drawShip};
+  // Wrecks are assembled from surviving plates, not an intact ship hidden by a mask.
+  // Missing panels leave actual gaps, with structural ribs and disabled machinery beneath.
+  const wreckModels = new Map();
+  function wreckModel(seed) {
+    if(wreckModels.has(seed)) {const value=wreckModels.get(seed);wreckModels.delete(seed);wreckModels.set(seed,value);return value;}
+    const rng=random(seed^82719),variant=Math.abs(seed)%3;
+    const panels=[
+      {points:[[-.67,-.39],[-.29,-.65],[-.14,-.54],[-.19,-.17],[-.34,.06],[-.65,.03]],color:[.37,.39,.37]},
+      {points:[[-.64,.16],[-.16,.08],[.37,.21],[.51,.49],[.25,.68],[-.36,.67],[-.70,.43]],color:[.33,.36,.36]},
+      {points:[[-.14,-.91],[.06,-.86],[.19,-.49],[-.09,-.47]],color:[.31,.36,.38]},
+      {points:[[.26,-.43],[.52,-.32],[.69,-.06],[.48,.10],[.28,-.03]],color:[.34,.37,.35],detached:true},
+      {points:[[-.43,.55],[-.22,.55],[-.20,.86],[-.43,.86]],color:[.20,.26,.29]},
+      {points:[[.15,.57],[.36,.55],[.39,.80],[.18,.83]],color:[.22,.27,.29]}
+    ];
+    if(variant===1)panels[3].points=panels[3].points.map(([x,y])=>[x+.15,y-.08]);
+    if(variant===2)panels[0].points=panels[0].points.map(([x,y])=>[x-.05,y-.06]);
+    const scars=[];
+    panels.forEach((panel,index)=>{
+      const center=panel.points.reduce((sum,p)=>[sum[0]+p[0]/panel.points.length,sum[1]+p[1]/panel.points.length],[0,0]);
+      panel.center=center;
+      for(let i=0;i<(index<2?5:2);i++){
+        const a=panel.points[Math.floor(rng()*panel.points.length)],blend=.15+rng()*.45;
+        scars.push({x:center[0]+(a[0]-center[0])*blend,y:center[1]+(a[1]-center[1])*blend,r:.025+rng()*.05,angle:rng()*6.28});
+      }
+    });
+    const model={panels,scars,variant};
+    wreckModels.set(seed,model);while(wreckModels.size>48)wreckModels.delete(wreckModels.keys().next().value);
+    return model;
+  }
+  function drawWreck(ox,oy,angle,radius,seed,integrity=1) {
+    const model=wreckModel(seed),c=Math.cos(angle),s=Math.sin(angle);
+    const p=(x,y)=>[ox+(x*c-y*s)*radius,oy+(x*s+y*c)*radius];
+    const metal=[.24,.29,.31,1],rust=[.39,.25,.15,.8];
+    // Broken keel and cross ribs remain visible through the open midship breach.
+    line(p(-.22,-.56),p(-.12,.61),metal,radius*.055);
+    line(p(.12,-.35),p(.30,.55),[.17,.23,.26,1],radius*.04);
+    for(let i=0;i<5;i++){
+      const y=-.28+i*.16;
+      line(p(-.40,y),p(.39,y+.065),metal,radius*.025);
+      line(p(.18,y+.03),p(.37,y+.13),rust,radius*.012);
+    }
+    // Exposed tanks, coils and severed cables; no functioning engine plume.
+    for(let i=0;i<4;i++)line(p(-.08+i*.065,-.16),p(-.06+i*.065,.24),[.29,.33,.32,1],radius*.035);
+    line(p(.31,-.29),p(.48,-.15),[.56,.34,.17,.85],radius*.014);
+    line(p(.48,-.15),p(.44,.03),[.40,.26,.14,.85],radius*.012);
+    for(const panel of model.panels){
+      const center=panel.center,shadeScale=.82+Math.max(0,Math.min(1,integrity))*.18;
+      const color=panel.color.map(v=>v*shadeScale);
+      for(let i=0;i<panel.points.length;i++){
+        const a=panel.points[i],b=panel.points[(i+1)%panel.points.length];
+        const A=p(...a),B=p(...b),downA=[A[0]+radius*.02,A[1]+radius*.04],downB=[B[0]+radius*.02,B[1]+radius*.04];
+        tri(A,B,downB,[.11,.15,.17,1]);tri(A,downB,downA,[.11,.15,.17,1]);
+        const nx=(a[0]+b[0])/2-center[0],ny=(a[1]+b[1])/2-center[1];
+        const rim=shade(color,nx*c-ny*s,nx*s+ny*c,.20,1,1);
+        triGradient(p(...center),A,B,shade(color,0,0,1,1,1),rim,rim);
+        line(A,B,[.56,.58,.54,.45],radius*.01);
+      }
+    }
+    // A cracked, unlit canopy is separate from the torn bow section.
+    triGradient(p(-.09,-.75),p(.07,-.69),p(-.04,-.54),[.16,.25,.27,1],[.08,.13,.15,1],[.06,.10,.12,1]);
+    line(p(-.07,-.70),p(.03,-.62),[.45,.49,.46,.6],radius*.01);
+    // Soft, small scorch stains follow surviving hull plates instead of masking the ship.
+    for(const scar of model.scars){
+      const center=p(scar.x,scar.y);
+      for(let i=0;i<12;i++){
+        const a=i/12*Math.PI*2,b=(i+1)/12*Math.PI*2;
+        const edge=a=>p(scar.x+Math.cos(a+scar.angle)*scar.r,scar.y+Math.sin(a+scar.angle)*scar.r*.65);
+        triGradient(center,edge(a),edge(b),[.07,.05,.035,.45+(1-integrity)*.15],[.13,.08,.04,0],[.13,.08,.04,0]);
+      }
+    }
+    // Fine fractures and exposed metal along the torn edges.
+    for(const [a,b]of [[[-.16,-.47],[-.22,-.34]],[[-.22,-.34],[-.18,-.26]],[[.37,.23],[.26,.34]],[[.26,.34],[.34,.43]]]){
+      line(p(...a),p(...b),[.10,.13,.14,.9],radius*.018);
+      line(p(a[0]-.012,a[1]-.01),p(b[0]-.012,b[1]-.01),[.59,.49,.33,.5],radius*.008);
+    }
+  }
+
+  return {drawRock, drawShip, drawWreck};
 })();

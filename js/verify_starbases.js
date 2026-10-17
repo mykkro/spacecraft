@@ -102,7 +102,7 @@ kraxnaWorld.ctx.GameAudio.setEngine = () => {};
 const fleetCrew = kraxnaWorld.run('Starbases');
 const hulls = kraxnaWorld.model.Shipyard;
 assert.equal(fleetCrew.crewCount(), 1);
-assert(fleetCrew.startingCrewSummary('starfox').includes('You'));
+assert(fleetCrew.startingCrewSummary('starfox').includes('Mara Voss'));
 hulls.choose('kraxna');
 kraxnaWorld.model.Colony.resizeCargo();
 assert.equal(hulls.current.captain, 'Jegor Kokotovič');

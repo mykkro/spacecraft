@@ -113,10 +113,7 @@ const Salvage = (() => {
         for(let i=0;i<7;i++)tri([x,y],points[i],points[(i+1)%7],i%2?[.2,.24,.27,1]:[.3,.32,.31,1]);
         line(project(-.4,-.3),project(.45,.2),[.65,.4,.2,.9],3);
       }else if(o.kind==='ship'){
-        WorldArt.drawShip('nomad',x,y,o.angle,.8,o.r/32,0);
-        tri(project(-.2,-.8),project(.8,.1),project(-.1,.45),[.025,.035,.045,1]);
-        line(project(-.55,-.2),project(.4,.55),[.65,.35,.18,1],3);
-        line(project(.3,.8),project(.95,1),[.3,.34,.36,1],5);
+        WorldArt.drawWreck(x,y,o.angle,o.r,o.seed,(records.get(o.id)?.hp??o.maxHp)/o.maxHp);
       }else{
         // Broken station ring, exposed ribs and disconnected solar wings.
         for(let i=0;i<30;i++){
@@ -132,7 +129,7 @@ const Salvage = (() => {
         }
       }
       // Scorched damage marks and a small salvage beacon remain readable in the dark.
-      if((records.get(o.id)?.hp??o.maxHp)<o.maxHp)disc(x,y,o.r*.15,[.035,.025,.02,.8],7);
+      if(o.kind!=='ship'&&(records.get(o.id)?.hp??o.maxHp)<o.maxHp)disc(x,y,o.r*.15,[.035,.025,.02,.8],7);
       disc(x+o.r*.25,y-o.r*.2,2,[.95,.57,.2,.75],5);
     }
   }

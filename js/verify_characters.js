@@ -10,7 +10,7 @@ assert(s.characters().find(p=>p.id==='character:bobo').description.includes('50%
 Object.assign(w.ctx.ship,{x:1800,y:1100,vx:0,vy:0});
 assert(s.openDock());
 assert.equal(s.characters().length,5);
-assert(s.characters().find(p=>p.name==='Rhea').status==='Met');
+assert(s.characters().find(p=>p.name==='Rhea').status==='Available for hire');
 assert(s.hire('miner'));
 assert(s.characters().find(p=>p.name==='Rhea').status==='On board');
 s.closeDock();
@@ -19,7 +19,7 @@ const reload=boot(w.store,{withStarbases:true});
 const people=reload.run('Starbases.characters()');
 assert.equal(people.find(p=>p.id==='character:bobo').status,'Met');
 assert.equal(people.find(p=>p.name==='Rhea').status,'On board');
-assert.equal(people.find(p=>p.id==='character:captain').status,'Current captain');
+assert.equal(people.find(p=>p.id==='character:viktor').status,'Current captain');
 assert.equal(people.length,6);
 reload.ctx.GameAudio.setEngine=()=>{};
 reload.ctx.document.querySelector('#shipyardOverlay').hidden=true;
@@ -40,4 +40,23 @@ assert(legacy.run('Starbases.characters()').some(p=>p.name==='Rhea'),'Old hired 
 legacy.run('Starbases.restore({met:["unknown",null,"bobo","bobo"]})');
 assert.equal(legacy.run('Starbases.characters()').filter(p=>p.id==='character:bobo').length,1);
 assert.equal(boot(undefined,{withStarbases:true}).run('Starbases.characters().length'),0);
+
+for(const [id,name] of [['engineer','Tarek'],['mechanic','Ada']]){
+  const person=guide.getEntry('character:'+id);
+  assert.equal(person.name,name);assert.equal(person.status,'Available for hire');assert(person.recruitmentCost>0);
+}
+assert(guide.showItem('character:engineer'));
+assert(reload.ctx.document.querySelector('#encyclopediaDetails').innerHTML.includes('Recruitment cost:'));
+assert(people.every(p=>p.name!=='You'&&p.name!=='Vy'));
+const captains=boot(undefined,{withStarbases:true}),shipyard=captains.model.Shipyard,contacts=captains.run('Starbases');
+shipyard.choose('starfox');captains.model.Colony.save();
+assert.equal(contacts.characters().find(p=>p.status==='Current captain').name,'Mara Voss');
+shipyard.choose('nomad');captains.model.Colony.save();
+assert.equal(contacts.characters().find(p=>p.status==='Current captain').name,'Viktor Vale');
+assert(contacts.characters().some(p=>p.name==='Mara Voss'&&p.status==='Met'));
+contacts.restore({met:['captain','engineer']});
+assert(contacts.characters().some(p=>p.id==='character:viktor'));
+assert(contacts.characters().every(p=>p.id!=='character:captain'));
+captains.ctx.I18n.language='cs';
+assert.equal(contacts.characters().find(p=>p.name==='Tarek').status,'K najmutí');
 console.log('PASS: encounter discovery, starting crew, recruitment, ship switching, save reload, legacy crew, catalogue portraits/search/details and fresh-profile isolation. No browser started.');

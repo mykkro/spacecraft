@@ -19,7 +19,7 @@ const I18n = (() => {
     "REPAIR PACK USED": "OPRAVNÁ SADA POUŽITA",
     "REPAIR PACK": "OPRAVNÁ SADA",
     "+20% HULL": "+20 % TRUPU",
-    "Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 8 seconds.": "Obnoví až 20 % trupu lodě. Použijte v inventáři, rychlém slotu nebo klávesou U během hry. Při plném trupu se nespotřebuje. Výroba na pracovním stole trvá 8 sekund.",
+    "Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 4 seconds.": "Obnoví až 20 % trupu lodě. Použijte v inventáři, rychlém slotu nebo klávesou U během hry. Při plném trupu se nespotřebuje. Výroba na pracovním stole trvá 4 sekundy.",
     " Requires Fotron charge cells.": " Vyžaduje nábojové články Fotronu.",
     " Requires Bulshitter cartridges; one per volley.": " Vyžaduje náboje do Bulšitru; jeden na salvu.",
     "Fotron charge cells": "Nábojové články Fotronu",

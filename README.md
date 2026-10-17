@@ -177,7 +177,7 @@ Customize **Quick inventory** in the inventory screen: select a stack and click 
 
 The first civilian station, **Wayfarer Exchange**, is southeast of the start at **(1800, 1100)**. Every system has a station, with a blue square bearing on the minimap and markers on local/global maps. Approach within **260 m**, slow below **100 m/s**, then press **H** or click the station prompt. Docking pauses play. **H / Escape / Undock** resumes flight.
 
-You start with **120 credits** and yourself as captain. Sell minerals to earn credits, buy fuel or missile ammunition, and repair your hull for one credit per missing percentage point (rounded up). Market buttons trade one item at a time; purchases require cargo space. Stations offer three permanent hires, for a maximum crew of four:
+You start with **120 credits** and yourself as captain. Sell minerals to earn credits, buy fuel or missile ammunition, and repair your hull for one credit per missing percentage point (rounded up). Market quantity controls support bulk buying and selling; purchases require cargo space. Stations offer three permanent hires, for a maximum crew of four:
 
 - **Rhea, miner (80 cr):** +25% asteroid damage. Weapon hardness gates still apply; pirate damage is unchanged.
 - **Tarek, engineer (110 cr):** 20% lower flight fuel use, including boost.
@@ -185,7 +185,7 @@ You start with **120 credits** and yourself as captain. Sell minerals to earn cr
 
 Each specialist can be hired once. Credits, crew and station discoveries share the expedition save with cargo. The station interface supports English and Czech. Run `node js/verify_starbases.js` for browser-free model checks.
 
-Kraxna's player captain is **Jegor Kokotovič**, captain and space garbage man. Its starting two-member crew includes repair robot **Bobo**, who makes station hull repairs **50% cheaper**, rounded up to whole credits. Bobo has a separate robot berth, so Kraxna can still hire all three specialists (five crew in total). Starfox and Nomad start with you alone as captain. Built-in crew follows the selected ship; hired specialists are retained when switching, and Bobo is never duplicated. The ship picker and station roster show this crew in English/Czech.
+Kraxna's player captain is **Jegor Kokotovič**, captain and space garbage man. Its starting two-member crew includes repair robot **Bobo**, who makes station hull repairs **50% cheaper**, rounded up to whole credits. Bobo has a separate robot berth, so Kraxna can still hire all three specialists (five crew in total). Starfox starts with captain **Mara Voss**; Nomad starts with captain **Viktor Vale**. Each begins as a one-person crew. Built-in crew follows the selected ship; hired specialists are retained when switching, and Bobo is never duplicated. The ship picker and station roster show this crew in English/Czech.
 
 ## Delivery, escort and navigation rewards
 
@@ -215,17 +215,17 @@ Focused checks: `node js/verify_visual_models.js`, `node js/verify_special_ammo.
 
 ## Timed crafting queue
 
-Crafting is no longer instant. Choose a recipe and press **Queue Craft** to reserve its ingredients and add one recipe batch to a **12-job FIFO queue**. Only the first job advances. Recipe buttons show the duration, and the workshop has progress bars, remaining seconds, station status and cancellation buttons. The flight HUD also shows queued fabrication.
+Crafting is no longer instant. Choose a recipe and press **Queue Craft** to reserve its ingredients and add one recipe batch to a **12-job FIFO queue**. Each available station processes one job step at a time; workbench and furnace can work in parallel. Recipe buttons show the duration, and the workshop has progress bars, remaining seconds, station status and cancellation buttons. The flight HUD also shows queued fabrication.
 
 | Output | Time per recipe batch |
 | --- | --- |
-| Basic handcraft | 2 seconds |
-| Refined materials and parts | 4 seconds |
-| Ammunition | 6 seconds |
-| Fuel items | 8 seconds |
-| Weapons | 18 seconds |
-| Machines, workbenches and furnaces | 25 seconds |
-| Scanner receiver | 35 seconds |
+| Basic handcraft | 1 second |
+| Refined materials and parts | 2 seconds |
+| Ammunition | 3 seconds |
+| Fuel items | 4 seconds |
+| Weapons | 9 seconds |
+| Machines, workbenches and furnaces | 12.5 seconds |
+| Scanner receiver | 17.5 seconds |
 
 Fabrication continues while menus/inventory pause flight and combat. Workbench/furnace jobs require their original moon's station network: stay on that surface or in low orbit. Leaving range, visiting another moon or removing the required station pauses that job and the jobs behind it. Reconnect to resume. Handcraft jobs can run anywhere.
 
@@ -235,7 +235,7 @@ Queue order, source workshop and remaining time save with the expedition. Reload
 
 ## Repair packs
 
-Craft a **Repair Pack** at a workbench from **1 hull plate + 1 iron ingot + 1 ice**. Each pack takes **8 seconds** in the crafting queue, stacks up to **8**, and restores **20 hull percentage points**, capped at 100%. At full hull, the pack is not consumed.
+Craft a **Repair Pack** at a workbench from **1 hull plate + 1 iron ingot + 1 ice**. Each pack takes **4 seconds** in the crafting queue, stacks up to **8**, and restores **20 hull percentage points**, capped at 100%. At full hull, the pack is not consumed.
 
 Select it in inventory and press **Use Repair Pack**, assign it to a quick slot for surface use, or press **U** during active flight/surface play. Assigning a quick slot in the editor does not use it. Partial repairs near full hull consume one pack and restore only the missing hull. Repair packs and their recipe appear in the encyclopedia under **Consumables**, with English/Czech text. Consumption and repaired hull save together.
 
@@ -247,9 +247,9 @@ Craft a generator at a workbench, then select it and choose **Equip Shield**, dr
 
 | Generator | Capacity | Regeneration | Delay after a hit | Crafting |
 | --- | --- | --- | --- | --- |
-| Mk I | 35 | 1.5 points/s | 5 seconds | 25 seconds |
-| Mk II | 65 | 3 points/s | 4 seconds | 30 seconds |
-| Ion | 100 | 5 points/s | 3 seconds | 35 seconds |
+| Mk I | 35 | 1.5 points/s | 5 seconds | 12.5 seconds |
+| Mk II | 65 | 3 points/s | 4 seconds | 15 seconds |
+| Ion | 100 | 5 points/s | 3 seconds | 17.5 seconds |
 
 Mk I uses 3 ingots, 2 hull plates, 1 crystal, 1 green Ion Cube and 1 glass. Mk II consumes a Mk I plus 2 Bulterite, 2 plates, 1 crystal and 1 green Ion Cube. Ion consumes a Mk II plus 2 Bulterite, 2 glass, 1 crystal and 1 Blue Ion Cube. Recipe grids show the exact arrangement.
 
@@ -283,7 +283,7 @@ Asteroid surfaces include rotating procedural bump detail, fractured seams, dust
 
 The encyclopedia includes a **Characters** category with crew portraits, roles, bonuses and current onboard/met status. Confirming a ship records its starting crew; docking introduces the station specialists. Recruited specialists from older saves are included automatically. Character encounters remain known after ship changes and are saved with each expedition profile. Names, roles and biographies are searchable in English and Czech.
 
-**Portable Workbench** (CZ: Přenosný pracovní stůl) is advanced reusable equipment: carrying one in your main cargo inventory unlocks the 3×3 workbench grid even in space. Craft it at a workbench in 45 seconds using 2 Bulterite, 2 plates, 2 glass, 1 crystal, 1 Blue Ion Cube and 1 ordinary workbench. It weighs 8 and occupies one slot. It does not unlock furnace recipes or establish a moon base. Portable queue jobs travel with you and pause without the device or an available moon workbench.
+**Portable Workbench** (CZ: Přenosný pracovní stůl) is advanced reusable equipment: carrying one in your main cargo inventory unlocks the 3×3 workbench grid even in space. Craft it at a workbench in 22.5 seconds using 2 Bulterite, 2 plates, 2 glass, 1 crystal, 1 Blue Ion Cube and 1 ordinary workbench. It weighs 8 and occupies one slot. It does not unlock furnace recipes or establish a moon base. Portable queue jobs travel with you and require the carried device. Physical moon jobs remain with their original moon.
 
 **Parallel crafting:** furnaces now have a separate 12-job queue from workbench/handcrafting. The head job in each queue progresses simultaneously. Station disconnects or cargo-space waits block only that queue. The inventory shows both queues, and existing saved jobs retain their order within each station queue.
 
@@ -296,3 +296,33 @@ The interface uses compact spacing while preserving the configured HUD text size
 Ore fields also contain **jagged**, **fractured**, and dark **basalt-like** asteroid shapes. Chipped ridges, angular shelves and deep clefts change the actual mesh silhouette. Seeded charcoal, brown and slate shades vary surface brightness while mineral seams retain their identifying colors. These are visual presets, not new inventory materials; mesh budgets and the bounded GPU cache are unchanged.
 
 **Space salvage:** systems contain six destructible debris pieces, a derelict ship and a derelict starbase. Small debris needs tier 0 weapons, abandoned ships tier 1 and abandoned starbases tier 2. Destroy them for metal, refined materials, fuel, ammunition and occasional repair supplies; collect the floating salvage as usual. Wrecks are collision hazards and cannot dock, trade or recruit. Nearby discovered wrecks get brown crossed-square map/radar markers. The starting derelict ship is at (-1100, 650), and the abandoned station at (3200, -1700). Damage and destroyed state persist per profile, preventing repeat salvage after reload. Live object caching is limited to nine systems.
+
+Buildable base storage:
+
+| Container | Slots | Workbench craft time |
+| --- | ---: | ---: |
+| Small Storage Crate | 8 | 7.5 s |
+| Cargo Container | 20 | 12.5 s |
+| Reinforced Storage Vault | 40 | 17.5 s |
+
+Craft a container at a workbench (or portable workbench), assign it to quick slots 1–6, select it and right-click a supported surface tile to build. Medium and large recipes consume an empty smaller container plus upgraded materials. Containers contribute to outpost modules; a placed workbench is still required for base status.
+
+Aim at a container and press **E** to open it, or use **Inventory > Storage** anywhere on that moon or from low orbit. Choose among containers in the selector. Click to move a stack, right-click for half, Shift-click for one, or drag between cargo and container slots to move, merge or swap whole stacks. Normal item stack limits apply. Each container saves independently with its moon/profile. Empty it before mining it back into an item. Stored goods are excluded from ship cargo mass, crafting ingredients and usable equipment until retrieved. Storage remains on the moon when you change ships.
+To discard unwanted items, select a cargo stack (or hold a split stack), choose a quantity in the cargo pane and click **Destroy**. **All** fills the quantity with the entire selected stack. Destruction permanently deletes those items without salvage and saves immediately. Other stacks, base-container contents and reserved crafting ingredients remain separate. Destroying equipment updates its availability.
+
+Shop rows have individual quantity fields and minus/plus controls. Buy and Sell buttons display the selected unit count and total credit price; per-unit buy/sell prices remain beside cargo stock. Bulk transactions are all-or-nothing and respect credits, usable inventory stock and compatible-stack cargo capacity. Quantity controls support 1–9999 units and English/Czech labels.
+
+**Moon-owned crafting queues:** each moon has its own 12-job workbench queue and 12-job furnace queue. Inventory displays only the current moon plus ship/portable jobs. A physical workbench is preferred over a carried portable workbench when both are available, so new work belongs to that base. Base jobs pause outside that moon's surface/low-orbit link and resume on return; remote jobs cannot deliver output or refunds into your ship. Their reserved materials no longer contribute to ship mass while away. Handcraft and portable-workbench jobs share a separate ship queue. Save loading preserves all moons' queues; removed stations leave local jobs available for cancellation.
+
+Inhabited starbases use detailed shaded station models with three seeded layouts: ring habitat, industrial hub and modular outpost. Structures include open docking apertures, guidance lights, illuminated window belts, subdivided solar arrays, ribbed radiators, antenna masts and exposed utility conduits. Model triangles are built from 3D structures, lit with surface normals, depth-sorted and projected into the existing WebGL batch. The cache retains at most 18 models. Docking distances, repair services, trade and recruitment are unchanged.
+
+Crafting durations are now **50% shorter**. On a moon base (including its low-orbit link), selecting a recipe with missing intermediate products enables **Auto Craft** if your cargo contains enough raw materials and the base has the required stations. For example, a scanner can be made from ore, crystal and ice: ingots and plates are produced automatically, with glass smelted in the furnace.
+
+The complete chain is validated before any materials are consumed. One queue entry reserves the raw inputs, runs its intermediate steps using the appropriate station, and delivers the final result plus surplus intermediate items together. Other jobs can use a station while the chain is working at the other one. Amber ingredient cells mean those items will be made automatically; hover Auto Craft to inspect the steps. **Max** also accounts for intermediate production. Missing raw materials or stations prevent crafting without consuming anything.
+
+Chains stay with the moon, pause out of range, save their progress, and refund their original reserved inputs if cancelled before completion. Completed chains wait for enough cargo space. Stored container contents must be retrieved into cargo before use. Existing saved job timers are rescaled to the shorter durations while preserving progress.
+Landable moons now have shaded spherical surfaces with crater bowls, raised rims, old impact basins, dark maria and fine terrain variation. Five seeded visual types cover cratered grey moons, fractured ice, volcanic terrain with faint lava fissures, rust-colored moons and dark basalt. Selene remains a cratered moon. These are flight-view visual types; existing terrain resources, moon radii, landing locations and bases are preserved. Baked colored geometry uses the shared WebGL batch and a 20-model cache, without texture downloads or extra GPU contexts.
+
+**Characters / Postavy:** docking introduces hireable Rhea, Tarek and Ada even before recruitment. Their entries show specialist bonuses, recruitment price and **Available for hire / K najmutí** or **On board / Na palubě**. Named core crew replace the generic You/Vy entry: Mara Voss (Starfox), Viktor Vale (Nomad), Jegor Kokotovič and Bobo (Kraxna 1). Previously met core crew remain in the guide after ship changes. Existing generic captain records migrate to named captain IDs without resetting progress.
+
+Derelict ships use dedicated broken-hull models rather than intact ships covered with dark triangles. Surviving shaded plates surround open breaches, exposed ribs, tanks and severed cables; detached bow/wing pieces, unlit machinery, cracked canopy and small feathered scorch marks show dereliction. Seeded details remain stable and cache at most 48 models. Salvage collision, loot and saved damage remain unchanged.

@@ -183,15 +183,15 @@ const Colony = (() => {
     name: I18n.language === 'cs' ? 'Přenosný pracovní stůl' : 'Portable Workbench',
     asset: 'portable_workbench.svg', machine: true, weight: 8,
     description: I18n.language === 'cs'
-      ? 'Pokročilá skládací dílna. V hlavním inventáři zpřístupní výrobu 3×3 i ve vesmíru. Nevyžaduje umístění a nespotřebovává se. Nenahrazuje pec ani nezakládá základnu. Výroba trvá 45 sekund.'
-      : 'Advanced folding workshop. Carry in your main inventory to unlock 3×3 workbench crafting even in space. Reusable without placement. Does not provide smelting or establish a base. Takes 45 seconds to craft.'
+      ? 'Pokročilá skládací dílna. V hlavním inventáři zpřístupní výrobu 3×3 i ve vesmíru. Nevyžaduje umístění a nespotřebovává se. Nenahrazuje pec ani nezakládá základnu. Výroba trvá 22,5 sekundy.'
+      : 'Advanced folding workshop. Carry in your main inventory to unlock 3×3 workbench crafting even in space. Reusable without placement. Does not provide smelting or establish a base. Takes 22.5 seconds to craft.'
   };
   Object.assign(items, {
     storage_small: {name:I18n.language==='cs'?'Malá bedna':'Small Storage Crate',asset:'storage_small.svg',place:true,color:'#ae9974',storageSlots:8,weight:4,description:I18n.language==='cs'?'Postavte na měsíci. 8 slotů pro předměty; otevřete přes E nebo sklad v inventáři.':'Build on a moon. Holds 8 item stacks; open with E or Storage in inventory.'},
     storage_medium: {name:I18n.language==='cs'?'Nákladní kontejner':'Cargo Container',asset:'storage_medium.svg',place:true,color:'#7dabb4',storageSlots:20,weight:8,description:I18n.language==='cs'?'Postavitelný kontejner s 20 sloty. Obsah zůstává na měsíci a zachovává limity zásobníků.':'Buildable container with 20 slots. Contents stay on the moon and respect normal stack limits.'},
     storage_large: {name:I18n.language==='cs'?'Zesílený sklad':'Reinforced Storage Vault',asset:'storage_large.svg',place:true,color:'#8ba287',storageSlots:40,weight:14,description:I18n.language==='cs'?'Pokročilý sklad se 40 sloty. Před rozebráním jej vyprázdněte.':'Advanced base storage with 40 slots. Empty it before dismantling.'}
   });
-  items.repair_pack = {name: I18n.t('Repair Pack'), asset: 'repair_pack.svg', color: '#9ae0bb', repair: 20, weight: 2, description: I18n.t('Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 8 seconds.')};
+  items.repair_pack = {name: I18n.t('Repair Pack'), asset: 'repair_pack.svg', color: '#9ae0bb', repair: 20, weight: 2, description: I18n.t('Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 4 seconds.')};
   items.ammo_fotron = {name: I18n.t('Fotron charge cells'), asset: 'ammo_fotron.svg', color: '#78e8c0', ammoFor: 'fotron', description: I18n.t('Special Fotron ammunition. One cell per shot; craft at a workbench from crystals, an Ion Cube and Bulterite.')};
   items.ammo_bulshitter = {name: I18n.t('Bulshitter cartridges'), asset: 'ammo_bulshitter.svg', color: '#e7b767', ammoFor: 'bulshitter', description: I18n.t('Special scatter ammunition. One cartridge fires the whole five-shot volley. Craft at a workbench from iron ingots and ore.')};
   // Every catalogue entry has a description; keep it next to the shared item model.
@@ -489,10 +489,39 @@ const Colony = (() => {
   // Two independent FIFO lanes share inventory; ingredients are reserved on enqueue.
   const craftQueueLimit = 12;
   const craftLane = station => station === 'furnace' ? 'furnace' : 'workbench';
-  const laneJobs = station => craftQueue.filter(job=>craftLane(job.recipe.station)===craftLane(station));
+  // A physical workshop belongs to its moon. Handcraft/portable jobs belong to ship.
+  const queueKey = (station,owner) => (owner && owner!=='portable'?owner:'ship')+'|'+craftLane(station);
+  function craftOwner(station) {
+    if(station==='hand')return null;
+    const access=stationAccess();
+    if(station==='bench' && !(access.moon && baseRecords.get(access.moon.id)?.counts.bench>0))return 'portable';
+    return access.moon?.id || null;
+  }
+  const laneJobs = (station,owner=craftOwner(station)) => craftQueue.filter(job=>queueKey(job.recipe.station,job.moonId)===queueKey(station,owner));
+  function visibleQueues() {
+    const cs=I18n.language==='cs',access=stationAccess();
+    const groups=[{station:'hand',owner:null,title:count('portable_workbench')>0?(cs?'LOĎ / PŘENOSNÁ DÍLNA':'SHIP / PORTABLE WORKBENCH'):(cs?'RUČNÍ VÝROBA':'HANDCRAFT')}];
+    for(const station of ['bench','furnace']){
+      if(!access.stations.has(station))continue;
+      const owner=craftOwner(station);
+      if(groups.some(g=>queueKey(g.station,g.owner)===queueKey(station,owner)))continue;
+      groups.push({station,owner,title:(access.moon?.name || '')+' · '+(station==='furnace'?(cs?'PEC':'FURNACE'):(cs?'DÍLNA':'WORKBENCH'))});
+    }
+    // Removed machines retain local jobs so their reserved materials can be refunded.
+    for(const job of craftQueue){
+      if(!queueAccessible(job)||groups.some(g=>queueKey(g.station,g.owner)===queueKey(job.recipe.station,job.moonId)))continue;
+      groups.push({station:job.recipe.station,owner:job.moonId,title:(access.moon?.name||'')+' · '+(job.recipe.station==='furnace'?(cs?'PEC':'FURNACE'):(cs?'DÍLNA':'WORKBENCH'))});
+    }
+    return groups;
+  }
+  function queueAccessible(job) {
+    return !job.moonId || job.moonId==='portable' || stationAccess().moon?.id===job.moonId;
+  }
+
   let craftQueue = [], nextCraftJob = 1, craftSaveClock = 0, craftUiClock = 0, craftQuantity = 1;
-  const jobDuration = job => craftSeconds(job.recipe) * job.batches;
-  function craftSeconds(recipe) {
+  const jobDuration = job => job.chain?chainSeconds(job.chain):craftSeconds(job.recipe)*job.batches;
+  function craftSeconds(recipe) { return legacyCraftSeconds(recipe) * .5; }
+  function legacyCraftSeconds(recipe) {
     if (items[recipe.out].storageSlots) return items[recipe.out].storageSlots===40?35:items[recipe.out].storageSlots===20?25:15;
     if (recipe.out === 'portable_workbench') return 45;
     if (items[recipe.out].shield) return 20 + items[recipe.out].shieldTier * 5;
@@ -503,44 +532,100 @@ const Colony = (() => {
     if (items[recipe.out].fuel || items[recipe.out].repair) return 8;
     return recipe.station === 'hand' ? 2 : 4;
   }
+  function autoCraftPlan(recipe,batches) {
+    const access=stationAccess();
+    if(!recipe||carried||!access.moon||!(baseRecords.get(access.moon.id)?.counts.bench>0))return null;
+    const stock=Object.fromEntries(Object.keys(items).map(type=>[type,count(type)]));
+    return CraftPlanner.plan(recipes,stock,access.stations,recipe,batches);
+  }
+  function reservedCosts(job) {
+    return job.chain?job.chain.raw:Object.fromEntries(Object.entries(costs(job.recipe.pattern)).map(([type,qty])=>[type,qty*job.batches]));
+  }
+  function craftedOutputs(job) {
+    const out={...(job.chain?.extra||{})};out[job.recipe.out]=(out[job.recipe.out]||0)+job.recipe.qty*job.batches;return out;
+  }
+  function chainSeconds(chain) {return chain.steps.reduce((sum,step)=>sum+craftSeconds(recipes[step.recipe])*step.batches,0);}
+  function currentCraftStep(job) {
+    if(!job.chain)return {recipe:job.recipe,left:job.remaining};
+    let elapsed=jobDuration(job)-job.remaining;
+    for(const step of job.chain.steps){
+      const recipe=recipes[step.recipe],duration=craftSeconds(recipe)*step.batches;
+      if(elapsed<duration-1e-7)return {recipe,left:duration-elapsed};
+      elapsed-=duration;
+    }
+    return {recipe:job.recipe,left:job.remaining};
+  }
+  const executionKey=job=>queueKey(currentCraftStep(job).recipe.station,job.moonId);
+  function encodeChain(chain) {
+    return chain?{raw:chain.raw,extra:chain.extra,steps:chain.steps.map(s=>({recipe:recipeKey(recipes[s.recipe]),batches:s.batches}))}:undefined;
+  }
+  function restoreChain(saved,root,batches) {
+    if(!saved||!Array.isArray(saved.steps)||!saved.steps.length||saved.steps.length>64)return null;
+    const validMap=map=>map&&typeof map==='object'&&!Array.isArray(map)&&Object.entries(map).every(([type,n])=>Object.hasOwn(items,type)&&Number.isSafeInteger(n)&&n>0&&n<=1e7);
+    if(!validMap(saved.raw)||!validMap(saved.extra))return null;
+    const pool={...saved.raw},steps=[];
+    for(const step of saved.steps){
+      const index=recipes.findIndex(r=>recipeKey(r)===step.recipe);
+      if(index<0||!Number.isSafeInteger(step.batches)||step.batches<1||step.batches>9999)return null;
+      const recipe=recipes[index];
+      for(const [type,qty]of Object.entries(costs(recipe.pattern))){
+        const amount=qty*step.batches;if((pool[type]||0)<amount)return null;pool[type]-=amount;
+      }
+      pool[recipe.out]=(pool[recipe.out]||0)+recipe.qty*step.batches;
+      steps.push({recipe:index,batches:step.batches});
+    }
+    const last=steps[steps.length-1];
+    if(recipes[last.recipe]!==root||last.batches!==batches)return null;
+    pool[root.out]-=root.qty*batches;
+    const extra=Object.fromEntries(Object.entries(pool).filter(([,n])=>n>0));
+    if(Object.keys(extra).length!==Object.keys(saved.extra).length||Object.entries(extra).some(([t,n])=>saved.extra[t]!==n))return null;
+    return {raw:{...saved.raw},extra,steps};
+  }
   const recipeKey = recipe => JSON.stringify([recipe.station, recipe.out, recipe.qty, recipe.pattern]);
   function craftQueueSnapshot() {
-    return craftQueue.map(job => ({id: job.id, recipe: recipeKey(job.recipe), batches: job.batches, remaining: job.remaining, moonId: job.moonId}));
+    return craftQueue.map(job => ({id: job.id, recipe: recipeKey(job.recipe), batches: job.batches, remaining: job.remaining, duration: jobDuration(job), chain: encodeChain(job.chain), moonId: job.moonId}));
   }
   function restoreCraftQueue(saved) {
     if (!Array.isArray(saved)) return;
     const ids = new Set();
-    for (const job of saved.slice(0, craftQueueLimit * 2)) {
+    for (const job of saved) {
       if (!job || !Number.isFinite(job.remaining)) continue;
       const recipe = recipes.find(recipe => recipeKey(recipe) === job.recipe);
       const batches = job.batches === undefined ? 1 : job.batches;
-      if (!recipe || !Number.isSafeInteger(batches) || batches < 1 || batches > 9999 || job.remaining < 0 || job.remaining > craftSeconds(recipe) * batches) continue;
+      if (!recipe || !Number.isSafeInteger(batches) || batches < 1 || batches > 9999 || job.remaining < 0 || job.remaining > (Number.isFinite(job.duration) ? job.duration : legacyCraftSeconds(recipe)*batches)) continue;
       if (recipe.station !== 'hand' && (typeof job.moonId !== 'string' || (!/^-?\d{1,7}:-?\d{1,7}$/.test(job.moonId) && !(recipe.station === 'bench' && job.moonId === 'portable')))) continue;
-      if (laneJobs(recipe.station).length >= craftQueueLimit) continue;
+      if (laneJobs(recipe.station,recipe.station==='hand'?null:job.moonId).length >= craftQueueLimit) continue;
+      const chain=job.chain?restoreChain(job.chain,recipe,batches):null;
+      if(job.chain&&!chain)continue;
+      const duration=chain?chainSeconds(chain):craftSeconds(recipe)*batches;
+      const previousDuration=Number.isFinite(job.duration)&&job.duration>0?job.duration:legacyCraftSeconds(recipe)*batches;
+      const remaining=Math.min(duration,job.remaining/previousDuration*duration);
       const id = Number.isSafeInteger(job.id) && job.id > 0 && job.id < 1e9 && !ids.has(job.id) ? job.id : nextCraftJob;
       ids.add(id); nextCraftJob = Math.max(nextCraftJob, id + 1);
-      craftQueue.push({id, recipe, batches, remaining: job.remaining, moonId: recipe.station === 'hand' ? null : job.moonId});
+      craftQueue.push({id, recipe, batches, chain, remaining, moonId: recipe.station === 'hand' ? null : job.moonId});
     }
   }
   function jobConnected(job) {
-    if (job.recipe.station === 'hand') return true;
+    const station=currentCraftStep(job).recipe.station;
+    if (station === 'hand') return queueAccessible(job);
     const access = stationAccess();
-    if (job.recipe.station === 'bench' && (access.portable || job.moonId === 'portable')) return access.stations.has('bench');
-    return access.moon?.id === job.moonId && access.stations.has(job.recipe.station);
+    if (job.moonId === 'portable') return count('portable_workbench') > 0;
+    if (station === 'bench') return access.moon?.id===job.moonId && (baseRecords.get(job.moonId)?.counts.bench || 0)>0;
+    return access.moon?.id === job.moonId && access.stations.has(station);
   }
   function craftJobStatus(job, index) {
     const cs = I18n.language === 'cs';
     if (job.remaining <= 0) return cs ? 'HOTOVO · ČEKÁ NA MÍSTO' : 'READY · WAITING FOR CARGO SPACE';
-    if (index > 0) return cs ? 'VE FRONTĚ' : 'QUEUED';
-    return jobConnected(job) ? (cs ? 'VÝROBA' : 'CRAFTING') : (cs ? 'POZASTAVENO · PŘIPOJTE DÍLNU' : 'PAUSED · RECONNECT WORKSHOP');
+    if (craftQueue.some(other=>other!==job&&queueAccessible(other)&&executionKey(other)===executionKey(job)&&craftQueue.indexOf(other)<craftQueue.indexOf(job))) return cs ? 'VE FRONTĚ' : 'QUEUED';
+    return jobConnected(job) ? (job.chain?'AUTO · '+items[currentCraftStep(job).recipe.out].name:(cs ? 'VÝROBA' : 'CRAFTING')) : (cs ? 'POZASTAVENO · PŘIPOJTE DÍLNU' : 'PAUSED · RECONNECT WORKSHOP');
   }
   function renderCraftQueue() {
     const host = $('#craftQueue');
     if (!host) return;
     const cs = I18n.language === 'cs';
-    host.innerHTML = ['workbench','furnace'].map(lane => {
-      const jobs = craftQueue.filter(job=>craftLane(job.recipe.station)===lane);
-      const title = lane==='furnace' ? (cs?'PEC':'FURNACE') : (cs?'DÍLNA / RUČNÍ VÝROBA':'WORKBENCH / HANDCRAFT');
+    host.innerHTML = visibleQueues().map(group => {
+      const jobs = laneJobs(group.station,group.owner);
+      const title = group.title;
       return '<div class="inventory-label">' + title + ' <span>' + jobs.length + ' / ' + craftQueueLimit + '</span></div>' +
         (jobs.length ? jobs.map((job,index) => {
           const recipe=job.recipe;
@@ -555,11 +640,11 @@ const Colony = (() => {
   }
   function cancelCraft(id) {
     const index = craftQueue.findIndex(job => job.id === id);
-    if (index < 0 || craftQueue[index].remaining <= 0) return false;
+    if (index < 0 || craftQueue[index].remaining <= 0 || !queueAccessible(craftQueue[index])) return false;
     const job = craftQueue[index];
     // Refund into cargo first, with preserved overflow if every slot is occupied.
-    for (const [type, qty] of Object.entries(costs(job.recipe.pattern))) {
-      const remaining = deposit(bag, type, qty * job.batches);
+    for (const [type, qty] of Object.entries(reservedCosts(job))) {
+      const remaining = deposit(bag, type, qty);
       if (remaining) preserveOverflow(type, remaining);
     }
     craftQueue.splice(index, 1);
@@ -570,10 +655,12 @@ const Colony = (() => {
   function updateCrafting(dt) {
     const hud = $('#craftingStatus');
     // Each lane has its own FIFO head; a disconnected/full lane cannot block the other.
-    const heads = ['workbench','furnace'].map(lane=>craftQueue.find(job=>craftLane(job.recipe.station)===lane)).filter(Boolean);
+    const executing=new Map();
+    for(const job of craftQueue.filter(queueAccessible))if(!executing.has(executionKey(job)))executing.set(executionKey(job),job);
+    const heads=[...executing.values()];
     if (hud) {
-      hud.hidden = !craftQueue.length;
-      const text = heads.map(job=>(job.recipe.station==='furnace'
+      hud.hidden = !heads.length;
+      const text = heads.map(job=>(currentCraftStep(job).recipe.station==='furnace'
         ? (I18n.language==='cs'?'PEC':'FURNACE') : (I18n.language==='cs'?'DÍLNA':'WORKBENCH'))+
         ' · '+Math.ceil(job.remaining)+' s').join(' | ');
       if (hud.textContent!==text) hud.textContent=text;
@@ -582,12 +669,12 @@ const Colony = (() => {
     let changed=false, completed=false, becameReady=false;
     for (const job of heads) {
       const previous=job.remaining;
-      if (job.remaining>0 && jobConnected(job)) job.remaining=Math.max(0,job.remaining-Math.min(dt,1));
+      if (job.remaining>0 && jobConnected(job)) job.remaining=Math.max(0,job.remaining-Math.min(dt,1,currentCraftStep(job).left));
       changed ||= job.remaining!==previous;
-      if (job.remaining<=0) {
+      if (job.remaining<=0 && jobConnected(job)) {
         // Failed insertion never partially deposits output or blocks the other lane.
         const next=bag.map(stack=>stack?{...stack}:null);
-        if (insert(next,job.recipe.out,job.recipe.qty*job.batches)) {
+        if (Object.entries(craftedOutputs(job)).every(([type,qty])=>insert(next,type,qty))) {
           bag=next;craftQueue.splice(craftQueue.indexOf(job),1);
           completed=true;
           notify((I18n.language==='cs'?'VÝROBA HOTOVA · ':'CRAFT COMPLETE · ')+items[job.recipe.out].name);
@@ -602,7 +689,7 @@ const Colony = (() => {
     if (!$('#overlay').hidden && craftUiClock>=.15) {
       craftUiClock=0;
       for (const queued of craftQueue) {
-        const index=laneJobs(queued.recipe.station).indexOf(queued);
+        const index=laneJobs(queued.recipe.station,queued.moonId).indexOf(queued);
         const meter=$('#craftJobProgress'+queued.id),status=$('#craftJobStatus'+queued.id),time=$('#craftJobTime'+queued.id);
         if(meter)meter.value=jobDuration(queued)-queued.remaining;
         if(status)status.textContent=craftJobStatus(queued,index);
@@ -830,7 +917,7 @@ const Colony = (() => {
 
   // Include held and reserve cargo so moving items cannot bypass the handling penalty.
   function cargoMass() {
-    const inProgress = craftQueue.flatMap(job => job.remaining <= 0 ? [{type: job.recipe.out, qty: job.recipe.qty * job.batches}] : Object.entries(costs(job.recipe.pattern)).map(([type, qty]) => ({type, qty: qty * job.batches})));
+    const inProgress = craftQueue.filter(queueAccessible).flatMap(job => Object.entries(job.remaining<=0?craftedOutputs(job):reservedCosts(job)).map(([type,qty])=>({type,qty})));
     return [...bag, ...overflow, carried, ...inProgress].reduce((sum, s) => sum + (s ? s.qty * (items[s.type].weight || 1) : 0), 0);
   }
 
@@ -847,6 +934,20 @@ const Colony = (() => {
   }
 
   // Check availability before mutating. Successful ammunition use is saved immediately.
+  // Explicit destruction affects only the selected stack (or the held half-stack).
+  // No drops or rewards are created; saved base contents and queued ingredients are separate.
+  function destroyInventoryItems(quantity) {
+    const stack=focusedStack();
+    if(!stack||!Number.isSafeInteger(quantity)||quantity<1||quantity>stack.qty)return false;
+    const type=stack.type;
+    stack.qty-=quantity;
+    if(!stack.qty){if(carried)carried=null;else bag[selected]=null;selected=-1;}
+    if(typeof Shields!=='undefined'){Shields.reconcile();Shields.refresh();}
+    Weapons.updateHUD();sync();save();renderInventory();
+    notify((I18n.language==='cs'?'ZNIČENO':'DESTROYED')+' · '+quantity+' '+items[type].name);
+    return true;
+  }
+
   function consumeItem(type, qty = 1, persist = true) {
     if (!items[type] || !Number.isSafeInteger(qty) || qty < 1 || count(type) < qty)
       return false;
@@ -1262,11 +1363,18 @@ const Colony = (() => {
   }
   // Quantities count recipe runs, since ammunition and blocks have multi-item yields.
   function maxCraftQuantity(r = matchedRecipe()) {
-    if (!r || carried || !nearbyStations().has(r.station)) return 0;
-    return Math.max(0, Math.min(9999,
-      Math.floor(bag.length * items[r.out].maxStack / r.qty),
-      ...Object.entries(costs(r.pattern)).map(([type, qty]) => Math.floor(count(type) / qty))));
+    if(!r||carried||!nearbyStations().has(r.station))return 0;
+    let low=0,high=Math.min(9999,Math.floor(bag.length*items[r.out].maxStack/r.qty));
+    while(low<high){
+      const mid=Math.ceil((low+high)/2);
+      if(hasCraftMaterials(r,mid))low=mid;else high=mid-1;
+    }
+    return low;
   }
+  function directCraftMaterials(r,batches) {
+    return !!r&&Object.entries(costs(r.pattern)).every(([type,n])=>count(type)>=n*batches);
+  }
+  function hasCraftMaterials(r,batches) {return directCraftMaterials(r,batches)||!!autoCraftPlan(r,batches);}
   function setCraftQuantity(value) {
     if (!Number.isFinite(value)) return false;
     craftQuantity = Math.max(1, Math.min(9999, Math.floor(value)));
@@ -1284,22 +1392,23 @@ const Colony = (() => {
   }
 
   function canCraft(r) {
-    return !carried && r && craftQuantity <= maxCraftQuantity(r) && laneJobs(r.station).length < craftQueueLimit && nearbyStations().has(r.station) && Object.entries(costs(r.pattern)).every(([t, n]) => count(t) >= n * craftQuantity);
+    return !carried && r && craftQuantity <= Math.floor(bag.length*items[r.out].maxStack/r.qty) && laneJobs(r.station).length < craftQueueLimit && nearbyStations().has(r.station) && hasCraftMaterials(r,craftQuantity);
   }
 
   // Reserve ingredients now; outputs arrive only after the queued timer finishes.
   function craft() {
-    const r = matchedRecipe();
-    if (!nearbyStations().has(station) || !canCraft(r)) return false;
-    const next = bag.map(stack => stack ? {...stack} : null);
-    for (const [type, qty] of Object.entries(costs(r.pattern))) remove(next, type, qty * craftQuantity);
-    const access = stationAccess();
-    const moonId = r.station === 'hand' ? null : r.station === 'bench' && access.portable ? 'portable' : access.moon.id;
-    bag = next;
-    if (typeof Shields !== 'undefined') { Shields.reconcile(); Shields.refresh(); }
-    craftQueue.push({id: nextCraftJob++, recipe: r, batches: craftQuantity, remaining: craftSeconds(r) * craftQuantity, moonId});
-    sync(); save(); renderInventory();
-    return true;
+    const r=matchedRecipe();
+    if(!canCraft(r))return false;
+    const chain=directCraftMaterials(r,craftQuantity)?null:autoCraftPlan(r,craftQuantity);
+    const reserved=chain?chain.raw:Object.fromEntries(Object.entries(costs(r.pattern)).map(([type,n])=>[type,n*craftQuantity]));
+    const next=bag.map(s=>s?{...s}:null);
+    for(const [type,qty]of Object.entries(reserved))if(!remove(next,type,qty))return false;
+    const moonId=craftOwner(r.station);
+    bag=next;
+    if(typeof Shields!=='undefined'){Shields.reconcile();Shields.refresh();}
+    const job={id:nextCraftJob++,recipe:r,batches:craftQuantity,chain,moonId};
+    job.remaining=jobDuration(job);craftQueue.push(job);
+    sync();save();renderInventory();return true;
   }
 
   // Dragging moves real stacks only between bag slots. Craft/quick/equipment
@@ -1388,12 +1497,13 @@ const Colony = (() => {
   // Allocate each available unit to one cell, in reading order. Repeated ingredients
   // must not all appear available when only one unit remains in the bag.
   function craftingCellsMarkup() {
-    const used = {};
+    const used = {}, recipe=matchedRecipe();
+    const automatic=!!recipe&&!directCraftMaterials(recipe,craftQuantity)&&!!autoCraftPlan(recipe,craftQuantity);
     return grid.map((type, index) => {
       const missing = type ? (used[type] = (used[type] || 0) + craftQuantity) > count(type) : false;
-      const warning = I18n.language === 'cs' ? 'Chybí materiál v inventáři' : 'Missing material in inventory';
+      const warning = automatic ? (I18n.language==='cs'?'Vyrobí se automaticky':'Will be crafted automatically') : (I18n.language === 'cs' ? 'Chybí materiál v inventáři' : 'Missing material in inventory');
       const title = type ? items[type].name + (missing ? ' · ' + warning : I18n.t(' · click to replace, right click to clear')) : I18n.t('Assign selected ingredient');
-      return `<button class="item-slot${missing ? ' missing-material' : ''}" data-cell="${index}" title="${title}">${type ? icon(type) : '<span class="cell-plus">+</span>'}${missing ? '<span class="missing-material-badge" aria-label="' + warning + '">!</span>' : ''}</button>`;
+      return `<button class="item-slot${missing ? (automatic ? ' auto-material' : ' missing-material') : ''}" data-cell="${index}" title="${title}">${type ? icon(type) : '<span class="cell-plus">+</span>'}${missing ? '<span class="missing-material-badge" aria-label="' + warning + '">!</span>' : ''}</button>`;
     }).join('');
   }
 
@@ -1408,10 +1518,22 @@ const Colony = (() => {
       ['hand', I18n.t('Handcraft · 2×2')],
       ['bench', I18n.t('Workbench · 3×3')],
       ['furnace', I18n.t('Furnace · 2×2')]
-    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ Object.entries(costs(r.pattern)).some(([type, qty]) => count(type) < qty) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
+    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ !hasCraftMaterials(r,1) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
     $('#slots .station-tabs').insertAdjacentHTML('beforebegin', stationAccessMarkup(access));
     renderQuickInventory();
     const focus = focusedStack();
+    if(focus){
+      const cs=I18n.language==='cs';
+      $('#slots .inventory-cargo-pane').insertAdjacentHTML('beforeend',`<div class="destroy-items">
+        <label for="destroyQuantity">${cs?'Zničit':'Destroy'} · ${items[focus.type].name}</label>
+        <div><input id="destroyQuantity" type="number" min="1" max="${focus.qty}" step="1" value="1" aria-label="${cs?'Počet ke zničení':'Quantity to destroy'}">
+        <button id="destroyAll">${cs?'VŠE':'ALL'}</button>
+        <button id="destroyItems" title="${cs?'Trvale odstraní předměty. Bez náhrady.':'Permanently deletes these items. No salvage.'}">${cs?'ZNIČIT':'DESTROY'}</button></div>
+        </div>`);
+      $('#destroyAll').onclick=()=>{$('#destroyQuantity').value=focusedStack()?.qty||1;};
+      $('#destroyItems').onclick=()=>destroyInventoryItems(Number($('#destroyQuantity').value));
+    }
+
     $('#slots .inventory-label span').textContent = I18n.t(`${ bag.length } SLOTS · LIMITS VARY BY ITEM`);
     if (carried) {
       $('#slots .inventory-hint').textContent = I18n.t(`Holding ${ carried.qty } ${ items[carried.type].name }. Left click to place / merge; right click to place one. Place held items before crafting.`);
@@ -1509,6 +1631,11 @@ const Colony = (() => {
       renderInventory();
     };
     if (r && !carried) $('#craftItem').textContent = laneJobs(r.station).length >= craftQueueLimit ? (I18n.language === 'cs' ? 'FRONTA PLNÁ' : 'QUEUE FULL') : canCraft(r) ? (I18n.language === 'cs' ? 'DO FRONTY' : 'QUEUE CRAFT') + ' · ' + craftSeconds(r) * craftQuantity + ' s' : I18n.t('NEED MATERIALS');
+    const autoPreview=r&&!directCraftMaterials(r,craftQuantity)?autoCraftPlan(r,craftQuantity):null;
+    if(autoPreview&&canCraft(r)){
+      $('#craftItem').textContent=(I18n.language==='cs'?'AUTO VÝROBA':'AUTO CRAFT')+' · '+chainSeconds(autoPreview)+' s';
+      $('#craftItem').title=autoPreview.steps.map(step=>items[recipes[step.recipe].out].name+' × '+step.batches).join(' → ');
+    }
     renderCraftQueue();
     $('#craftItem').onclick = craft;
     $('#craftLess').onclick = () => setCraftQuantity(craftQuantity - 1);
@@ -1732,6 +1859,8 @@ const Colony = (() => {
       const [x, y] = screen(m.x, m.y);
       if (x < -m.r - 50 || x > width + m.r + 50 || y < -m.r - 50 || y > height + m.r + 50)
         continue;
+      if(typeof MoonArt !== 'undefined') MoonArt.render(m,x,y);
+      else {
       disc(x, y, m.r + 12, [.3, .55, .65, .035], 50);
       disc(x, y, m.r, [.18, .23, .27, 1], 48);
       const rng = random(Math.round(m.x));
@@ -1745,6 +1874,7 @@ const Colony = (() => {
         const a = i / 48 * 6.28,
           b = (i + 1) / 48 * 6.28;
         line([x + Math.cos(a) * m.r, y + Math.sin(a) * m.r], [x + Math.cos(b) * m.r, y + Math.sin(b) * m.r], [.48, .66, .7, .2]);
+      }
       }
       const px = x,
         py = y - m.r - 18;
@@ -2087,6 +2217,14 @@ const Colony = (() => {
     lamp: [.8, .67, .36]
   };
 
+  // New buildable items inherit their item color unless they have a custom terrain palette.
+  // Keep this registration next to the renderer so added structures cannot leave colors undefined.
+  for (const [type,item] of Object.entries(items)) {
+    if (Object.hasOwn(tileColors,type)) continue;
+    const hex=/^#([0-9a-f]{6})$/i.exec(item.color || '');
+    tileColors[type]=hex?[0,2,4].map(offset=>parseInt(hex[1].slice(offset,offset+2),16)/255):tileColors.stone;
+  }
+
   // Draw only visible tiles. Convert tile coordinates to pixels at the camera boundary.
   function renderSurface() {
     vertices = [];
@@ -2107,7 +2245,7 @@ const Colony = (() => {
           continue;
         const sx = x * tileSize - cam.x,
           sy = y * tileSize - cam.y,
-          c = tileColors[t],
+          c = tileColors[t] || tileColors.stone,
           v = .85 + random(x * 781 + y * 318)() * .2;
         rect(sx, sy, 32, 32, [c[0] * v, c[1] * v, c[2] * v, t === 'glass' ? .45 : 1]);
         line([sx, sy], [sx + 32, sy], [.75, .8, .83, .15], 2);
@@ -2289,14 +2427,16 @@ const Colony = (() => {
     count: ownedCount,
     availableCount: count,
     consumeItem,
+    destroyInventoryItems,
     craft,
     craftSeconds,
+    autoCraftPlan,
     setCraftQuantity,
     maxCraftQuantity,
     get craftQuantity() { return craftQuantity; },
     updateCrafting,
     cancelCraft,
-    get craftingQueue() { return craftQueue.map(job => ({id: job.id, out: job.recipe.out, qty: job.recipe.qty * job.batches, batches: job.batches, remaining: job.remaining, duration: jobDuration(job), moonId: job.moonId, station: job.recipe.station, lane: craftLane(job.recipe.station)})); },
+    get craftingQueue() { return craftQueue.map(job => ({id: job.id, out: job.recipe.out, qty: job.recipe.qty * job.batches, batches: job.batches, remaining: job.remaining, duration: jobDuration(job), moonId: job.moonId, station: job.recipe.station, steps: job.chain?.steps.map(s=>({out:recipes[s.recipe].out,station:recipes[s.recipe].station,batches:s.batches})), lane: craftLane(job.recipe.station), owner: job.moonId && job.moonId!=='portable'?job.moonId:'ship'})); },
     recipes,
     items,
     recordMined,

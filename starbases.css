@@ -25,3 +25,14 @@
 #stationCrew article::after { content: ''; display: table; clear: both; }
 .starting-crew-portraits { display: flex; gap: 8px; margin-top: 12px; }
 .starting-crew-portraits .crew-avatar { width: 40px; height: 40px; border: 1px solid #8db8d65c; border-radius: 6px; object-fit: cover; image-rendering: pixelated; }
+
+/* Compact two-row market entries keep quantities and total prices visible. */
+.station-row.market-row { display: grid; grid-template-columns: 36px minmax(0,1fr) auto; gap: 5px 8px; }
+.market-row > img { grid-row: 1 / 3; }
+.market-row > span { min-width: 0; overflow-wrap: anywhere; }
+.trade-quantity { display: flex; align-items: center; gap: 3px; }
+.trade-quantity input { width: 48px; min-width: 0; padding: 4px 2px; text-align: center; color: #d6e6ef; background: #102638; border: 1px solid #7fa5bc66; font: inherit; font-size: 12px; }
+.market-row .trade-quantity button { padding: 4px 6px; }
+.trade-actions { grid-column: 2 / 4; display: flex; gap: 5px; }
+.trade-actions button { flex: 1; padding: 5px; letter-spacing: 0; }
+@media(max-width:450px) { .market-row .trade-quantity { grid-column: 2 / 4; } .market-row > img { grid-row: 1 / 4; } }

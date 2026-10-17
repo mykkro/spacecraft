@@ -9,7 +9,8 @@ const Shipyard = (() => {
     starfox: {
       id: 'starfox',
       name: 'Starfox',
-      captain: 'You',
+      captainId: 'mara',
+      captain: 'Mara Voss',
       startingCrew: [],
       role: 'INTERCEPTOR',
       description: 'Fast and agile. Small cargo hold; ideal for scouting and dogfights.',
@@ -29,6 +30,7 @@ const Shipyard = (() => {
     kraxna: {
       id: 'kraxna',
       name: 'Kraxna 1',
+      captainId: 'jegor',
       captain: 'Jegor Kokotovič',
       startingCrew: [{id: 'bobo', name: 'Bobo', repairDiscount: .5}],
       role: 'SALVAGE HAULER',
@@ -49,7 +51,8 @@ const Shipyard = (() => {
     nomad: {
       id: 'nomad',
       name: 'Nomad',
-      captain: 'You',
+      captainId: 'viktor',
+      captain: 'Viktor Vale',
       startingCrew: [],
       role: 'MULTIROLE FREIGHTER',
       description: 'A balanced freighter with dependable handling, cargo space and a Photon Cannon.',

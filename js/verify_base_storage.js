@@ -1,0 +1,90 @@
+// Real base placement, container transfers and save migration; no browser.
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const {boot}=require('./verify_ships.js');
+const setup=boot();
+Object.assign(setup.ctx.ship,{x:720,y:-870});
+setup.model.Colony.land();setup.model.Colony.surface[13][40]='bench';setup.model.Colony.save();
+const w=boot(setup.store),c=w.model.Colony;
+const recipe=c.recipes.find(r=>r.out==='storage_small'),cost={};
+for(const t of recipe.pattern)if(t)cost[t]=(cost[t]||0)+1;
+for(const[t,n]of Object.entries(cost))assert(c.addItem(t,n));
+assert(c.selectRecipe(c.recipes.indexOf(recipe)));assert(c.craft());
+for(let i=0;i<15;i++)c.updateCrafting(.5);
+assert.equal(c.availableCount('storage_small'),1);
+assert.equal(c.items.storage_medium.storageSlots,20);assert.equal(c.items.storage_large.storageSlots,40);
+// Place an actual crate within reach with solid support.
+c.surface[13][16]=null;c.surface[14][16]='stone';c.player.x=15;c.player.y=14;
+c.assignQuickSlot(0,'storage_small');c.selectBuild('storage_small');
+assert(c.editTile(16,13,true));
+const container=c.storageContainers().find(s=>s.x===16&&s.y===13);
+assert(container);assert.equal(container.capacity,8);
+const id=container.id;
+assert.equal(c.availableCount('storage_small'),0);
+c.addItem('metal',60);
+const find=t=>c.bag.findIndex(s=>s?.type===t);
+const before=c.availableCount('metal'),mass=c.cargoMass;
+assert(c.transferStorage(id,'bag',find('metal'),10,0));
+assert.equal(c.storageSlots(id)[0].qty,10);
+assert.equal(c.availableCount('metal'),before-10);assert(c.cargoMass<mass);
+assert.equal(c.editTile(16,13,false),false,'Filled crates cannot be mined');
+assert(c.transferStorage(id,'bag',find('metal'),5,0));
+assert.equal(c.storageSlots(id)[0].qty,15);
+assert(c.transferStorage(id,'storage',0,8));
+assert.equal(c.storageSlots(id)[0].qty,7);
+assert.equal(c.transferStorage(id,'storage',0,8),false);
+assert.equal(c.transferStorage(id,'bag',999,1),false);
+assert.equal(c.transferStorage('bad','bag',0,1),false);
+c.save();
+const restored=boot(w.store),r=restored.model.Colony;
+assert.equal(r.storageSlots(id)[0].qty,7);
+r.launch();assert(r.storageSlots(id),'Low orbit access works');
+Object.assign(restored.ctx.ship,{x:5000,y:0});
+assert.equal(r.storageSlots(id),null);
+assert.equal(r.transferStorage(id,'storage',0,1),false);
+assert.equal(r.storageContainers().length,0);
+// Independent sizes and stack caps, with full-target rejection and whole-stack swap.
+c.addItem('ice',5);
+const ice=find('ice'),metal=find('metal');
+assert(c.transferStorage(id,'bag',ice,2,1));
+const oldMetal=c.storageSlots(id)[0].qty,oldIce=c.bag[ice].qty;
+assert(c.transferStorage(id,'bag',ice,undefined,0));
+assert.equal(c.storageSlots(id)[0].type,'ice');assert.equal(c.bag[ice].type,'metal');
+assert.equal(c.bag[ice].qty,oldMetal);
+assert.equal(c.storageSlots(id)[0].qty,oldIce);
+assert(c.transferStorage(id,'storage',0));
+assert(c.transferStorage(id,'storage',1));
+c.addItem('metal',64);
+assert(c.transferStorage(id,'bag',find('metal'),undefined,0));
+const slot=c.storageSlots(id)[0];assert(slot.qty<=64);
+if(slot.qty===64)assert.equal(c.transferStorage(id,'bag',find('metal'),1,0),false);
+// UI contains bounded panes and native transfer controls.
+w.ctx.GameAudio.setEngine=()=>{};
+w.ctx.document.querySelector('#overlay').hidden=true;
+w.run(fs.readFileSync('js/base-storage-ui.js','utf8'));
+const ui=w.run('BaseStorageUI');
+assert(ui.show(id));assert(w.ctx.paused);
+const html=w.ctx.document.querySelector('#storageItems').innerHTML;
+assert(html.includes('data-storage-side="storage"'));
+ui.close();assert.equal(w.ctx.paused,false);
+// Empty all contents and dismantle safely.
+for(let i=0;i<8;i++)if(c.storageSlots(id)[i])assert(c.transferStorage(id,'storage',i));
+assert(c.editTile(16,13,false));
+assert.equal(c.storageSlots(id),null);
+assert.equal(c.availableCount('storage_small'),1);
+assert(c.storageContainers().every(s=>s.id!==id));
+
+// All variants restore their exact physical capacity, independently of ship slots.
+const variants=boot(setup.store),v=variants.model.Colony;
+v.surface[13][42]='storage_medium';v.surface[13][43]='storage_large';v.save();
+const sized=boot(variants.store).model.Colony;
+const medium=sized.storageContainers().find(s=>s.type==='storage_medium');
+const large=sized.storageContainers().find(s=>s.type==='storage_large');
+assert.equal(sized.storageSlots(medium.id).length,20);
+assert.equal(sized.storageSlots(large.id).length,40);
+sized.addItem('ice',32);
+const source=sized.bag.findIndex(s=>s?.type==='ice');
+assert(sized.transferStorage(large.id,'bag',source,undefined,39));
+assert(sized.storageSlots(large.id)[39].qty<=sized.items.ice.maxStack);
+assert.equal(sized.transferStorage(medium.id,'storage',39,1),false);
+
+console.log('PASS: timed crafting, placement, capacities, stack limits, moves/merges/swaps, mass, full-container safety, surface/orbit/range access, UI, save reload and dismantling. No browser started.');

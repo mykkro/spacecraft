@@ -118,6 +118,7 @@ function boot(saved, { onEvent, withStarbases = false, withMissions = false, wit
   if (withMissions) vm.runInContext(read('missions.js'), ctx);
   if (withTracker) vm.runInContext(read('quest-tracker.js'), ctx);
   if (withSalvage) vm.runInContext(read('salvage.js'), ctx);
+  vm.runInContext(read('crafting-plan.js'), ctx);
   vm.runInContext(read('systems.js'), ctx);
   vm.runInContext(read('weapons.js'), ctx);
   const run = code => vm.runInContext(code, ctx);

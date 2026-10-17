@@ -34,7 +34,7 @@ const DeepSpace = (() => {
     const palette=palettes[kind], phase=seed*.00001;
     // An atmospheric halo sits behind the opaque sphere.
     if(kind!==2) {
-      for(let i=3;i>0;i--) glow(mesh,x,y,r+i*9,r+i*9,[.18,.48,.78],.045,64);
+      for(let i=3;i>0;i--) glow(mesh,x,y,r+i*9,r+i*9,[.18,.48,.78],.035,64);
     }
     const rows=20, columns=64, points=[];
     for(let row=0;row<=rows;row++) {
@@ -50,7 +50,7 @@ const DeepSpace = (() => {
         const shade=.055+Math.pow(light,.85)*.85;
         const rim=kind!==2?Math.pow(1-nz,5)*Math.max(0,light)*.25:0;
         const spec=kind===0&&band<-.4?Math.pow(Math.max(0,-nx*.32-ny*.18+nz*.93),40)*.32:0;
-        ring.push({p:[x+nx*r,y+ny*r],c:base.map((v,i)=>Math.min(1,v*shade+rim*[.2,.5,1][i]+spec)).concat(1)});
+        ring.push({p:[x+nx*r,y+ny*r],c:base.map((v,i)=>Math.min(1,(v*shade+rim*[.2,.5,1][i]+spec)*.8)).concat(1)});
       }
       points.push(ring);
     }
@@ -95,7 +95,8 @@ const DeepSpace = (() => {
   }
   function render() {
     // Never wrap individual objects across the viewport: the camera crosses tiles.
-    const layers=[.025,.11,.055], margin=1100;
+    // Planets move at 24% of flight speed; farther stars and clouds drift slower.
+    const layers=[.04,.24,.08], margin=1100;
     for(const layer of [0,2,1]) {
       const cx=ship.x*layers[layer],cy=ship.y*layers[layer];
       const left=Math.floor((cx-width/2-margin)/TILE),right=Math.floor((cx+width/2+margin)/TILE);

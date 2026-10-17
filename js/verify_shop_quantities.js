@@ -1,0 +1,46 @@
+// Bulk shop model and actual quantity handlers; no browser/server.
+const assert=require('node:assert/strict');
+const {boot}=require('./verify_ships.js');
+const w=boot(undefined,{withStarbases:true}),c=w.model.Colony,s=w.run('Starbases');
+w.ctx.GameAudio.setEngine=()=>{};
+const input={dataset:{tradeQuantity:'metal'},value:'1'},steps=[{dataset:{tradeStep:'metal',step:'-1'}},{dataset:{tradeStep:'metal',step:'1'}}];
+w.ctx.document.querySelector('#stationMarket').querySelectorAll=selector=>
+  selector==='[data-trade-quantity]'?[input]:selector==='[data-trade-step]'?steps:[];
+Object.assign(w.ctx.ship,{x:1800,y:1100,vx:0,vy:0});
+assert(s.openDock());
+const before=c.availableCount('metal');
+assert(s.trade('metal',true,10));assert.equal(c.availableCount('metal'),before+10);
+assert.equal(s.snapshot().credits,70);
+assert(s.trade('metal',false,7));assert.equal(c.availableCount('metal'),before+3);
+assert.equal(s.snapshot().credits,84);
+const saved=JSON.stringify(c.bag);
+for(const qty of [0,-1,1.5,NaN,Infinity,10000])assert.equal(s.trade('metal',true,qty),false);
+assert.equal(JSON.stringify(c.bag),saved);
+assert.equal(s.trade('metal',false,100),false);
+assert.equal(s.trade('metal',true,100),false);
+assert.equal(s.snapshot().credits,84);
+input.value='5';input.oninput();
+let buy=w.ctx.document.querySelector('#stationMarket [data-buy="metal"]');
+let sell=w.ctx.document.querySelector('#stationMarket [data-sell="metal"]');
+assert(buy.textContent.includes('25 cr'));assert(sell.textContent.includes('10 cr'));
+assert.equal(buy.disabled,false);
+steps[1].onclick();assert(buy.textContent.includes('30 cr'));
+input.value='';input.oninput();assert(buy.disabled&&sell.disabled);
+input.value='9999';input.oninput();assert(buy.disabled&&sell.disabled);
+// Full cargo still accepts the remaining room in a matching stack.
+const empty=c.bag.filter(stack=>!stack).length;
+assert(c.addItem('stone',empty*64));
+s.restore({credits:10000});
+const room=64-c.availableCount('metal');
+assert.equal(s.maxTrade('metal',true),room);
+const balance=s.snapshot().credits,stock=c.availableCount('metal');
+assert.equal(s.trade('metal',true,room+1),false);
+assert.equal(c.availableCount('metal'),stock);assert.equal(s.snapshot().credits,balance);
+assert(s.trade('metal',true,room));assert.equal(c.availableCount('metal'),64);
+assert.equal(s.maxTrade('metal',true),0);
+assert(s.trade('metal',false,33));
+const loaded=boot(w.store,{withStarbases:true});
+assert.equal(loaded.model.Colony.availableCount('metal'),31);
+assert.equal(loaded.run('Starbases.snapshot().credits'),s.snapshot().credits);
+s.closeDock();assert.equal(s.trade('metal',true,1),false);
+console.log('PASS: bulk purchases/sales, totals, quantity controls, validation, compatible-stack capacity, failure atomicity, docking guards and save reload. No browser started.');

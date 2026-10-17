@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {boot}=require('./verify_ships.js');
 function world(saved){
   const w=boot(saved,{withSalvage:true});w.ctx.drops=[];
-  w.ctx.damageShip=()=>{};w.ctx.WorldArt={drawShip(){}};
+  w.ctx.damageShip=()=>{};w.ctx.WorldArt={drawShip(){},drawWreck(){}};
   return {...w,salvage:w.run('Salvage')};
 }
 const w=world(),s=w.salvage;

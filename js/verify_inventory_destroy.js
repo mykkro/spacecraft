@@ -1,0 +1,37 @@
+// Explicit disposal through real inventory selection and click handlers; no browser.
+const assert=require('node:assert/strict');
+const {boot}=require('./verify_ships.js');
+const w=boot(),c=w.model.Colony;
+const buttons=c.bag.map((_,i)=>({dataset:{slot:String(i)}}));
+w.ctx.document.querySelector('#slots').querySelectorAll=s=>s==='[data-slot]'?buttons:[];
+c.openInventory();
+assert.equal(c.destroyInventoryItems(1),false);
+const slot=c.bag.findIndex(s=>s?.type==='metal'),before=c.availableCount('metal');
+buttons[slot].onclick();
+assert.equal(c.destroyInventoryItems(0),false);
+assert.equal(c.destroyInventoryItems(before+1),false);
+assert.equal(c.destroyInventoryItems(1.5),false);
+const field=w.ctx.document.querySelector('#destroyQuantity');
+field.value='2';
+w.ctx.document.querySelector('#destroyItems').onclick();
+assert.equal(c.availableCount('metal'),before-2);
+w.ctx.document.querySelector('#destroyAll').onclick();
+assert.equal(Number(field.value),before-2);
+w.ctx.document.querySelector('#destroyItems').onclick();
+assert.equal(c.availableCount('metal'),0);
+assert.equal(c.destroyInventoryItems(1),false);
+const reloaded=boot(w.store).model.Colony;
+assert.equal(reloaded.availableCount('metal'),0);
+// Destroying a held half affects only that half, not its remaining bag stack.
+c.addItem('metal',9);
+const fresh=c.bag.findIndex(s=>s?.type==='metal');
+buttons[fresh].oncontextmenu({preventDefault(){}});
+assert.equal(c.availableCount('metal'),4);
+assert.equal(c.count('metal'),9);
+assert(c.destroyInventoryItems(2));
+assert.equal(c.count('metal'),7);
+assert.equal(c.availableCount('metal'),4);
+assert(c.destroyInventoryItems(3));
+assert.equal(c.count('metal'),4);
+assert.equal(boot(w.store).model.Colony.count('metal'),4);
+console.log('PASS: selected-stack disposal, quantity validation, All control, held halves, exact counts and saved deletion. No browser started.');

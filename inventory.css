@@ -275,3 +275,12 @@ body .craft-job img.item-icon { width: 32px; height: 32px; flex-shrink: 0; }
 .recipe-book button.recipe-unavailable small { color: #81909b; }
 .inventory-craft-pane .recipe-book button.recipe-unavailable:hover,
 .inventory-craft-pane .recipe-book button.recipe-unavailable:focus-visible { border-color: #9ab7c2; color: #c6d5dd; }
+/* Explicit item disposal stays in the cargo pane and never occupies recipe space. */
+.destroy-items { flex-shrink: 0; margin-top: 5px; border-top: 1px solid #b5786b44; padding-top: 5px; }
+.destroy-items label { display: block; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.destroy-items > div { display: flex; gap: 4px; margin-top: 4px; }
+.destroy-items input { width: 55px; min-width: 0; padding: 4px; color: #d6e6ef; background: #102638; border: 1px solid #7fa5bc66; font: inherit; }
+.destroy-items button { padding: 4px 6px; font-size: 11px; letter-spacing: 0; }
+#destroyItems { color: #f3a69a; border-color: #ba796a99; }
+.craft-grid .item-slot.auto-material { border: 2px solid #dfb86e; background: #3b3223; }
+.craft-grid .auto-material .missing-material-badge { background: #dfb86e; color: #251e10; }

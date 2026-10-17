@@ -57,6 +57,7 @@ const Encyclopedia = (() => {
       category: categoryFor(id, item),
       icon: iconPath(id),
       stackLimit: item.maxStack,
+      storageSlots: item.storageSlots || 0,
       weight: item.weight || 1,
       owned: Colony.count(id),
       available: item.weapon ? Weapons.unlocked(id) : Colony.count(id) > 0,
@@ -169,11 +170,12 @@ const Encyclopedia = (() => {
         <img src="${escape(entry.icon)}" width="112" height="112" alt="">
         <div><span class="eyebrow">${escape(entry.role)}</span><h3>${escape(entry.name)}</h3></div></div>
         <p class="encyclopedia-description">${escape(entry.description)}</p>
-        <p class="character-status">${escape(entry.status)}</p>`;
+        <p class="character-status">${escape(entry.status)}</p>${entry.recruitmentCost ? '<p>'+escape(I18n.language==='cs'?'Cena najmutí: ':'Recruitment cost: ')+entry.recruitmentCost+' cr</p>' : ''}`;
       return;
     }
     let stats = stat('Owned', entry.owned) + stat('Stack limit', entry.stackLimit) +
       stat('Mass per item', entry.weight);
+    if (entry.storageSlots) stats += stat(I18n.language === 'cs' ? 'Sloty skladu' : 'Storage slots', entry.storageSlots);
     if (entry.fuel) stats += stat('Fuel units', entry.fuel);
     if (entry.weapon) {
       const weapon = entry.weapon;
@@ -282,6 +284,7 @@ const Encyclopedia = (() => {
   // Capture input while open so movement, firing, and other menu hotkeys stay inactive.
   addEventListener('keydown', event => {
     const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName);
+    if (typeof BaseStorageUI !== 'undefined' && BaseStorageUI.isOpen) return;
     if (!open) {
       if (event.code === 'KeyB' && !event.repeat && !typing) {
         event.preventDefault();

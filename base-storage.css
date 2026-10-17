@@ -1,0 +1,16 @@
+/* Container transfer panes scroll independently inside a bounded dialog. */
+#baseStorageOverlay[hidden] { display: none; }
+#baseStorageOverlay { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 12px; background: #030b16e8; }
+#baseStorageOverlay > section { box-sizing: border-box; width: min(1000px,96vw); height: min(680px,92dvh); min-height: 0; padding: 16px; border: 1px solid #769cb066; background: #0c1b29; display: flex; flex-direction: column; gap: 7px; }
+.storage-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.storage-heading h2 { margin: 0; }
+#baseStorageOverlay p { margin: 0; font-size: 12px; line-height: 1.4; }
+#baseStorageOverlay label { font-size: 12px; }
+#storageSelect { width: 100%; padding: 6px; color: #d6e6ef; background: #102638; border: 1px solid #7fa5bc66; font: inherit; }
+.storage-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; min-height: 0; }
+.storage-panes > div { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.storage-panes h3 { font-size: 14px; margin: 5px 0; }
+.storage-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(48px,1fr)); gap: 4px; align-content: start; overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding: 3px; }
+.storage-grid .item-slot { min-height: 54px; aspect-ratio: 1; }
+body .storage-grid img.item-icon { width: 40px; height: 40px; }
+#storageMessage { color: #f3b68d; }

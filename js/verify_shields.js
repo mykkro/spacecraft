@@ -64,14 +64,14 @@ seed.model.Colony.land(); seed.model.Colony.surface[13][40] = 'bench'; seed.mode
 const craftWorld = boot(seed.store, {withShields: true}), craft = craftWorld.model.Colony;
 for (const [id, qty] of [['ingot', 3], ['plate', 4], ['glass', 1], ['bulterite', 2]]) assert(craft.addItem(id, qty));
 assert(craft.selectRecipe(craft.recipes.findIndex(r => r.out === 'shield_generator')));
-assert(craft.craft()); assert.equal(craft.craftingQueue[0].duration, 25);
-for (let i = 0; i < 25; i++) craft.updateCrafting(1);
+assert(craft.craft()); assert.equal(craft.craftingQueue[0].duration, 12.5);
+for (let i = 0; i < 25; i++) craft.updateCrafting(.5);
 assert(craft.equipShipSlot('shield', 'shield_generator'));
 assert(craft.selectRecipe(craft.recipes.findIndex(r => r.out === 'shield_generator_advanced')));
 assert(craft.craft());
 assert.equal(craftWorld.run('Shields.equipped'), null);
-assert.equal(craft.craftingQueue[0].duration, 30);
-for (let i = 0; i < 30; i++) craft.updateCrafting(1);
+assert.equal(craft.craftingQueue[0].duration, 15);
+for (let i = 0; i < 30; i++) craft.updateCrafting(.5);
 assert.equal(craft.availableCount('shield_generator_advanced'), 1);
 assert(craft.equipShipSlot('shield', 'shield_generator_advanced'));
 assert.equal(craftWorld.run('Shields.charge'), 0);
