@@ -1,0 +1,1210 @@
+/* Shared game layout, typography, weapon cards, and inventory styles.
+ * Keep the existing rule order: later overrides intentionally depend on the cascade. */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+button:disabled {
+  opacity: .35;
+  cursor: not-allowed
+}
+
+button:disabled:hover {
+  color: inherit;
+  border-color: #91a7b02e
+}
+
+body #slots {
+  display: block
+}
+
+body #overlay section {
+  width: min(850px,94vw)
+}
+
+#surfaceHud {
+  background: #080e17db;
+  border: 1px solid #71889928;
+  padding: 14px 18px;
+  backdrop-filter: blur(6px)
+}
+
+body img.item-icon {
+  display: block;
+  width: 54px;
+  height: 54px;
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+  filter: drop-shadow(1px 2px 1px #0005)
+}
+
+body .recipe-book img.item-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0
+}
+
+body:not(.on-surface) #landingPrompt {
+  top: 300px
+}
+
+body .coordinates {
+  bottom: 185px
+}
+
+#rockScan {
+  width: 300px
+}
+
+@media(max-width:700px) {
+  body:not(.on-surface) #landingPrompt {
+    top: 355px
+  }
+}
+
+.weapon-cards {
+  display: flex;
+  gap: 7px
+}
+
+.weapon-card {
+  position: relative;
+  width: 72px;
+  padding: 5px 3px 8px;
+  border: 1px solid #51636d35;
+  border-radius: 3px;
+  background: #0a141eaa;
+  letter-spacing: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px
+}
+
+.weapon-card.equipped {
+  border-color: var(--weapon-color);
+  background: #13212ccc
+}
+
+.weapon-card:hover {
+  border-color: var(--weapon-color);
+  color: var(--ink)
+}
+
+.weapon-number {
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  font-size: 7px;
+  color: var(--muted)
+}
+
+.cooldown-icon {
+  position: relative;
+  display: block;
+  width: 58px;
+  height: 58px
+}
+
+.cooldown-icon img {
+  position: absolute;
+  inset: 5px;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated
+}
+
+.cooldown-icon svg {
+  position: absolute;
+  inset: 0;
+  width: 58px;
+  height: 58px;
+  transform: rotate(-90deg);
+  overflow: visible
+}
+
+.cooldown-track,.cooldown-arc {
+  fill: none;
+  stroke-width: 2.5
+}
+
+.cooldown-track {
+  stroke: #42526155
+}
+
+.cooldown-arc {
+  stroke: var(--weapon-color);
+  stroke-linecap: round
+}
+
+.weapon-card b {
+  font-size: 9px;
+  font-weight: 500
+}
+
+.weapon-status {
+  font-size: 7px;
+  letter-spacing: .4px;
+  color: var(--weapon-color)
+}
+
+.weapon-card.locked img {
+  filter: grayscale(1);
+  opacity: .32
+}
+
+.weapon-card.locked b,.weapon-card.locked .weapon-status {
+  color: #657583
+}
+
+.weapon-card.recharging img {
+  opacity: .6
+}
+
+#weaponHud {
+  display: block
+}
+
+#weaponDetails {
+  font-size: 8px;
+  color: #91a3af;
+  white-space: pre-wrap;
+  margin-top: 10px;
+  line-height: 1.7
+}
+
+#rockScan {
+  position: absolute;
+  left: 50%;
+  top: 190px;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: #080e1799;
+  padding: 12px 18px;
+  border-top: 1px solid var(--scan-color)
+}
+
+#rockScan[hidden],.on-surface #rockScan {
+  display: none
+}
+
+#rockScan .eyebrow {
+  color: var(--muted);
+  font-size: 8px
+}
+
+#rockScan b {
+  color: var(--scan-color);
+  font-weight: 400;
+  font-size: 12px
+}
+
+#rockScan>span:last-child {
+  font-size: 8px;
+  color: #97a7b2
+}
+
+.equip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+  color: var(--accent)
+}
+
+@media(max-width:1000px) {
+  .weapon-card {
+    width: 64px
+  }
+
+  .weapon-cards {
+    gap: 5px
+  }
+
+  .cooldown-icon,.cooldown-icon svg {
+    width: 52px;
+    height: 52px
+  }
+
+  .cooldown-icon img {
+    width: 42px;
+    height: 42px
+  }
+
+  #weaponDetails {
+    max-width: 350px
+  }
+}
+
+@media(max-width:700px) {
+  .weapon-card {
+    width: 57px
+  }
+
+  .weapon-cards {
+    gap: 5px
+  }
+
+  .weapon-card b {
+    font-size: 8px
+  }
+
+  .cooldown-icon,.cooldown-icon svg {
+    width: 48px;
+    height: 48px
+  }
+
+  .cooldown-icon img {
+    width: 38px;
+    height: 38px
+  }
+
+  .weapon-status {
+    font-size: 6px
+  }
+
+  #rockScan {
+    top: 255px;
+    max-width: 90vw;
+    width: 240px
+  }
+
+  .coordinates {
+    display: none
+  }
+
+  .equip-row {
+    font-size: 8px
+  }
+}
+
+#overlay {
+  z-index: 10;
+  overflow: auto;
+  padding: 20px 0
+}
+
+#overlay section {
+  width: min(850px,94vw);
+  max-height: 94vh;
+  overflow: auto
+}
+
+#slots {
+  display: block;
+  margin: 20px 0
+}
+
+.inventory-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px
+}
+
+.inventory-label>span {
+  color: var(--muted);
+  font-size: 8px
+}
+
+.bag-grid {
+  display: grid;
+  grid-template-columns: repeat(10,minmax(0,1fr));
+  gap: 5px
+}
+
+.item-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 5px;
+  border: 2px solid #263540;
+  border-top-color: #53616a;
+  background: #0a131c;
+  box-shadow: inset 2px 2px 0 #02070c80;
+  letter-spacing: 0
+}
+
+.item-slot.selected {
+  border-color: var(--accent);
+  background: #dfb87812
+}
+
+.item-icon {
+  font-size: 25px;
+  line-height: 1;
+  filter: drop-shadow(2px 3px 0 #0008)
+}
+
+.item-slot>small {
+  position: absolute;
+  bottom: 4px;
+  right: 5px;
+  color: #e4ebef;
+  font-size: 11px;
+  text-shadow: 1px 2px #000
+}
+
+.item-name {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #080e17;
+  border: 1px solid #60727e;
+  padding: 7px;
+  z-index: 2;
+  color: var(--ink);
+  font-size: 9px;
+  pointer-events: none
+}
+
+.item-slot:hover .item-name,.item-slot:focus-visible .item-name {
+  display: block
+}
+
+.inventory-hint {
+  font-size: 9px;
+  min-height: 25px;
+  line-height: 1.7;
+  margin: 12px 0
+}
+
+.station-tabs {
+  display: flex;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 17px;
+  margin-top: 10px
+}
+
+.station-tabs button {
+  flex: 1;
+  letter-spacing: 0;
+  font-size: 10px
+}
+
+.station-tabs .active {
+  color: var(--accent);
+  border-color: #dfb87888
+}
+
+.craft-layout {
+  display: grid;
+  grid-template-columns: 180px 140px 1fr;
+  gap: 25px;
+  align-items: start;
+  margin: 22px 0
+}
+
+.craft-grid {
+  display: grid;
+  gap: 5px
+}
+
+.craft-grid .item-slot {
+  max-height: 85px
+}
+
+.cell-plus {
+  color: #4d606c;
+  font-size: 19px
+}
+
+.subtle {
+  border: 0;
+  font-size: 8px;
+  width: 100%;
+  background: transparent;
+  padding: 10px
+}
+
+.craft-result {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px
+}
+
+.craft-result>span {
+  color: var(--muted);
+  font-size: 20px
+}
+
+.craft-result .output {
+  width: 65px
+}
+
+.craft-result b {
+  font-size: 10px;
+  font-weight: 400;
+  min-height: 15px
+}
+
+.recipe-book>.eyebrow {
+  margin-bottom: 10px
+}
+
+.recipe-book button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  letter-spacing: 0;
+  padding: 10px;
+  margin-bottom: 5px
+}
+
+.recipe-book .item-icon {
+  font-size: 20px
+}
+
+.recipe-book small {
+  display: block;
+  font-size: 8px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-top: 5px
+}
+
+#landingPrompt {
+  position: absolute;
+  left: 50%;
+  top: 200px;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: 1px;
+  z-index: 3
+}
+
+#landingPrompt[hidden],#surfaceHud[hidden] {
+  display: none
+}
+
+#landingPrompt button {
+  border-color: #dfb87866;
+  background: #0a121dee
+}
+
+#surfaceHud {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: min(650px,95vw)
+}
+
+#surfaceHud p {
+  font-size: 9px;
+  color: #a0b1bd;
+  line-height: 1.8
+}
+
+#hotbar {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 15px
+}
+
+#hotbar .item-slot {
+  width: 65px;
+  flex-shrink: 1
+}
+
+#hotbar em {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-style: normal;
+  color: var(--muted);
+  font-size: 8px
+}
+
+.on-surface .telemetry,.on-surface .manifest,.on-surface .location,.on-surface .coordinates,.on-surface footer {
+  display: none
+}
+
+.on-surface #landingPrompt {
+  top: 113px
+}
+
+.on-surface #toast {
+  bottom: 175px
+}
+
+.on-surface header {
+  pointer-events: none
+}
+
+.on-surface header button,.on-surface header a {
+  pointer-events: auto
+}
+
+@media(max-width:700px) {
+  #overlay section {
+    padding: 22px 16px
+  }
+
+  .bag-grid {
+    grid-template-columns: repeat(6,minmax(0,1fr))
+  }
+
+  .inventory-label>span {
+    display: none
+  }
+
+  .craft-layout {
+    grid-template-columns: 125px 90px;
+    gap: 15px
+  }
+
+  .recipe-book {
+    grid-column: 1/-1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px
+  }
+
+  .recipe-book>.eyebrow {
+    width: 100%
+  }
+
+  .recipe-book button {
+    flex: 1;
+    min-width: 120px
+  }
+
+  .item-icon {
+    font-size: 22px
+  }
+
+  .station-tabs button {
+    font-size: 8px;
+    padding: 10px 5px
+  }
+
+  .on-surface #landingPrompt {
+    top: 105px
+  }
+
+  #surfaceHud p {
+    font-size: 8px
+  }
+
+  #hotbar .item-slot {
+    width: 52px
+  }
+}
+
+:root {
+  color-scheme: dark;
+  --ink: #c6d1da;
+  --muted: #647581;
+  --accent: #dfb878;
+  --line: #9db6c51c
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #080e17;
+  color: var(--ink);
+  font: 11px 'IBM Plex Mono',monospace
+}
+
+#space {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block
+}
+
+header {
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 23px
+}
+
+.wordmark {
+  font: 600 26px 'Barlow Condensed',sans-serif;
+  letter-spacing: 5px;
+  color: #e0e7e8;
+  text-decoration: none
+}
+
+.wordmark span {
+  display: block;
+  font: 8px 'IBM Plex Mono',monospace;
+  letter-spacing: 2.4px;
+  color: var(--muted);
+  margin-top: 5px
+}
+
+.sector {
+  font-size: 10px;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 12px
+}
+
+.sector i,.weapon i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: #8da99c;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #8da99c55
+}
+
+.sector>span {
+  color: var(--muted);
+  margin-left: 15px;
+  letter-spacing: 1px
+}
+
+button {
+  font: 10px 'IBM Plex Mono',monospace;
+  letter-spacing: 1px;
+  color: var(--ink);
+  background: #0e1821cc;
+  border: 1px solid #91a7b02e;
+  cursor: pointer;
+  padding: 12px 16px
+}
+
+button:hover {
+  border-color: var(--accent);
+  color: var(--accent)
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px
+}
+
+#pause {
+  background: transparent
+}
+
+#pause span {
+  margin-left: 9px
+}
+
+.telemetry {
+  position: absolute;
+  left: 36px;
+  top: 139px;
+  width: 213px
+}
+
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--accent)
+}
+
+h1 {
+  font: 500 38px 'Barlow Condensed',sans-serif;
+  letter-spacing: 1px;
+  margin: 10px 0 0
+}
+
+h1 span {
+  display: block;
+  font: 8px 'IBM Plex Mono',monospace;
+  letter-spacing: 1.1px;
+  color: var(--muted);
+  margin-top: 9px
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+  margin: 23px 0 18px
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  letter-spacing: .5px;
+  margin: 13px 0;
+  color: var(--muted)
+}
+
+.stat b {
+  font-weight: 400;
+  color: var(--ink);
+  font-size: 10px
+}
+
+.stat small {
+  font-size: 8px;
+  color: var(--muted)
+}
+
+.meter {
+  height: 3px;
+  background: #93a5b21c
+}
+
+.meter div {
+  height: 100%;
+  width: 100%;
+  background: #a6bbae;
+  transition: width .2s
+}
+
+.lower {
+  margin-top: 25px
+}
+
+.location {
+  position: absolute;
+  top: 132px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #82949d
+}
+
+.cross {
+  font-size: 24px;
+  font-weight: 400;
+  color: #dfb87880
+}
+
+.location small {
+  display: block;
+  color: #475b6a;
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  margin-top: 7px
+}
+
+.manifest {
+  position: absolute;
+  right: 36px;
+  top: 144px;
+  width: 215px
+}
+
+.manifest .eyebrow {
+  display: flex;
+  justify-content: space-between
+}
+
+.manifest .eyebrow span {
+  color: var(--muted)
+}
+
+h2 {
+  font: 500 29px/1.2 'Barlow Condensed',sans-serif;
+  letter-spacing: .4px;
+  margin: 17px 0 14px
+}
+
+.manifest p {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.9
+}
+
+.cargo {
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: .5px;
+  margin-top: 26px
+}
+
+.cargo>div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 14px
+}
+
+.cargo b {
+  font-size: 18px;
+  color: var(--ink);
+  font-weight: 400
+}
+
+.cargo div span {
+  font-size: 7px;
+  margin-right: 8px
+}
+
+#inventory {
+  margin-top: 27px;
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: center
+}
+
+kbd {
+  font: 8px 'IBM Plex Mono',monospace;
+  border: 1px solid #a2b2bd29;
+  border-radius: 2px;
+  padding: 4px 6px;
+  color: #a0aeb5
+}
+
+#inventory kbd {
+  margin-left: auto
+}
+
+.coordinates {
+  position: absolute;
+  bottom: 140px;
+  left: 36px;
+  width: 156px;
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 2px
+}
+
+.coordinates>span {
+  display: block;
+  margin-bottom: 10px
+}
+
+#radar {
+  display: block;
+  width: 156px;
+  height: 156px;
+  opacity: .65
+}
+
+.coordinates small {
+  display: block;
+  font-size: 7px;
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 1px
+}
+
+footer {
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  bottom: 25px;
+  border-top: 1px solid var(--line);
+  padding-top: 19px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px
+}
+
+.weapons {
+  display: flex;
+  gap: 35px
+}
+
+.weapon {
+  padding-left: 12px;
+  border-left: 2px solid #35414b;
+  min-width: 130px
+}
+
+.weapon.active {
+  border-color: var(--accent)
+}
+
+.weapon>span {
+  color: var(--muted);
+  font-size: 7px;
+  letter-spacing: 1px
+}
+
+.weapon>b {
+  font: 500 21px 'Barlow Condensed',sans-serif;
+  display: block;
+  margin: 5px 0 7px
+}
+
+.weapon small {
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: #758f87
+}
+
+.weapon i {
+  margin-left: 5px;
+  width: 4px;
+  height: 4px
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  color: var(--muted);
+  font-size: 7px;
+  align-items: center
+}
+
+.controls kbd {
+  margin-right: 4px
+}
+
+#toast {
+  position: absolute;
+  left: 50%;
+  bottom: 125px;
+  transform: translateX(-50%);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  transition: opacity .4s;
+  pointer-events: none;
+  text-align: center
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: #050a12c9;
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center
+}
+
+#overlay[hidden] {
+  display: none
+}
+
+#overlay section {
+  position: relative;
+  background: #101a24;
+  border: 1px solid #8295a333;
+  width: min(560px,90vw);
+  padding: 35px
+}
+
+#overlay h2 {
+  font-size: 38px
+}
+
+#overlay p {
+  color: var(--muted);
+  line-height: 1.8
+}
+
+#close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  padding: 5px 10px;
+  font-size: 20px
+}
+
+#slots {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin: 25px 0
+}
+
+.slot {
+  aspect-ratio: 1;
+  border: 1px solid #71889928;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 8px
+}
+
+.slot b {
+  font-size: 23px;
+  color: var(--accent);
+  font-weight: 400
+}
+
+.slot.installed {
+  background: #78928e0c
+}
+
+#resume {
+  width: 100%
+}
+
+@media(max-width:1000px) {
+  .controls {
+    max-width: 340px;
+    gap: 12px
+  }
+
+  .manifest {
+    width: 175px
+  }
+
+  .telemetry {
+    width: 175px
+  }
+
+  .sector>span {
+    display: none
+  }
+}
+
+@media(max-width:700px) {
+  header {
+    left: 18px;
+    right: 18px;
+    top: 18px
+  }
+
+  .wordmark {
+    font-size: 21px
+  }
+
+  .sector {
+    display: none
+  }
+
+  .telemetry {
+    left: 18px;
+    top: 113px;
+    width: 125px
+  }
+
+  h1 {
+    font-size: 29px
+  }
+
+  .manifest {
+    right: 18px;
+    top: 115px;
+    width: 135px
+  }
+
+  .manifest h2,.manifest p,.manifest .rule,.manifest>.stat {
+    display: none
+  }
+
+  .manifest .cargo {
+    margin-top: 19px
+  }
+
+  .cargo>div {
+    gap: 4px;
+    flex-wrap: wrap
+  }
+
+  .cargo b {
+    font-size: 14px
+  }
+
+  .cargo div span {
+    margin-right: 2px
+  }
+
+  .manifest .eyebrow {
+    font-size: 7px
+  }
+
+  #inventory {
+    padding: 10px 8px;
+    font-size: 8px;
+    gap: 5px
+  }
+
+  #inventory kbd {
+    display: none
+  }
+
+  .location {
+    display: none
+  }
+
+  .coordinates {
+    left: 18px;
+    bottom: 170px;
+    width: 100px
+  }
+
+  #radar {
+    width: 100px;
+    height: 100px
+  }
+
+  footer {
+    left: 18px;
+    right: 18px;
+    bottom: 20px;
+    display: block
+  }
+
+  .controls {
+    margin-top: 18px;
+    max-width: none;
+    font-size: 6px;
+    gap: 9px
+  }
+
+  .weapons {
+    gap: 20px
+  }
+
+  .weapon>b {
+    font-size: 18px
+  }
+
+  .weapon {
+    min-width: 115px
+  }
+
+  #toast {
+    bottom: 180px;
+    width: 65%;
+    font-size: 8px
+  }
+}

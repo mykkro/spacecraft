@@ -1,0 +1,48 @@
+/* Language selector and Czech layout adjustments for longer labels. */
+
+.language-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0
+}
+
+.on-surface header .language-control {
+  pointer-events: auto
+}
+
+.language-control select {
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #dfb878;
+  background: #101b26;
+  border: 1px solid #48606e;
+  padding: 7px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  min-width: 54px
+}
+
+.language-control select:focus-visible {
+  outline: 2px solid #dfb878;
+  outline-offset: 3px
+}
+
+.language-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap
+}
+
+html[lang="cs"] .controls {
+  flex-wrap: wrap;
+  row-gap: 5px
+}
+
+html[lang="cs"] .header-actions {
+  gap: 8px
+}

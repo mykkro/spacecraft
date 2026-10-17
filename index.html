@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080e17">
+  <title>SPACECRAFT — The Drift</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="navigation.css">
+  <link rel="stylesheet" href="pirates.css">
+  <link rel="stylesheet" href="audio.css">
+  <link rel="stylesheet" href="bases.css">
+  <link rel="stylesheet" href="inventory.css">
+  <link rel="stylesheet" href="quests.css">
+  <link rel="stylesheet" href="i18n.css">
+  <link rel="stylesheet" href="ships.css">
+  <link rel="stylesheet" href="fuel.css">
+  <link rel="stylesheet" href="encyclopedia.css">
+</head>
+<body>
+  <canvas id="space" aria-label="SPACECRAFT space flight and moon exploration game"></canvas>
+  <header><a class="wordmark" href="./">SPACECRAFT<span>DEEP SPACE EXPLORATION</span></a><div class="sector"><i></i> <span id="systemLabel">THE DRIFT</span> <span id="sector">SECTOR 0 : 0</span></div><div class="header-actions"><details id="audioSettings"><summary id="soundSummary" title="Sound settings (V to mute)">SOUND</summary><div class="audio-popover"><button id="muteSound" aria-pressed="false">MUTE SOUND <kbd>V</kbd></button><label for="soundVolume">VOLUME <output id="volumeValue" for="soundVolume">35%</output></label><input id="soundVolume" type="range" min="0" max="100" value="35" step="1" aria-label="Sound volume"><small id="audioHint">Audio starts with your first click or keypress.</small></div></details><button id="mapButton" title="Open map (M)">MAP <kbd>M</kbd></button><button id="pause" title="Pause (P)">Ⅱ <span>PAUSE</span></button></div></header>
+  <aside class="telemetry"><div class="eyebrow">VESSEL 001</div><h1>Nomad<span>LIGHT EXPLORER / MK. I</span></h1><div class="rule"></div><div class="stat"><span>HULL INTEGRITY</span><b id="hullText">100%</b></div><div class="meter"><div id="hullBar"></div></div><div class="stat fuel-heading"><span>FUEL TANK</span><b id="fuelText">180 / 180</b></div><div id="fuelGauge" role="meter" aria-label="Fuel tank" aria-valuemin="0" aria-valuemax="180" aria-valuenow="180"><div class="fuel-meter"><div id="fuelBar"></div></div><small id="fuelStatus" class="fuel-status">REACTOR ONLINE</small></div><button id="refuel" title="Refuel with a fuel cell or Ion Cube (T)">REFUEL <kbd>T</kbd></button><div class="stat lower"><span>VELOCITY</span><b><span id="speed">0</span> <small>m/s</small></b></div><div class="stat"><span>POSITION</span><b id="position">0 / 0</b></div></aside>
+  <div class="location"><span class="cross">+</span><span>UNCHARTED SPACE<small>NO SIGNAL · FREE FLIGHT</small></span></div>
+  <aside class="manifest"><div class="eyebrow">EXPEDITION LOG <span>01</span></div><h2>A little further<br>into the unknown.</h2><p>Break rock. Collect what remains.<br>See where the drift takes you.</p><div class="rule"></div><div class="stat"><span>ASTEROIDS BROKEN</span><b id="kills">0</b></div><div class="cargo"><span>CARGO RECOVERED</span><div><b id="metal">0</b> <span>IRON</span><b id="ice">0</b> <span>ICE</span><b id="crystal">0</b> <span>CRYSTAL</span><b id="bulterite">0</b> <span>BULTERITE</span></div></div><button id="inventory">▦ <span>SHIP & CARGO</span> <kbd>I</kbd></button></aside>
+  <div class="coordinates"><span>LOCAL SCAN <kbd>M</kbd></span><canvas id="radar" width="156" height="156" aria-label="Nearby asteroids, friendly bases and coverage, and detected wormhole bearings"></canvas><small>RANGE 2.4 KM</small><small id="scannerStatus">RECEIVER OFFLINE</small><small id="baseRadarKey" hidden>⌂ BASES · EDGE ARROWS = DISTANT</small><small id="baseBearing" hidden></small></div>
+  <div id="rockScan" hidden></div>
+  <div id="pirateAlert" hidden role="status"><span class="eyebrow">HOSTILE CONTACT</span><b id="pirateAlertText"></b><small>SPACE / F TO ENGAGE · BOOST TO DISENGAGE</small></div>
+  <footer><div id="weaponHud" class="weapons" aria-label="Ship weapons"></div><div class="controls"><span><kbd>W</kbd><kbd>S</kbd> THRUST / REVERSE</span><span><kbd>A</kbd><kbd>D</kbd> ROTATE</span><span><kbd>SPACE</kbd> FIRE</span><span><kbd>F</kbd> MISSILE</span><span><kbd>Q</kbd> LASER</span><span><kbd>R</kbd> MISSILE TYPE</span><span><kbd>SHIFT</kbd> BOOST</span></div></footer>
+  <div id="toast" role="status">FLIGHT SYSTEMS ONLINE</div>
+  <div id="overlay" hidden><section><button id="close" aria-label="Close">×</button><div class="eyebrow">NOMAD / SYSTEMS</div><h2 id="overlayTitle">Inventory & crafting</h2><p id="overlayDescription">Manage item stacks and craft supplies using your available station grids.</p><div id="slots"></div><button id="inventoryEncyclopedia">ENCYCLOPEDIA <kbd>B</kbd></button><button id="resume">RETURN TO FLIGHT →</button></section></div>
+  <div id="landingPrompt" hidden><span id="landingText"></span><button id="land">LAND <kbd>E</kbd></button></div>
+  <div id="surfaceHud" hidden><div class="eyebrow" id="moonName">MOON SURFACE</div><p>A / D move · Space jump · Left click mine · Right click build<br>E use station / launch near ship · I inventory · 1–6 select block</p><div id="hotbar"></div></div>
+  <div id="wormholePrompt" hidden><span id="wormholeText"></span><button id="enterWormhole">ENTER WORMHOLE <kbd>E</kbd></button></div>
+  <div id="mapOverlay" hidden><section role="dialog" aria-modal="true" aria-labelledby="mapTitle"><div class="map-heading"><div><div class="eyebrow">NOMAD / NAVIGATION</div><h2 id="mapTitle">Stellar cartography</h2></div><button id="closeMap" aria-label="Close map">×</button></div><div class="map-toolbar"><div role="tablist" aria-label="Map scale"><button id="localMapTab" role="tab" aria-selected="true">LOCAL SPACE</button><button id="globalMapTab" role="tab" aria-selected="false">GLOBAL SYSTEMS</button></div><span id="mapReceiver"></span></div><div class="map-layout"><div class="map-stage"><canvas id="chart" aria-label="Interactive space map. Select a marker to inspect it; use the lists for keyboard navigation."></canvas><div class="map-zoom"><button id="zoomOut" aria-label="Zoom out">−</button><button id="zoomIn" aria-label="Zoom in">+</button><button id="fitMap">FIT</button></div></div><aside class="map-sidebar"><div id="mapDetails"></div><div id="mapObjects"></div></aside></div><div class="map-bottom"><span id="mapLegend"></span><span>SCROLL TO ZOOM · DRAG TO PAN · M / ESC TO CLOSE</span></div></section></div>
+  <script defer src="js/i18n.js"></script>
+  <script defer src="js/ships.js"></script>
+  <script defer src="js/audio.js"></script>
+  <script defer src="js/game.js"></script>
+  <script defer src="js/weapons.js"></script>
+  <script defer src="js/fuel.js"></script>
+  <script defer src="js/systems.js"></script>
+  <script defer src="js/navigation.js"></script>
+  <script defer src="js/pirates.js"></script>
+  <script defer src="js/quests.js"></script>
+  <script defer src="js/encyclopedia.js"></script>
+  <script defer src="js/ships-ui.js"></script>
+</body>
+</html>

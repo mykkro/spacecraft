@@ -1,0 +1,15 @@
+# Local dependencies and generated checks
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+test-results/
+playwright-report/
+*.log
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

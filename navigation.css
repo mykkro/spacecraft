@@ -1,0 +1,421 @@
+/* Local/global map dialog, canvas controls, and responsive navigation layout. */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px
+}
+
+.header-actions button {
+  white-space: nowrap
+}
+
+.header-actions kbd {
+  margin-left: 5px
+}
+
+.sector #systemLabel {
+  color: var(--ink);
+  margin-left: 0;
+  letter-spacing: 2px
+}
+
+#scannerStatus {
+  font-size: 7px;
+  line-height: 1.7;
+  letter-spacing: .7px;
+  color: #5f7887;
+  margin-top: 9px
+}
+
+.online,#scannerStatus.online {
+  color: #7cd5e2
+}
+
+.coordinates>span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center
+}
+
+.coordinates>span kbd {
+  font-size: 7px;
+  padding: 2px 5px
+}
+
+#wormholePrompt {
+  position: absolute;
+  left: 50%;
+  bottom: 220px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 3;
+  background: #0a1823e6;
+  border: 1px solid #70c8d64d;
+  padding: 15px 22px;
+  text-align: center;
+  max-width: 90vw;
+  width: max-content;
+  color: #91d3de;
+  font-size: 9px;
+  letter-spacing: 1px
+}
+
+#wormholePrompt[hidden],#mapOverlay[hidden] {
+  display: none
+}
+
+.on-surface #wormholePrompt {
+  display: none
+}
+
+#mapOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #050a12da;
+  backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  padding: 24px
+}
+
+#mapOverlay>section {
+  width: min(1150px,100%);
+  height: min(790px,94vh);
+  background: #0c1721;
+  border: 1px solid #586e7f55;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 100px #0007;
+  padding: 26px
+}
+
+.map-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px
+}
+
+.map-heading h2 {
+  margin: 8px 0 0;
+  font-size: 34px
+}
+
+.map-heading>button {
+  font-size: 23px;
+  padding: 4px 12px;
+  align-self: flex-start
+}
+
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding: 17px 0
+}
+
+.map-toolbar [role=tablist] {
+  display: flex;
+  gap: 7px
+}
+
+.map-toolbar button {
+  font-size: 9px;
+  padding: 11px 14px
+}
+
+.map-toolbar button[aria-selected=true] {
+  border-color: #7cd5e277;
+  color: #9cdae4;
+  background: #71b4c00d
+}
+
+#mapReceiver {
+  font-size: 8px;
+  letter-spacing: .5px;
+  line-height: 1.8;
+  text-align: right;
+  color: #67808f
+}
+
+#mapReceiver.online {
+  color: #7cd5e2
+}
+
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 245px;
+  gap: 20px;
+  flex: 1;
+  min-height: 0
+}
+
+.map-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid #71889926;
+  background: #08121c;
+  overflow: hidden
+}
+
+#chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none
+}
+
+#chart:active {
+  cursor: grabbing
+}
+
+.map-zoom {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px
+}
+
+.map-zoom button {
+  padding: 7px 11px;
+  background: #0b1722ed;
+  font-size: 10px;
+  letter-spacing: 0
+}
+
+.map-sidebar {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden
+}
+
+.map-sidebar .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1px
+}
+
+.map-sidebar h3 {
+  font: 500 27px 'Barlow Condensed',sans-serif;
+  margin: 10px 0
+}
+
+.map-sidebar p {
+  font-size: 10px;
+  line-height: 1.9;
+  color: #8199a8;
+  margin: 12px 0
+}
+
+#mapDetails {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+  margin-bottom: 18px
+}
+
+#mapObjects {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 5px
+}
+
+#mapObjects>.eyebrow {
+  margin: 0 0 12px
+}
+
+.map-object {
+  display: block;
+  text-align: left;
+  width: 100%;
+  padding: 11px 10px;
+  margin-bottom: 7px;
+  letter-spacing: 0;
+  border-color: #71889925;
+  background: #10202c77
+}
+
+.map-object>span {
+  display: block;
+  font-size: 10px;
+  line-height: 1.6
+}
+
+.map-object>small {
+  display: block;
+  font-size: 8px;
+  color: #6d899a;
+  margin-top: 6px;
+  line-height: 1.6
+}
+
+.map-object.tracked {
+  border-color: #dfb87866;
+  color: var(--accent)
+}
+
+#mapObjects .map-list-label {
+  margin-top: 24px
+}
+
+.map-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  font-size: 8px;
+  line-height: 1.7;
+  color: #668091;
+  margin-top: 19px
+}
+
+#mapLegend {
+  color: #96afbd;
+  letter-spacing: .5px
+}
+
+@media(max-width:800px) {
+  #mapOverlay {
+    padding: 12px
+  }
+
+  #mapOverlay>section {
+    padding: 18px;
+    height: 95vh
+  }
+
+  .map-layout {
+    grid-template-columns: minmax(0,1fr) 190px;
+    gap: 12px
+  }
+
+  .map-toolbar {
+    align-items: flex-start
+  }
+
+  .map-toolbar button {
+    font-size: 8px;
+    padding: 10px
+  }
+
+  .map-heading h2 {
+    font-size: 29px
+  }
+
+  .map-bottom {
+    font-size: 7px
+  }
+
+  .map-sidebar h3 {
+    font-size: 23px
+  }
+
+  #mapReceiver {
+    max-width: 165px
+  }
+}
+
+@media(max-width:600px) {
+  .header-actions {
+    gap: 5px
+  }
+
+  .header-actions button {
+    font-size: 8px;
+    padding: 10px
+  }
+
+  .header-actions #pause span {
+    display: none
+  }
+
+  #mapOverlay>section {
+    padding: 15px
+  }
+
+  .map-heading {
+    margin-bottom: 12px
+  }
+
+  .map-heading h2 {
+    font-size: 26px
+  }
+
+  .map-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+  }
+
+  .map-stage {
+    flex: 1;
+    min-height: 230px
+  }
+
+  .map-sidebar {
+    max-height: 205px;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px
+  }
+
+  .map-sidebar p {
+    font-size: 8px
+  }
+
+  .map-sidebar h3 {
+    font-size: 23px
+  }
+
+  #mapDetails {
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+    padding-right: 12px;
+    margin-bottom: 0;
+    overflow: auto
+  }
+
+  #mapObjects {
+    overflow: auto;
+    padding-right: 0
+  }
+
+  #mapReceiver {
+    font-size: 6px;
+    max-width: 110px
+  }
+
+  .map-toolbar button {
+    font-size: 7px;
+    padding: 9px 8px
+  }
+
+  .map-toolbar [role=tablist] {
+    gap: 4px
+  }
+
+  .map-bottom {
+    display: block;
+    margin-top: 12px;
+    font-size: 6px
+  }
+
+  .map-bottom>span {
+    display: block
+  }
+
+  #wormholePrompt {
+    bottom: 220px;
+    font-size: 8px
+  }
+}

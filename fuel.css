@@ -1,0 +1,81 @@
+/* Fuel gauge states, refuelling controls, and inventory fuel actions. */
+
+.fuel-heading {
+  margin-top: 19px
+}
+
+.fuel-meter {
+  height: 4px;
+  background: #48677738
+}
+
+.fuel-meter>div {
+  height: 100%;
+  background: #83d5aa;
+  transition: width .2s,background .2s
+}
+
+.fuel-status {
+  display: block;
+  margin: 8px 0;
+  color: #83d5aa;
+  font-size: 8px;
+  line-height: 1.6;
+  letter-spacing: .3px
+}
+
+#fuelGauge.low-fuel .fuel-meter>div {
+  background: #e4b86c
+}
+
+#fuelGauge.solar-only .fuel-status {
+  color: #e4b86c
+}
+
+#refuel {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 8px;
+  letter-spacing: .4px
+}
+
+#refuel:disabled {
+  opacity: .4;
+  cursor: default
+}
+
+.fuel-item-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #83d5aa55;
+  color: #a0d8ba;
+  font-size: 10px;
+  line-height: 1.7
+}
+
+.fuel-item-actions button {
+  flex-shrink: 0
+}
+
+.fuel-hint {
+  color: #91b4a9!important
+}
+
+@media(max-width:700px) {
+  .fuel-status {
+    font-size: 7px
+  }
+
+  .fuel-item-actions {
+    flex-direction: column;
+    align-items: stretch
+  }
+
+  .fuel-heading {
+    margin-top: 13px
+  }
+}

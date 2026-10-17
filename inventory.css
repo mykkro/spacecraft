@@ -1,0 +1,168 @@
+/* Inventory cursor stacks, reserve cargo, and stack-management feedback. */
+
+/* Quick slots contain references to bag items, with a separate active-slot highlight. */
+.quick-inventory-editor {
+  margin-top: 20px;
+  padding: 15px 0 4px;
+  border-top: 1px solid var(--line);
+}
+
+.quick-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+  width: min(100%, 490px);
+}
+
+.quick-slot-key {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  color: var(--muted);
+  font-size: 8px;
+  font-style: normal;
+}
+
+.quick-inventory-grid .item-icon {
+  width: min(44px, 100%);
+  height: auto;
+  max-height: 44px;
+}
+
+.quick-slot.out-of-stock .item-icon {
+  opacity: .35;
+}
+
+.quick-inventory-grid [draggable="true"] {
+  cursor: grab;
+}
+
+.quick-inventory-hint {
+  margin: 12px 0 0;
+  font-size: 9px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .quick-inventory-grid {
+    gap: 4px;
+  }
+}
+
+.held-stack,.inventory-overflow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #dfb87855;
+  background: #dfb87808;
+  margin: 0 0 16px;
+  font-size: 9px
+}
+
+.held-stack>span {
+  flex: 1;
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 1px
+}
+
+.held-stack b {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 400;
+  margin: 5px 0
+}
+
+.held-stack small {
+  font-size: 7px
+}
+
+.held-stack img.item-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px
+}
+
+.held-stack button,.inventory-overflow button {
+  font-size: 8px;
+  padding: 10px;
+  letter-spacing: .5px;
+  flex-shrink: 0
+}
+
+.inventory-overflow {
+  border-color: #7c9aab55;
+  background: #7c9aab08;
+  align-items: flex-start
+}
+
+.inventory-overflow>div {
+  flex: 1
+}
+
+.inventory-overflow b {
+  font-size: 9px;
+  letter-spacing: 1px;
+  font-weight: 400;
+  color: #bad5df
+}
+
+.inventory-overflow p {
+  font-size: 9px;
+  line-height: 1.7;
+  margin: 7px 0
+}
+
+.inventory-overflow small {
+  font-size: 8px;
+  color: var(--muted);
+  line-height: 1.6
+}
+
+#inventoryCursor {
+  position: fixed;
+  z-index: 30;
+  width: 46px;
+  height: 46px;
+  pointer-events: none;
+  filter: drop-shadow(2px 3px 2px #000b)
+}
+
+#inventoryCursor[hidden] {
+  display: none
+}
+
+#inventoryCursor small {
+  position: absolute;
+  bottom: 1px;
+  right: 0;
+  color: white;
+  font-size: 12px;
+  text-shadow: 1px 2px #000
+}
+
+body #inventoryCursor img {
+  width: 43px;
+  height: 43px;
+  max-width: none;
+  max-height: none
+}
+
+@media(max-width:600px) {
+  .held-stack,.inventory-overflow {
+    gap: 8px;
+    padding: 9px
+  }
+
+  .held-stack button,.inventory-overflow button {
+    font-size: 7px;
+    padding: 8px
+  }
+
+  .held-stack b {
+    font-size: 10px
+  }
+}

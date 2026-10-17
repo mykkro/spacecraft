@@ -1,0 +1,53 @@
+/* Saved-base map entries, selected bearings, and minimap labels. */
+
+#baseRadarKey {
+  color: #a2dfb9;
+  font-size: 7px;
+  letter-spacing: .5px;
+  line-height: 1.7;
+  margin-top: 8px
+}
+
+#baseRadarKey[hidden] {
+  display: none
+}
+
+.base-object {
+  border-color: #8de5b73d;
+  background: #79c69c08
+}
+
+.base-object>span {
+  color: #a2dfb9
+}
+
+.base-object>small {
+  color: #78a58c
+}
+
+.base-list-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 17px 0
+}
+
+#baseBearing {
+  color: #dfb878;
+  font-size: 8px;
+  letter-spacing: 0;
+  line-height: 1.7;
+  overflow-wrap: anywhere
+}
+
+#baseBearing[hidden] {
+  display: none
+}
+
+.base-object.tracked {
+  border-color: #dfb878;
+  background: #dfb87812
+}
+
+.base-object.tracked>span {
+  color: #dfb878
+}

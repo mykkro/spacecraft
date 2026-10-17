@@ -1,0 +1,210 @@
+/* Ship selection cards and responsive weapon-card layout. */
+
+#shipyardOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #050b14ed;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: auto;
+  backdrop-filter: blur(9px)
+}
+
+#shipyardOverlay[hidden] {
+  display: none
+}
+
+#shipyardOverlay section {
+  width: min(1000px,96vw);
+  max-height: 94vh;
+  overflow: auto;
+  padding: 30px;
+  background: #0d1924;
+  border: 1px solid #5c758b66
+}
+
+.shipyard-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center
+}
+
+.shipyard-heading h2 {
+  font-size: 36px;
+  margin: 10px 0
+}
+
+.shipyard-heading label {
+  font-size: 10px;
+  color: #9eb0bc
+}
+
+.shipyard-heading select {
+  font: inherit;
+  color: #dfb878;
+  background: #111f2c;
+  padding: 8px;
+  border: 1px solid #546c7d
+}
+
+.shipyard-heading+p {
+  line-height: 1.8;
+  color: #8fa5b5;
+  max-width: 750px
+}
+
+#shipChoices {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 16px;
+  margin: 25px 0
+}
+
+.ship-choice {
+  padding: 20px;
+  text-align: left;
+  letter-spacing: 0;
+  background: #101f2d;
+  border: 1px solid #435d7055;
+  transition: border-color .15s
+}
+
+.ship-choice.selected {
+  border-color: #dfb878;
+  background: #1d2831
+}
+
+.ship-choice svg {
+  display: block;
+  height: 120px;
+  margin: 0 auto 18px
+}
+
+.ship-choice h3 {
+  font-size: 22px;
+  color: #e2e7e5;
+  margin: 10px 0
+}
+
+.ship-choice p {
+  font-size: 11px;
+  line-height: 1.8;
+  min-height: 80px;
+  color: #9eb2c2
+}
+
+.ship-choice .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1px
+}
+
+.ship-choice dl {
+  margin: 20px 0 0
+}
+
+.ship-choice dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #48607033;
+  padding: 10px 0;
+  font-size: 10px
+}
+
+.ship-choice dt {
+  color: #8ca1b1
+}
+
+.ship-choice dd {
+  margin: 0;
+  color: #d7e4e7;
+  text-align: right
+}
+
+.shipyard-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px
+}
+
+#confirmShip {
+  border-color: #dfb878;
+  color: #dfb878
+}
+
+.weapon-cards {
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  gap: 5px;
+  padding-bottom: 6px
+}
+
+.weapon-card {
+  flex: 0 0 64px;
+  min-height: 105px
+}
+
+#weaponHud {
+  min-width: 0;
+  max-width: min(700px,55vw)
+}
+
+#weaponDetails {
+  max-width: 700px
+}
+
+html[lang="cs"] .weapon-card b {
+  font-size: 8px
+}
+
+.cargo>div {
+  flex-wrap: wrap
+}
+
+@media(max-width:700px) {
+  #weaponHud {
+    max-width: 100%
+  }
+
+  .weapon-card {
+    flex-basis: 57px
+  }
+}
+
+@media(max-width:760px) {
+  #shipChoices {
+    grid-template-columns: 1fr
+  }
+
+  .ship-choice {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    column-gap: 18px
+  }
+
+  .ship-choice svg {
+    height: 80px;
+    grid-row: 1/4;
+    width: 80px
+  }
+
+  .ship-choice p {
+    min-height: 0
+  }
+
+  .ship-choice dl {
+    grid-column: 1/-1
+  }
+
+  .shipyard-heading {
+    align-items: flex-start
+  }
+
+  .shipyard-heading h2 {
+    font-size: 27px
+  }
+}

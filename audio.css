@@ -1,0 +1,98 @@
+/* Audio controls and their compact settings popover. */
+
+#audioSettings {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto
+}
+
+#audioSettings summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 13px 12px;
+  border: 1px solid #91a7b02e;
+  background: #0e1821cc;
+  color: var(--ink)
+}
+
+#audioSettings summary::-webkit-details-marker {
+  display: none
+}
+
+#audioSettings summary:hover,#audioSettings[open] summary {
+  border-color: var(--accent);
+  color: var(--accent)
+}
+
+#audioSettings summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px
+}
+
+.audio-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 9px);
+  width: 230px;
+  padding: 16px;
+  background: #0e1a26;
+  border: 1px solid #69849555;
+  box-shadow: 0 12px 35px #0008
+}
+
+.audio-popover button {
+  width: 100%;
+  font-size: 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 11px
+}
+
+.audio-popover label {
+  display: flex;
+  justify-content: space-between;
+  margin: 18px 0 10px;
+  font-size: 9px;
+  color: #9aadb8;
+  letter-spacing: 1px
+}
+
+.audio-popover output {
+  color: var(--accent)
+}
+
+#soundVolume {
+  display: block;
+  width: 100%;
+  accent-color: #dfb878;
+  cursor: pointer
+}
+
+.audio-popover small {
+  display: block;
+  font-size: 8px;
+  line-height: 1.7;
+  margin-top: 12px;
+  color: #6f8999
+}
+
+#muteSound[aria-pressed=true] {
+  color: var(--accent);
+  border-color: #dfb87866
+}
+
+@media(max-width:600px) {
+  #audioSettings summary {
+    font-size: 7px;
+    padding: 11px 8px;
+    letter-spacing: .5px
+  }
+
+  .audio-popover {
+    right: -45px;
+    width: 215px
+  }
+}
