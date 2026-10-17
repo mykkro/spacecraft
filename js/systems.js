@@ -181,8 +181,8 @@ const Colony = (() => {
     "ingot": "Refined iron produced by smelting ore in a furnace. A basic component for equipment, ammunition and hull plates.",
     "plate": "Structural hull plating. Craft it from iron at a workbench, or forge durable plates with Bulterite in a furnace.",
     "block": "A simple construction block made from regolith. Build an outpost on a moon; add a placed workbench to establish a base.",
-    "bench": "Place this machine on a moon and stand nearby to use its 3×3 crafting grid. A placed workbench makes that moon count as a base.",
-    "furnace": "Place on a moon to unlock nearby smelting recipes. Refines iron ore and makes glass, fuel cells and durable hull plates.",
+    "bench": "Place on a moon to unlock its 3×3 crafting grid anywhere on that surface or from low orbit. A placed workbench makes that moon count as a base.",
+    "furnace": "Place on a moon to unlock smelting anywhere on that surface or from low orbit. Refines iron ore and makes glass, fuel cells and durable hull plates.",
     "glass": "A translucent construction block fused from ice and crystal. Also used as a component in the Scanner Receiver.",
     "lamp": "A placeable beacon that extends base signal coverage to a 1.2 km radius on the minimap and local chart.",
     "pulse": "The basic ship cannon. An energy weapon with rapid single shots for ordinary rocks and unarmoured targets.",
@@ -915,25 +915,46 @@ const Colony = (() => {
     return `<button class="item-slot ${ i === selected ? 'selected' : '' }" data-slot="${ i }" data-item="${ (s?.type) || '' }" title="${ s ? items[s.type].name + ' × ' + s.qty + ' / ' + items[s.type].maxStack : I18n.t('Empty slot') }" aria-label="${ s ? items[s.type].name + ', ' + s.qty + I18n.t(', stack limit ') + items[s.type].maxStack : I18n.t('Empty slot') }">${ s ? I18n.html(`${ icon(s.type) }<small>${ s.qty }</small><span class="item-name">${ items[s.type].name } · MAX ${ items[s.type].maxStack }</span>`) : '' }</button>`;
   }
 
-  // Stations must be physically close on the active moon; carrying one is not enough.
-  function nearbyStations() {
-    const found = new Set(['hand']);
-    if (surface)
-      for (let y = Math.floor(player.y) - 3; y <= Math.ceil(player.y) + 2; y++)
-        for (let x = Math.floor(player.x) - 3; x <= Math.ceil(player.x) + 3; x++) {
-          const v = tile(x, y);
-          if ((v === 'bench' || v === 'furnace') && Math.hypot(x + .5 - player.x, y + .5 - player.y) < 3.5)
-            found.add(v);
-        }
-    return found;
+  // A moon's built stations form one workshop network. Inventory access follows
+  // the current surface, or the same low-orbit range used by the landing prompt.
+  // Read cached construction counts rather than scanning terrain on every UI render.
+  function stationAccess() {
+    const moon = surface ? activeMoon : nearestMoon();
+    const counts = moon ? baseRecords.get(moon.id)?.counts : null;
+    const stations = new Set(['hand']);
+    if (counts?.bench > 0) stations.add('bench');
+    if (counts?.furnace > 0) stations.add('furnace');
+    return { moon, mode: surface ? 'surface' : moon ? 'orbit' : 'space', stations };
   }
+
+  function nearbyStations() {
+    return stationAccess().stations;
+  }
+
   function openInventory() {
-    if (!nearbyStations().has(station)) {
-      station = 'hand';
-      grid = Array(4).fill(null);
+    const available = nearbyStations();
+    if (!available.has(station) || station === 'hand') {
+      const next = available.has('bench') ? 'bench' : available.has('furnace') ? 'furnace' : 'hand';
+      if (next !== station) {
+        station = next;
+        grid = Array(station === 'bench' ? 9 : 4).fill(null);
+      }
     }
     renderInventory();
     $('#resume').textContent = surface ? I18n.t('RETURN TO SURFACE →') : I18n.t('RETURN TO FLIGHT →');
+  }
+
+  function stationAccessMarkup(access) {
+    const connected = [...access.stations].filter(type => type !== 'hand');
+    if (connected.length) {
+      const label = access.mode === 'orbit' ? 'ORBITAL STATION LINK' : 'SURFACE STATIONS';
+      return '<p class="station-access" role="status"><b>' + I18n.t(label) + ' · ' +
+        access.moon.name + '</b><span>' + connected.map(type => items[type].name).join(' · ') +
+        '</span></p>';
+    }
+    return '<p class="station-access unavailable" role="status">' +
+      I18n.t('HANDCRAFT ONLY · Build stations on this moon, or approach a moon with built stations to low orbit.') +
+      '</p>';
   }
 
   // Recipes match their exact station grid, including empty cells.
@@ -948,7 +969,7 @@ const Colony = (() => {
     return out;
   }
   function canCraft(r) {
-    return !carried && r && Object.entries(costs(r.pattern)).every(([t, n]) => count(t) >= n);
+    return !carried && r && nearbyStations().has(r.station) && Object.entries(costs(r.pattern)).every(([t, n]) => count(t) >= n);
   }
 
   // Remove ingredients and insert output into a copy, then commit both together.
@@ -974,14 +995,16 @@ const Colony = (() => {
   // Rebuild the inventory panel from model state and reconnect handlers afterwards.
   // Ingredient grids reference bag items; they do not hold a second copy of the cargo.
   function renderInventory() {
-    const available = nearbyStations(),
+    const access = stationAccess(),
+      available = access.stations,
       size = station === 'bench' ? 3 : 2,
       r = matchedRecipe();
     $('#slots').innerHTML = I18n.html(`<div class="inventory-label">PERSONAL INVENTORY <span>${ bag.length } SLOTS · LIMITS VARY BY ITEM</span></div><div class="bag-grid">${ bag.map(slotMarkup).join('') }</div><p class="inventory-hint">${ selected >= 0 && bag[selected] ? I18n.t(`Selected: ${ items[bag[selected].type].name }. Click another slot to move / merge, or a grid cell to assign.`) : I18n.t('Click a stack to select it. Ingredients stay in inventory until you craft.') }</p><div class="station-tabs">${ [
       ['hand', I18n.t('Handcraft · 2×2')],
       ['bench', I18n.t('Workbench · 3×3')],
       ['furnace', I18n.t('Furnace · 2×2')]
-    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Place this station on a moon and stand nearby') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ grid.map((t, i) => `<button class="item-slot" data-cell="${ i }" title="${ t ? items[t].name + I18n.t(' · click to replace, right click to clear') : I18n.t('Assign selected ingredient') }">${ t ? icon(t) : '<span class="cell-plus">+</span>' }</button>`).join('') }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b><button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }">${ icon(r.out) }<span>${ r.name }<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p>`);
+    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ grid.map((t, i) => `<button class="item-slot" data-cell="${ i }" title="${ t ? items[t].name + I18n.t(' · click to replace, right click to clear') : I18n.t('Assign selected ingredient') }">${ t ? icon(t) : '<span class="cell-plus">+</span>' }</button>`).join('') }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b><button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }">${ icon(r.out) }<span>${ r.name }<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p>`);
+    $('#slots .station-tabs').insertAdjacentHTML('beforebegin', stationAccessMarkup(access));
     renderQuickInventory();
     const focus = focusedStack();
     $('#slots .inventory-label span').textContent = I18n.t(`${ bag.length } SLOTS · LIMITS VARY BY ITEM`);
@@ -1042,6 +1065,7 @@ const Colony = (() => {
       };
     });
     $('#slots').querySelectorAll('[data-station]').forEach(btn => btn.onclick = () => {
+      if (!nearbyStations().has(btn.dataset.station)) return;
       station = btn.dataset.station;
       grid = Array(station === 'bench' ? 9 : 4).fill(null);
       renderInventory();
@@ -1808,6 +1832,7 @@ const Colony = (() => {
     closeInventory,
     getMoons: localMoons,
     getBases,
+    getStationAccess: stationAccess,
     get bag() {
       return bag;
     },

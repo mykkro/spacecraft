@@ -65,6 +65,8 @@ per scene. Seeded randomness controls repeatable world generation; ordinary
   methods rather than changing the public bag directly.
 - Fuel beyond tank capacity remains in the inserted cell. Changing ships must
   conserve total fuel and preserve excess cargo, without granting fresh supplies.
+- Station access comes from cached built stations on the current moon, or the moon
+  in landing range while in orbit. Carrying machines does not unlock their grids.
 - Base metadata is cached after construction changes. Radar rendering must not
   scan whole moon terrain grids.
 
@@ -85,6 +87,7 @@ node js/verify_base_navigation.js
 node js/verify_localization.js
 node js/verify_encyclopedia.js
 node js/verify_quick_inventory.js
+node js/verify_stations.js
 ```
 
 They use in-memory models and canvas spies; they start no browser, graphics

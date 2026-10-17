@@ -1,0 +1,49 @@
+name: Deploy SPACECRAFT to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      # This is a static game: publish runtime files without installing packages
+      # or launching browsers. Relative URLs also work under /spacecraft/.
+      - name: Prepare static game
+        shell: bash
+        run: |
+          mkdir -p _site/js
+          cp index.html ./*.css _site/
+          cp -R assets _site/assets
+          for script in js/*.js; do
+            case "$(basename "$script")" in
+              verify_*|test_source_utils.js) continue ;;
+            esac
+            cp "$script" _site/js/
+          done
+          touch _site/.nojekyll
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4

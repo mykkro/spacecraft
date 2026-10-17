@@ -166,3 +166,24 @@ body #inventoryCursor img {
     font-size: 10px
   }
 }
+
+/* Make the workshop source explicit when crafting from the surface or low orbit. */
+.station-access {
+  margin: 18px 0 0;
+  padding: 12px;
+  border: 1px solid #83c5a044;
+  background: #83c5a008;
+  color: #a6d6b7;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.station-access b,
+.station-access span {
+  display: block;
+}
+
+.station-access.unavailable {
+  border-color: var(--line);
+  color: var(--muted);
+}

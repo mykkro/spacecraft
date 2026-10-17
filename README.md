@@ -1,5 +1,17 @@
 # SPACECRAFT
 
+## GitHub Pages deployment
+
+The game is a static site and needs no package installation or build server.
+The workflow in `.github/workflows/pages.yml` publishes the runtime files on every push to `main`, without running browser tests.
+
+1. Open [repository Settings → Pages](https://github.com/mykkro/spacecraft/settings/pages).
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Open [Actions](https://github.com/mykkro/spacecraft/actions), select **Deploy SPACECRAFT to GitHub Pages**, and choose **Run workflow** on `main` (or rerun the first deployment if it failed before Pages was enabled).
+4. After deployment succeeds, play at **https://mykkro.github.io/spacecraft/**.
+
+Future pushes to `main` deploy automatically. GitHub Pages has a separate browser origin from localhost, so local development saves do not transfer automatically.
+
 For code structure, shared-state rules, and lightweight development checks, see
 [SOURCE_GUIDE.md](SOURCE_GUIDE.md).
 
@@ -120,7 +132,7 @@ Select an item or hold a split stack and click crafting cells to assign ingredie
 - Workbench (3×3): ingots + plates + glass + crystal → scanner receiver.
 - Furnace (2×2): iron ore → iron ingot; ice + crystal → glass blocks.
 
-Place stations on a moon and stand within three tiles to access their grids through **I** or **E**. This first prototype uses instant processing without fuel. Hull plates are stored items for future ship upgrades.
+Place stations on a moon to access their grids through **I** anywhere on that surface or from low orbit (within 220 world units of the moon’s edge). The inventory shows the connected moon and its stations; use the Workbench and Furnace tabs to switch grids. Carrying an unplaced station does not unlock it. Mining the last station of a type disables that grid immediately. This first prototype uses instant processing without fuel. Hull plates are stored items for future ship upgrades.
 
 ## Landing and bases
 

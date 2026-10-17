@@ -317,6 +317,12 @@ const I18n = (() => {
     "progress": "průběh"
   };
   Object.assign(cs, {
+    "ORBITAL STATION LINK": "ORBITÁLNÍ SPOJENÍ SE STANICEMI",
+    "SURFACE STATIONS": "POVRCHOVÉ STANICE",
+    "HANDCRAFT ONLY · Build stations on this moon, or approach a moon with built stations to low orbit.": "JEN RUČNÍ VÝROBA · Postavte stanice na tomto měsíci nebo se přibližte na nízkou oběžnou dráhu k měsíci s postavenými stanicemi.",
+    "Build this station on a moon, then use it on that surface or from low orbit.": "Postavte stanici na měsíci a používejte ji kdekoli na jeho povrchu nebo z nízké oběžné dráhy.",
+    "Place on a moon to unlock its 3×3 crafting grid anywhere on that surface or from low orbit. A placed workbench makes that moon count as a base.": "Postavte stůl na měsíci pro použití výrobní mřížky 3×3 kdekoli na jeho povrchu nebo z nízké oběžné dráhy. Umístěný pracovní stůl se počítá jako základna na daném měsíci.",
+    "Place on a moon to unlock smelting anywhere on that surface or from low orbit. Refines iron ore and makes glass, fuel cells and durable hull plates.": "Postavte pec na měsíci pro tavení kdekoli na jeho povrchu nebo z nízké oběžné dráhy. Zpracovává železnou rudu a vyrábí sklo, palivové články a odolné pláty trupu.",
     "Quick inventory": "Rychlý inventář",
     "Quick slot": "Rychlý slot",
     "Empty quick slot": "Prázdný rychlý slot",
