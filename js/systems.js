@@ -186,6 +186,11 @@ const Colony = (() => {
       ? 'Pokročilá skládací dílna. V hlavním inventáři zpřístupní výrobu 3×3 i ve vesmíru. Nevyžaduje umístění a nespotřebovává se. Nenahrazuje pec ani nezakládá základnu. Výroba trvá 45 sekund.'
       : 'Advanced folding workshop. Carry in your main inventory to unlock 3×3 workbench crafting even in space. Reusable without placement. Does not provide smelting or establish a base. Takes 45 seconds to craft.'
   };
+  Object.assign(items, {
+    storage_small: {name:I18n.language==='cs'?'Malá bedna':'Small Storage Crate',asset:'storage_small.svg',place:true,color:'#ae9974',storageSlots:8,weight:4,description:I18n.language==='cs'?'Postavte na měsíci. 8 slotů pro předměty; otevřete přes E nebo sklad v inventáři.':'Build on a moon. Holds 8 item stacks; open with E or Storage in inventory.'},
+    storage_medium: {name:I18n.language==='cs'?'Nákladní kontejner':'Cargo Container',asset:'storage_medium.svg',place:true,color:'#7dabb4',storageSlots:20,weight:8,description:I18n.language==='cs'?'Postavitelný kontejner s 20 sloty. Obsah zůstává na měsíci a zachovává limity zásobníků.':'Buildable container with 20 slots. Contents stay on the moon and respect normal stack limits.'},
+    storage_large: {name:I18n.language==='cs'?'Zesílený sklad':'Reinforced Storage Vault',asset:'storage_large.svg',place:true,color:'#8ba287',storageSlots:40,weight:14,description:I18n.language==='cs'?'Pokročilý sklad se 40 sloty. Před rozebráním jej vyprázdněte.':'Advanced base storage with 40 slots. Empty it before dismantling.'}
+  });
   items.repair_pack = {name: I18n.t('Repair Pack'), asset: 'repair_pack.svg', color: '#9ae0bb', repair: 20, weight: 2, description: I18n.t('Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 8 seconds.')};
   items.ammo_fotron = {name: I18n.t('Fotron charge cells'), asset: 'ammo_fotron.svg', color: '#78e8c0', ammoFor: 'fotron', description: I18n.t('Special Fotron ammunition. One cell per shot; craft at a workbench from crystals, an Ion Cube and Bulterite.')};
   items.ammo_bulshitter = {name: I18n.t('Bulshitter cartridges'), asset: 'ammo_bulshitter.svg', color: '#e7b767', ammoFor: 'bulshitter', description: I18n.t('Special scatter ammunition. One cartridge fires the whole five-shot volley. Craft at a workbench from iron ingots and ore.')};
@@ -222,6 +227,7 @@ const Colony = (() => {
   items.fotron.description += I18n.t(' Requires Fotron charge cells.');
   items.bulshitter.description += I18n.t(' Requires Bulshitter cartridges; one per volley.');
   const stackLimits = {
+    storage_small: 4, storage_medium: 2, storage_large: 1,
     portable_workbench: 1,
     shield_generator: 1,
     shield_generator_advanced: 1,
@@ -474,6 +480,12 @@ const Colony = (() => {
 
   recipes.push({station: 'bench', name: items.portable_workbench.name, pattern: ['bulterite','crystal','bulterite','plate','blue_ion_cube','plate','glass','bench','glass'], out: 'portable_workbench', qty: 1});
 
+  recipes.push(
+    {station:'bench',name:items.storage_small.name,pattern:['ingot','plate','ingot',null,'ingot',null,null,null,null],out:'storage_small',qty:1},
+    {station:'bench',name:items.storage_medium.name,pattern:['plate','crystal','plate','ingot','storage_small','ingot',null,null,null],out:'storage_medium',qty:1},
+    {station:'bench',name:items.storage_large.name,pattern:['bulterite','plate','bulterite','crystal','storage_medium','crystal','plate','blue_ion_cube','plate'],out:'storage_large',qty:1}
+  );
+
   // Two independent FIFO lanes share inventory; ingredients are reserved on enqueue.
   const craftQueueLimit = 12;
   const craftLane = station => station === 'furnace' ? 'furnace' : 'workbench';
@@ -481,6 +493,7 @@ const Colony = (() => {
   let craftQueue = [], nextCraftJob = 1, craftSaveClock = 0, craftUiClock = 0, craftQuantity = 1;
   const jobDuration = job => craftSeconds(job.recipe) * job.batches;
   function craftSeconds(recipe) {
+    if (items[recipe.out].storageSlots) return items[recipe.out].storageSlots===40?35:items[recipe.out].storageSlots===20?25:15;
     if (recipe.out === 'portable_workbench') return 45;
     if (items[recipe.out].shield) return 20 + items[recipe.out].shieldTier * 5;
     if (recipe.out === 'scanner') return 35;
@@ -604,11 +617,12 @@ const Colony = (() => {
 
   const moons = new Map(),
     terrains = new Map(),
+    storageContents = new Map(),
     baseRecords = new Map(),
     tileSize = 32,
     cols = 160,
     rows = 64;
-  const baseParts = ['block', 'glass', 'bench', 'furnace', 'lamp'];
+  const baseParts = ['block', 'glass', 'bench', 'furnace', 'lamp', 'storage_small', 'storage_medium', 'storage_large'];
   const player = {
     x: 14,
     y: 14,
@@ -985,6 +999,7 @@ const Colony = (() => {
         overflow,
         quests: questState,
         terrains: [...terrains],
+        storageContents: [...storageContents],
         ship: {
           x: ship.x,
           y: ship.y,
@@ -1094,6 +1109,7 @@ const Colony = (() => {
       for (const [id, t] of data.terrains || [])
         if (typeof id === 'string' && Array.isArray(t) && t.length === rows && t.every(r => Array.isArray(r) && r.length === cols && r.every(v => v === null || !!items[v])))
           terrains.set(id, t);
+      restoreStorage(data.storageContents);
       if (data.ship && Number.isFinite(data.ship.x) && Number.isFinite(data.ship.y)) {
         ship.x = data.ship.x;
         ship.y = data.ship.y;
@@ -1117,6 +1133,71 @@ const Colony = (() => {
   function icon(type) {
     return `<img class="item-icon" src="${ itemImages[type].getAttribute('src') }" width="54" height="54" alt="" aria-hidden="true" draggable="false">`;
   }
+  // Container state belongs to a placed tile, never to a carried empty crate.
+  function storageAt(id) {
+    if(typeof id!=='string')return null;
+    const match=/^(-?\d{1,7}:-?\d{1,7})\|(\d{1,3}),(\d{1,2})$/.exec(id);
+    if(!match)return null;
+    const x=Number(match[2]),y=Number(match[3]),type=terrains.get(match[1])?.[y]?.[x];
+    if(!Object.hasOwn(items,type||'')||!items[type].storageSlots)return null;
+    return {id,moonId:match[1],x,y,type,capacity:items[type].storageSlots};
+  }
+  function storageContainers() {
+    const moon=stationAccess().moon,map=moon&&terrains.get(moon.id),out=[];
+    if(!map)return out;
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const type=map[y][x];if(!items[type]?.storageSlots)continue;
+      const id=moon.id+'|'+x+','+y,slots=storageContents.get(id)||[];
+      out.push({id,type,capacity:items[type].storageSlots,x,y,used:slots.filter(Boolean).length});
+    }
+    return out;
+  }
+  function storageSlots(id) {
+    const info=storageAt(id);
+    if(!info||stationAccess().moon?.id!==info.moonId)return null;
+    return (storageContents.get(id)||Array(info.capacity).fill(null)).map(s=>s?{...s}:null);
+  }
+  function restoreStorage(saved) {
+    if(!Array.isArray(saved))return;
+    for(const row of saved){
+      if(!Array.isArray(row)||row.length!==2||storageContents.has(row[0]))continue;
+      const info=storageAt(row[0]),slots=row[1];
+      if(!info||!Array.isArray(slots)||slots.length!==info.capacity||
+        slots.some(s=>s!==null&&(!s||!Object.hasOwn(items,s.type)||!Number.isSafeInteger(s.qty)||s.qty<1||s.qty>items[s.type].maxStack)))continue;
+      storageContents.set(info.id,slots.map(s=>s?{type:s.type,qty:s.qty}:null));
+    }
+  }
+  // Move only what fits; cargo and chest commit together to the expedition save.
+  function transferStorage(id,from,index,quantity,toIndex=null) {
+    if(carried||!['bag','storage'].includes(from))return false;
+    const slots=storageSlots(id);if(!slots)return false;
+    const nextBag=bag.map(s=>s?{...s}:null),source=from==='bag'?nextBag:slots,dest=from==='bag'?slots:nextBag;
+    if(!Number.isInteger(index)||index<0||index>=source.length||!source[index])return false;
+    const stack=source[index],amount=quantity===undefined?stack.qty:quantity;
+    if(!Number.isSafeInteger(amount)||amount<1||amount>stack.qty)return false;
+    let moved=0;
+    if(toIndex!==null){
+      if(!Number.isInteger(toIndex)||toIndex<0||toIndex>=dest.length)return false;
+      const target=dest[toIndex];
+      if(target&&target.type!==stack.type){
+        if(amount!==stack.qty)return false;
+        dest[toIndex]={...stack};source[index]={...target};moved=amount;
+      }else{
+        moved=Math.min(amount,items[stack.type].maxStack-(target?.qty||0));
+        if(!moved)return false;
+        dest[toIndex]={type:stack.type,qty:(target?.qty||0)+moved};
+        stack.qty-=moved;if(!stack.qty)source[index]=null;
+      }
+    }else{
+      moved=amount-deposit(dest,stack.type,amount);
+      if(!moved)return false;
+      stack.qty-=moved;if(!stack.qty)source[index]=null;
+    }
+    bag=nextBag;storageContents.set(id,slots);
+    if(typeof Shields!=='undefined'){Shields.reconcile();Shields.refresh();}
+    sync();save();return true;
+  }
+
   function slotMarkup(s, i) {
     return `<button class="item-slot ${ i === selected ? 'selected' : '' }" data-slot="${ i }" data-item="${ (s?.type) || '' }" title="${ s ? items[s.type].name + ' × ' + s.qty + ' / ' + items[s.type].maxStack : I18n.t('Empty slot') }" aria-label="${ s ? items[s.type].name + ', ' + s.qty + I18n.t(', stack limit ') + items[s.type].maxStack : I18n.t('Empty slot') }">${ s ? I18n.html(`${ icon(s.type) }<small>${ s.qty }</small><span class="item-name">${ items[s.type].name } · MAX ${ items[s.type].maxStack }</span>`) : '' }</button>`;
   }
@@ -1317,6 +1398,7 @@ const Colony = (() => {
   }
 
   function renderInventory() {
+    if(typeof BaseStorageUI!=='undefined')BaseStorageUI.refresh();
     const scrollPositions = ['.bag-grid', '.recipe-book', '.inventory-ship-pane', '.craft-queue'].map(selector => [selector, $(selector)?.scrollTop || 0]);
     const access = stationAccess(),
       available = access.stations,
@@ -1816,6 +1898,7 @@ const Colony = (() => {
   function handleQuickInventoryKeys(event) {
     if (event.repeat || !/^Digit[1-6]$/.test(event.code) || !paused || $('#overlay').hidden) return;
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+    if (typeof BaseStorageUI !== 'undefined' && BaseStorageUI.isOpen) return;
     if (typeof Encyclopedia !== 'undefined' && Encyclopedia.isOpen) return;
     if (typeof QuestLog !== 'undefined' && QuestLog.isOpen) return;
     if (typeof StarChart !== 'undefined' && StarChart.mapOpen) return;
@@ -1892,11 +1975,16 @@ const Colony = (() => {
         notify(I18n.t('LANDING PAD / BEDROCK · CANNOT MINE'));
         return false;
       }
+      const storageId=activeMoon.id+'|'+x+','+y;
+      if(items[existing]?.storageSlots&&storageContents.get(storageId)?.some(Boolean)){
+        notify(I18n.language==='cs'?'NEJPRVE VYPRÁZDNĚTE KONTEJNER':'EMPTY THE CONTAINER FIRST');return false;
+      }
       if (!addItem(existing, 1)) {
         notify(I18n.t('INVENTORY FULL'));
         return false;
       }
       surface[y][x] = null;
+      storageContents.delete(storageId);
     } else {
       if (!canPlace(buildType) || existing || intersectsPlayer(x, y) || !count(buildType))
         return false;
@@ -2034,6 +2122,12 @@ const Colony = (() => {
           rect(sx + 6, sy + 12, 4, 17, [.25, .2, .16, 1]);
           rect(sx + 22, sy + 12, 4, 17, [.25, .2, .16, 1]);
         }
+        if(items[t]?.storageSlots){
+          rect(sx+3,sy+6,26,24,[.12,.18,.22,1]);rect(sx+5,sy+8,22,6,[.45,.56,.56,1]);
+          rect(sx+14,sy+11,4,10,[.85,.67,.32,1]);
+          const bands=items[t].storageSlots===40?3:items[t].storageSlots===20?2:1;
+          for(let n=0;n<bands;n++)rect(sx+6+n*8,sy+18,3,9,[.39,.5,.52,1]);
+        }
         if (t === 'furnace') {
           rect(sx + 7, sy + 12, 18, 14, [.07, .09, .1, 1]);
           rect(sx + 11, sy + 19, 10, 5, [1, .45, .15, .8]);
@@ -2120,6 +2214,10 @@ const Colony = (() => {
       if (!surface && typeof StarChart !== 'undefined' && StarChart.nearbyPortal())
         return;
       if (surface) {
+        const cell=target();
+        if(inReach(cell.x,cell.y)&&items[tile(cell.x,cell.y)]?.storageSlots&&typeof BaseStorageUI!=='undefined'){
+          BaseStorageUI.show(activeMoon.id+'|'+cell.x+','+cell.y);return;
+        }
         const found = nearbyStations();
         if (Math.hypot(player.x - 12, player.y - 14) < 4) {
           land();
@@ -2163,6 +2261,7 @@ const Colony = (() => {
     },
     addItem,
     moveInventoryStack,
+    storageContainers, storageSlots, transferStorage,
     applyInventoryDrop,
     equipShipSlot,
     get craftingGrid() { return [...grid]; },
