@@ -44,9 +44,9 @@ for (const entry of entries) {
   assert(fs.existsSync(path.join(__dirname, '..', entry.icon)), entry.icon);
   assert(entry.stackLimit > 0);
 }
-assert.equal(guide.entries('', 'machines').length, 7);
+assert.equal(guide.entries('', 'machines').length, 10);
 assert.equal(guide.entries('', 'fuel').length, 3);
-assert.equal(guide.entries('', 'ammunition').length, 5);
+assert.equal(guide.entries('', 'ammunition').length, 7);
 assert(guide.entries('FOTRON').some(entry => entry.id === 'fotron'));
 assert(guide.entries('blue ion').some(entry => entry.id === 'blue_ion_cube'));
 assert(guide.entries('small pirate').some(entry => entry.id === 'bulshitter'));

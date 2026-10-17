@@ -1,0 +1,42 @@
+// In-memory base support checks; no browser.
+const assert=require('node:assert/strict');
+const {boot}=require('./verify_ships.js');
+const seed=boot(),s=seed.model.Colony;
+Object.assign(seed.ctx.ship,{x:720,y:-870});s.land();
+for(const [i,id] of ['bench','furnace','repair_station','solar_array','fabrication_hub'].entries())s.surface[13][40+i]=id;
+s.save();
+const w=boot(seed.store),c=w.model.Colony,f=w.model.Fuel;
+assert(c.getBases().find(b=>b.id==='0:0').counts.repair_station===1);
+assert(c.addItem('ingot',10));
+w.ctx.ship.hull=50;
+f.drive(1,true,5);
+const fuel=f.snapshot().amount,ingots=c.count('ingot');
+for(let i=0;i<5;i++)c.updateBaseServices(1);
+assert.equal(w.ctx.ship.hull,70);
+assert.equal(c.count('ingot'),ingots-1);
+assert.equal(f.snapshot().amount,Math.min(w.model.Shipyard.current.fuelCapacity,fuel+5));
+assert(c.selectRecipe(c.recipes.findIndex(r=>r.out==='plate')));
+assert(c.craft());
+const remaining=c.craftingQueue[0].remaining;
+c.updateCrafting(.5);
+assert.equal(c.craftingQueue[0].remaining,remaining-.75);
+c.launch();Object.assign(w.ctx.ship,{x:720,y:-870,vx:60,vy:0});
+const hull=w.ctx.ship.hull;
+for(let i=0;i<10;i++)c.updateBaseServices(1);
+assert.equal(w.ctx.ship.hull,hull);
+Object.assign(w.ctx.ship,{vx:0,x:8000,y:8000});
+for(let i=0;i<10;i++)c.updateBaseServices(1);
+assert.equal(w.ctx.ship.hull,hull);
+const queue=c.craftingQueue[0].remaining;c.updateCrafting(1);
+assert.equal(c.craftingQueue[0].remaining,queue);
+const reload=boot(w.store);
+assert.equal(reload.model.Colony.getBases().find(b=>b.id==='0:0').counts.fabrication_hub,1);
+for(const output of ['repair_station','solar_array','fabrication_hub']){
+  const fresh=boot(seed.store),col=fresh.model.Colony;
+  const index=col.recipes.findIndex(r=>r.out===output),recipe=col.recipes[index];
+  for(const mat of recipe.pattern.filter(Boolean))assert(col.addItem(mat,1));
+  const before=col.count(output);assert(col.selectRecipe(index));assert(col.craft());
+  for(let i=0;i<40;i++)col.updateCrafting(1);
+  assert.equal(col.count(output),before+1);
+}
+console.log('PASS: base indexing/persistence, repairs and ingot cost, solar fuel, fabrication speed, distance/speed limits and actual building recipes. No browser started.');

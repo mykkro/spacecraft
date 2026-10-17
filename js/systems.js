@@ -191,6 +191,37 @@ const Colony = (() => {
     storage_medium: {name:I18n.language==='cs'?'Nákladní kontejner':'Cargo Container',asset:'storage_medium.svg',place:true,color:'#7dabb4',storageSlots:20,weight:8,description:I18n.language==='cs'?'Postavitelný kontejner s 20 sloty. Obsah zůstává na měsíci a zachovává limity zásobníků.':'Buildable container with 20 slots. Contents stay on the moon and respect normal stack limits.'},
     storage_large: {name:I18n.language==='cs'?'Zesílený sklad':'Reinforced Storage Vault',asset:'storage_large.svg',place:true,color:'#8ba287',storageSlots:40,weight:14,description:I18n.language==='cs'?'Pokročilý sklad se 40 sloty. Před rozebráním jej vyprázdněte.':'Advanced base storage with 40 slots. Empty it before dismantling.'}
   });
+  Object.assign(items, {
+    titanium_ore:{name:I18n.language==='cs'?'Titanová ruda':'Titanium Ore',asset:'titanium_ore.svg',color:'#91b8c9',weight:3,moonOre:true,description:I18n.language==='cs'?'Vzácná ruda v podzemních žilách pouze na měsících. Dva kusy se v peci přetaví na titanový ingot.':'Rare ore found only in underground moon veins. Smelt two pieces in a furnace to produce a titanium ingot.'},
+    cobalt_ore:{name:I18n.language==='cs'?'Kobaltová ruda':'Cobalt Ore',asset:'cobalt_ore.svg',color:'#5279d4',weight:4,moonOre:true,description:I18n.language==='cs'?'Modrá ruda z hlubších měsíčních žil. Dva kusy vytvoří kobaltový ingot pro pokročilou slitinu a účinnější munici.':'Blue ore in deeper moon veins. Smelt two pieces into a cobalt ingot for advanced alloy and efficient ammunition batches.'},
+    iridium_ore:{name:I18n.language==='cs'?'Iridiová ruda':'Iridium Ore',asset:'iridium_ore.svg',color:'#ce9bd5',weight:7,moonOre:true,advancedCutter:true,description:I18n.language==='cs'?'Velmi vzácná ruda hluboko na některých měsících. Těžba vyžaduje pokročilý řezák. Dva kusy vytvoří iridiový ingot.':'Very rare ore deep beneath some moons. Requires an advanced cutter to mine. Smelt two pieces into an iridium ingot.'},
+    titanium_ingot:{name:I18n.language==='cs'?'Titanový ingot':'Titanium Ingot',asset:'titanium_ingot.svg',color:'#b2d0da',weight:4,description:I18n.language==='cs'?'Rafinovaný titan z měsíční rudy. V peci vytvoří tři pláty trupu, nebo jej použijte do pokročilé slitiny.':'Refined titanium from moon ore. Forge three hull plates in a furnace, or use it to craft advanced alloy.'},
+    cobalt_ingot:{name:I18n.language==='cs'?'Kobaltový ingot':'Cobalt Ingot',asset:'cobalt_ingot.svg',color:'#7098e2',weight:5,description:I18n.language==='cs'?'Rafinovaný kobalt pro pokročilou slitinu a větší dávky munice Bulšitru a Fotronu. Vyrábí se v peci.':'Refined cobalt for advanced alloy and larger Bulshitter/Fotron ammunition batches. Produced in a furnace.'},
+    iridium_ingot:{name:I18n.language==='cs'?'Iridiový ingot':'Iridium Ingot',asset:'iridium_ingot.svg',color:'#d4b6df',weight:9,description:I18n.language==='cs'?'Hustý ingot z hlubinné měsíční rudy. Používá se do pokročilé slitiny a účinných fotronových článků.':'Dense ingot refined from deep lunar ore. Used in advanced alloy and efficient Fotron charge-cell batches.'},
+    advanced_alloy:{name:I18n.language==='cs'?'Pokročilá slitina':'Advanced Alloy',asset:'advanced_alloy.svg',color:'#9fcbb5',weight:6,description:I18n.language==='cs'?'Slitina titanu, kobaltu a iridia. Alternativní surovina pro generátor štítu Mk II a přenosnou dílnu.':'Alloy of titanium, cobalt and iridium. An alternative crafting material for Mk II shields and portable workbenches.'}
+  });
+  Object.assign(items,{
+    portable_furnace:{name:I18n.language==='cs'?'Přenosná pec':'Portable Furnace',asset:'portable_furnace.svg',machine:true,weight:10,color:'#d49d72',
+      description:I18n.language==='cs'?'Pec v hlavním nákladu zpřístupní tavení i ve vesmíru. Má vlastní frontu lodi, souběžnou s přenosnou dílnou. Nespotřebovává se.':'Carry in main cargo to smelt even in space. Uses a separate ship furnace queue alongside the portable workbench. Reusable.'},
+    fuel_optimizer:{name:I18n.language==='cs'?'Optimalizátor paliva':'Fuel Optimizer',asset:'fuel_optimizer.svg',machine:true,weight:5,color:'#82c8ae',
+      description:I18n.language==='cs'?'V hlavním nákladu sníží spotřebu paliva při tahu i zrychlení o 15 %. Kombinuje se s bonusem inženýra. Další kusy bonus nezvyšují.':'Carry in main cargo for 15% less thrust and boost fuel consumption. Combines with the engineer bonus. Additional units do not stack.'},
+    repair_controller:{name:I18n.language==='cs'?'Servisní manipulátor':'Repair Controller',asset:'repair_controller.svg',machine:true,weight:6,color:'#a3c5d7',
+      description:I18n.language==='cs'?'V hlavním nákladu zvýší účinek opravné sady z 20 na 30 % trupu. Opravné sady se stále spotřebovávají. Další kusy bonus nezvyšují.':'Carry in main cargo to improve repair packs from 20 to 30 hull points. Still consumes one pack. Additional controllers do not stack.'}
+  });
+  // All new weapons and ammunition use the shared cargo and recipe model.
+  Object.assign(items, {
+    plasma:{name:I18n.language==='cs'?'Plazmová brokovnice':'Plasma Scattergun',asset:'plasma.svg',color:'#ed8fb6',weight:8,weapon:true,description:I18n.language==='cs'?'Sedm plazmových střel na krátkou vzdálenost. Rozbíjí zpevněné skály bez munice.':'Seven short-range energy bolts per volley. Breaks reinforced rocks without ammunition.'},
+    railgun:{name:I18n.language==='cs'?'Elektromagnetický kanón':'Rail Cannon',asset:'railgun.svg',color:'#b2e5ff',weight:8,weapon:true,description:I18n.language==='cs'?'Pomalý kanón s rychlou střelou proti obrněným cílům a ultrahustým skalám. Jeden projektil na výstřel.':'A slow-firing high-velocity cannon for armoured targets and ultradense rocks. Consumes one rail slug per shot.'},
+    cluster:{name:I18n.language==='cs'?'Salvový raketomet':'Cluster Launcher',asset:'cluster.svg',color:'#f6b575',weight:8,weapon:true,description:I18n.language==='cs'?'Tři výbušné rakety do vějíře. Jeden svazek na salvu; výbuchy poškozují okolní cíle i rezonanční skály.':'Fires three explosive missiles in a fan. One pod per volley; each blast damages nearby targets. Breaks resonant rocks.'},
+    ammo_railgun:{name:I18n.language==='cs'?'EM projektily':'Rail Slugs',asset:'ammo_railgun.svg',color:'#b2e5ff',weight:1,ammoFor:'railgun',description:I18n.language==='cs'?'Iridiová munice pro elektromagnetický kanón. Jeden projektil na výstřel; v dílně vyrobíte dvanáct kusů.':'Dense iridium ammunition for the Rail Cannon. One slug per shot; craft twelve at a workbench.'},
+    ammo_cluster:{name:I18n.language==='cs'?'Raketové svazky':'Cluster Missile Pods',asset:'ammo_cluster.svg',color:'#f6b575',weight:1,ammoFor:'cluster',description:I18n.language==='cs'?'Jednorázový svazek tří raket. Jeden na celou salvu; v dílně vyrobíte čtyři kusy.':'A disposable three-missile pod. One pod fires the entire volley; craft four at a workbench.'}
+  });
+  // Placed support buildings use the persistent moon construction index.
+  Object.assign(items, {
+    repair_station:{name:I18n.language==='cs'?'Opravárenská stanice':'Repair Station',asset:'repair_station.svg',place:true,color:'#86cfae',weight:12,description:I18n.language==='cs'?'Opraví 20 bodů trupu každých 5 sekund na měsíci nebo na pomalé nízké orbitě. Spotřebuje jeden železný ingot z nákladu. Vyžaduje postavenou dílnu; bonus se nesčítá.':'Repairs 20 hull every 5 seconds at this moon or in slow low orbit. Consumes one iron ingot from ship cargo per repair. Requires a placed workbench. Multiple stations do not stack.'},
+    solar_array:{name:I18n.language==='cs'?'Solární elektrárna':'Solar Array',asset:'solar_array.svg',place:true,color:'#729fdf',weight:12,description:I18n.language==='cs'?'Doplňuje jednu jednotku paliva za sekundu na základně nebo na pomalé nízké orbitě. Bez spotřeby palivových předmětů. Vyžaduje postavenou dílnu; bonus se nesčítá.':'Recharges one ship fuel unit per second at this base or in slow low orbit, without consuming fuel items. Requires a placed workbench. Multiple arrays do not stack.'},
+    fabrication_hub:{name:I18n.language==='cs'?'Výrobní centrum':'Fabrication Hub',asset:'fabrication_hub.svg',place:true,color:'#d8b47c',weight:12,description:I18n.language==='cs'?'Zrychlí fronty dílny a pece tohoto měsíce o 50 %, pokud jste připojeni. Neovlivňuje přenosné ani vzdálené fronty. Vyžaduje postavenou dílnu; bonus se nesčítá.':'Speeds up this moon workbench and furnace queues by 50% while connected. Does not accelerate portable or remote queues. Requires a placed workbench. Multiple hubs do not stack.'}
+  });
   items.repair_pack = {name: I18n.t('Repair Pack'), asset: 'repair_pack.svg', color: '#9ae0bb', repair: 20, weight: 2, description: I18n.t('Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 4 seconds.')};
   items.ammo_fotron = {name: I18n.t('Fotron charge cells'), asset: 'ammo_fotron.svg', color: '#78e8c0', ammoFor: 'fotron', description: I18n.t('Special Fotron ammunition. One cell per shot; craft at a workbench from crystals, an Ion Cube and Bulterite.')};
   items.ammo_bulshitter = {name: I18n.t('Bulshitter cartridges'), asset: 'ammo_bulshitter.svg', color: '#e7b767', ammoFor: 'bulshitter', description: I18n.t('Special scatter ammunition. One cartridge fires the whole five-shot volley. Craft at a workbench from iron ingots and ore.')};
@@ -227,6 +258,11 @@ const Colony = (() => {
   items.fotron.description += I18n.t(' Requires Fotron charge cells.');
   items.bulshitter.description += I18n.t(' Requires Bulshitter cartridges; one per volley.');
   const stackLimits = {
+    repair_station:4, solar_array:4, fabrication_hub:4,
+    plasma:1, railgun:1, cluster:1, ammo_railgun:24, ammo_cluster:8,
+    portable_furnace:1, fuel_optimizer:1, repair_controller:1,
+    titanium_ore:32, cobalt_ore:24, iridium_ore:12,
+    titanium_ingot:16, cobalt_ingot:16, iridium_ingot:8, advanced_alloy:16,
     storage_small: 4, storage_medium: 2, storage_large: 1,
     portable_workbench: 1,
     shield_generator: 1,
@@ -486,6 +522,35 @@ const Colony = (() => {
     {station:'bench',name:items.storage_large.name,pattern:['bulterite','plate','bulterite','crystal','storage_medium','crystal','plate','blue_ion_cube','plate'],out:'storage_large',qty:1}
   );
 
+  recipes.push(
+    ...['titanium','cobalt','iridium'].map(metal=>({station:'furnace',name:items[metal+'_ingot'].name,pattern:[metal+'_ore',metal+'_ore',null,null],out:metal+'_ingot',qty:1})),
+    {station:'furnace',name:items.plate.name,pattern:['titanium_ingot',null,null,null],out:'plate',qty:3},
+    {station:'bench',name:items.advanced_alloy.name,pattern:['titanium_ingot','cobalt_ingot','titanium_ingot',null,'iridium_ingot',null,null,null,null],out:'advanced_alloy',qty:2},
+    {station:'bench',name:items.ammo_fotron.name,pattern:['crystal','cobalt_ingot','crystal',null,'iridium_ingot',null,null,null,null],out:'ammo_fotron',qty:48},
+    {station:'bench',name:items.ammo_bulshitter.name,pattern:['ingot','cobalt_ingot','ingot',null,null,null,null,null,null],out:'ammo_bulshitter',qty:160},
+    {station:'bench',name:items.shield_generator_advanced.name,pattern:['advanced_alloy','crystal','advanced_alloy',null,'shield_generator',null,null,'ion_cube',null],out:'shield_generator_advanced',qty:1},
+    {station:'bench',name:items.portable_workbench.name,pattern:['advanced_alloy','glass','advanced_alloy','plate','blue_ion_cube','plate',null,'bench',null],out:'portable_workbench',qty:1}
+  );
+
+  recipes.push(
+    {station:'bench',name:items.portable_furnace.name,pattern:['bulterite','glass','bulterite','plate','blue_ion_cube','plate',null,'furnace',null],out:'portable_furnace',qty:1},
+    {station:'bench',name:items.portable_furnace.name,pattern:['titanium_ingot','cobalt_ingot','titanium_ingot','glass','ion_cube','glass',null,'furnace',null],out:'portable_furnace',qty:1},
+    {station:'bench',name:items.fuel_optimizer.name,pattern:['cobalt_ingot','glass','cobalt_ingot','plate','ion_cube','plate',null,'titanium_ingot',null],out:'fuel_optimizer',qty:1},
+    {station:'bench',name:items.repair_controller.name,pattern:['titanium_ingot','crystal','titanium_ingot','glass','advanced_alloy','glass',null,'ion_cube',null],out:'repair_controller',qty:1}
+  );
+
+  recipes.push(
+    {station:'bench',name:items.plasma.name,pattern:['glass','crystal','glass','plate','ion_cube','plate',null,'ingot',null],out:'plasma',qty:1},
+    {station:'bench',name:items.railgun.name,pattern:['titanium_ingot','iridium_ingot','titanium_ingot','cobalt_ingot','blue_ion_cube','cobalt_ingot',null,'advanced_alloy',null],out:'railgun',qty:1},
+    {station:'bench',name:items.cluster.name,pattern:['plate','cobalt_ingot','plate','ammo_rockbreaker','titanium_ingot','ammo_rockbreaker',null,'crystal',null],out:'cluster',qty:1},
+    {station:'bench',name:items.ammo_railgun.name,pattern:['titanium_ingot','iridium_ingot','titanium_ingot',null,null,null,null,null,null],out:'ammo_railgun',qty:12},
+    {station:'bench',name:items.ammo_cluster.name,pattern:['ingot','crystal','ingot','metal','cobalt_ingot','metal',null,null,null],out:'ammo_cluster',qty:4});
+
+  recipes.push(
+    {station:'bench',name:items.repair_station.name,pattern:['plate','repair_pack','plate','ingot','ion_cube','ingot',null,'bench',null],out:'repair_station',qty:1},
+    {station:'bench',name:items.solar_array.name,pattern:['glass','crystal','glass','plate','cobalt_ingot','plate',null,'ingot',null],out:'solar_array',qty:1},
+    {station:'bench',name:items.fabrication_hub.name,pattern:['titanium_ingot','crystal','titanium_ingot','plate','advanced_alloy','plate',null,'blue_ion_cube',null],out:'fabrication_hub',qty:1});
+
   // Two independent FIFO lanes share inventory; ingredients are reserved on enqueue.
   const craftQueueLimit = 12;
   const craftLane = station => station === 'furnace' ? 'furnace' : 'workbench';
@@ -494,7 +559,7 @@ const Colony = (() => {
   function craftOwner(station) {
     if(station==='hand')return null;
     const access=stationAccess();
-    if(station==='bench' && !(access.moon && baseRecords.get(access.moon.id)?.counts.bench>0))return 'portable';
+    if(!(access.moon && baseRecords.get(access.moon.id)?.counts[station]>0))return 'portable';
     return access.moon?.id || null;
   }
   const laneJobs = (station,owner=craftOwner(station)) => craftQueue.filter(job=>queueKey(job.recipe.station,job.moonId)===queueKey(station,owner));
@@ -505,12 +570,12 @@ const Colony = (() => {
       if(!access.stations.has(station))continue;
       const owner=craftOwner(station);
       if(groups.some(g=>queueKey(g.station,g.owner)===queueKey(station,owner)))continue;
-      groups.push({station,owner,title:(access.moon?.name || '')+' · '+(station==='furnace'?(cs?'PEC':'FURNACE'):(cs?'DÍLNA':'WORKBENCH'))});
+      groups.push({station,owner,title:(owner==='portable'?(cs?'LOĎ / PŘENOSNÁ':'SHIP / PORTABLE'):(access.moon?.name || ''))+' · '+(station==='furnace'?(cs?'PEC':'FURNACE'):(cs?'DÍLNA':'WORKBENCH'))});
     }
     // Removed machines retain local jobs so their reserved materials can be refunded.
     for(const job of craftQueue){
       if(!queueAccessible(job)||groups.some(g=>queueKey(g.station,g.owner)===queueKey(job.recipe.station,job.moonId)))continue;
-      groups.push({station:job.recipe.station,owner:job.moonId,title:(access.moon?.name||'')+' · '+(job.recipe.station==='furnace'?(cs?'PEC':'FURNACE'):(cs?'DÍLNA':'WORKBENCH'))});
+      groups.push({station:job.recipe.station,owner:job.moonId,title:((!job.moonId||job.moonId==='portable')?(cs?'LOĎ':'SHIP'):(access.moon?.name||''))+' · '+(job.recipe.station==='furnace'?(cs?'PEC':'FURNACE'):(cs?'DÍLNA':'WORKBENCH'))});
     }
     return groups;
   }
@@ -523,8 +588,9 @@ const Colony = (() => {
   function craftSeconds(recipe) { return legacyCraftSeconds(recipe) * .5; }
   function legacyCraftSeconds(recipe) {
     if (items[recipe.out].storageSlots) return items[recipe.out].storageSlots===40?35:items[recipe.out].storageSlots===20?25:15;
-    if (recipe.out === 'portable_workbench') return 45;
+    if (['portable_workbench','portable_furnace'].includes(recipe.out)) return 45;
     if (items[recipe.out].shield) return 20 + items[recipe.out].shieldTier * 5;
+    if (['repair_station','solar_array','fabrication_hub'].includes(recipe.out)) return 30;
     if (recipe.out === 'scanner') return 35;
     if (items[recipe.out].machine || ['bench', 'furnace'].includes(recipe.out)) return 25;
     if (items[recipe.out].weapon) return 18;
@@ -534,7 +600,7 @@ const Colony = (() => {
   }
   function autoCraftPlan(recipe,batches) {
     const access=stationAccess();
-    if(!recipe||carried||!access.moon||!(baseRecords.get(access.moon.id)?.counts.bench>0))return null;
+    if(!recipe||carried||!access.stations.has('bench'))return null;
     const stock=Object.fromEntries(Object.keys(items).map(type=>[type,count(type)]));
     return CraftPlanner.plan(recipes,stock,access.stations,recipe,batches);
   }
@@ -593,7 +659,7 @@ const Colony = (() => {
       const recipe = recipes.find(recipe => recipeKey(recipe) === job.recipe);
       const batches = job.batches === undefined ? 1 : job.batches;
       if (!recipe || !Number.isSafeInteger(batches) || batches < 1 || batches > 9999 || job.remaining < 0 || job.remaining > (Number.isFinite(job.duration) ? job.duration : legacyCraftSeconds(recipe)*batches)) continue;
-      if (recipe.station !== 'hand' && (typeof job.moonId !== 'string' || (!/^-?\d{1,7}:-?\d{1,7}$/.test(job.moonId) && !(recipe.station === 'bench' && job.moonId === 'portable')))) continue;
+      if (recipe.station !== 'hand' && (typeof job.moonId !== 'string' || (!/^-?\d{1,7}:-?\d{1,7}$/.test(job.moonId) && !(['bench','furnace'].includes(recipe.station) && job.moonId === 'portable')))) continue;
       if (laneJobs(recipe.station,recipe.station==='hand'?null:job.moonId).length >= craftQueueLimit) continue;
       const chain=job.chain?restoreChain(job.chain,recipe,batches):null;
       if(job.chain&&!chain)continue;
@@ -609,9 +675,8 @@ const Colony = (() => {
     const station=currentCraftStep(job).recipe.station;
     if (station === 'hand') return queueAccessible(job);
     const access = stationAccess();
-    if (job.moonId === 'portable') return count('portable_workbench') > 0;
-    if (station === 'bench') return access.moon?.id===job.moonId && (baseRecords.get(job.moonId)?.counts.bench || 0)>0;
-    return access.moon?.id === job.moonId && access.stations.has(station);
+    if (job.moonId === 'portable') return count(station==='furnace'?'portable_furnace':'portable_workbench')>0;
+    return access.moon?.id===job.moonId && ((baseRecords.get(job.moonId)?.counts[station]||0)>0 || (job.chain&&access.stations.has(station)));
   }
   function craftJobStatus(job, index) {
     const cs = I18n.language === 'cs';
@@ -669,7 +734,7 @@ const Colony = (() => {
     let changed=false, completed=false, becameReady=false;
     for (const job of heads) {
       const previous=job.remaining;
-      if (job.remaining>0 && jobConnected(job)) job.remaining=Math.max(0,job.remaining-Math.min(dt,1,currentCraftStep(job).left));
+      if (job.remaining>0 && jobConnected(job)) job.remaining=Math.max(0,job.remaining-Math.min(Math.min(dt,1)*(job.moonId && job.moonId!=='portable' && baseRecords.get(job.moonId)?.isBase && baseRecords.get(job.moonId)?.counts.fabrication_hub>0 ? 1.5 : 1),currentCraftStep(job).left));
       changed ||= job.remaining!==previous;
       if (job.remaining<=0 && jobConnected(job)) {
         // Failed insertion never partially deposits output or blocks the other lane.
@@ -709,7 +774,7 @@ const Colony = (() => {
     tileSize = 32,
     cols = 160,
     rows = 64;
-  const baseParts = ['block', 'glass', 'bench', 'furnace', 'lamp', 'storage_small', 'storage_medium', 'storage_large'];
+  const baseParts = ['block', 'glass', 'bench', 'furnace', 'lamp', 'storage_small', 'storage_medium', 'storage_large', 'repair_station', 'solar_array', 'fabrication_hub'];
   const player = {
     x: 14,
     y: 14,
@@ -988,13 +1053,14 @@ const Colony = (() => {
     const label = I18n.language === 'cs' ? 'OPRAVIT' : 'REPAIR';
     const markup = label + ' (' + stock + ') <kbd>U</kbd>';
     if (button.innerHTML !== markup) button.innerHTML = markup;
-    button.title = I18n.language === 'cs' ? 'Použít opravnou sadu: až +20 % trupu (U)' : 'Apply a repair pack: up to +20% hull (U)';
+    button.title = I18n.language === 'cs' ? 'Použít opravnou sadu: až +' + repairPackAmount() + ' % trupu (U)' : 'Apply a repair pack: up to +' + repairPackAmount() + '% hull (U)';
   }
 
+  function repairPackAmount() { return count('repair_controller')>0?30:20; }
   function useRepairPack() {
     if (carried || count('repair_pack') < 1 || !Number.isFinite(ship.hull) || ship.hull <= 0 || ship.hull >= 100) return false;
     remove(bag, 'repair_pack', 1);
-    ship.hull = Math.min(100, ship.hull + items.repair_pack.repair);
+    ship.hull = Math.min(100, ship.hull + repairPackAmount());
     sync(); save(); GameAudio.play('craft');
     $('#hullText').textContent = Math.ceil(ship.hull) + '%';
     $('#hullBar').style.width = ship.hull + '%';
@@ -1310,10 +1376,34 @@ const Colony = (() => {
     const moon = surface ? activeMoon : nearestMoon();
     const counts = moon ? baseRecords.get(moon.id)?.counts : null;
     const stations = new Set(['hand']);
-    const portable = count('portable_workbench') > 0;
+    const portable = count('portable_workbench') > 0, portableFurnace = count('portable_furnace') > 0;
     if (counts?.bench > 0 || portable) stations.add('bench');
-    if (counts?.furnace > 0) stations.add('furnace');
-    return { moon, mode: surface ? 'surface' : moon ? 'orbit' : 'space', stations, portable };
+    if (counts?.furnace > 0 || portableFurnace) stations.add('furnace');
+    return { moon, mode: surface ? 'surface' : moon ? 'orbit' : 'space', stations, portable, portableFurnace };
+  }
+
+  let repairStationClock = 0, supportMoon = null, supportSaveClock = 0;
+  // Only active play runs support services. Pause and distant bases grant no progress.
+  function updateBaseServices(dt) {
+    if (!Number.isFinite(dt) || dt <= 0) return;
+    const access = stationAccess(), base = access.moon && baseRecords.get(access.moon.id);
+    if (!base?.isBase || (!surface && Math.hypot(ship.vx,ship.vy)>40)) {
+      repairStationClock=0; supportMoon=null; return;
+    }
+    if (supportMoon!==base.id) {supportMoon=base.id;repairStationClock=0;}
+    const elapsed=Math.min(dt,1);
+    let changed=false;
+    if (base.counts.repair_station && ship.hull>0 && ship.hull<100 && count('ingot')>0) {
+      repairStationClock+=elapsed;
+      if (repairStationClock>=5 && consumeItem('ingot',1,false)) {
+        repairStationClock=0;ship.hull=Math.min(100,ship.hull+20);
+        changed=true;GameAudio.play('craft');refreshRepairButton();save();
+      }
+    } else repairStationClock=0;
+    if (base.counts.solar_array && typeof Fuel!=='undefined' && Fuel.canRefuel()) {
+      changed=Fuel.insert(elapsed)||changed;
+    }
+    if (changed) {supportSaveClock+=elapsed;if(supportSaveClock>=2){supportSaveClock=0;save();}}
   }
 
   function nearbyStations() {
@@ -1334,10 +1424,11 @@ const Colony = (() => {
   }
 
   function stationAccessMarkup(access) {
-    if (access.portable) return '<p class="station-access" role="status"><b>' +
-      (I18n.language === 'cs' ? 'PŘENOSNÁ DÍLNA ONLINE' : 'PORTABLE WORKBENCH ONLINE') +
-      '</b><span>' + (I18n.language === 'cs' ? 'Výroba 3×3 dostupná z inventáře' : '3×3 crafting available from inventory') +
-      (access.stations.has('furnace') ? ' · ' + items.furnace.name : '') + '</span></p>';
+    if(access.portable||access.portableFurnace) {
+      const devices=[access.portable?'portable_workbench':null,access.portableFurnace?'portable_furnace':null].filter(Boolean);
+      return '<p class="station-access" role="status"><b>'+(I18n.language==='cs'?'PŘENOSNÁ DÍLNA ONLINE':'PORTABLE WORKSHOP ONLINE')+'</b><span>'+
+        devices.map(type=>items[type].name).join(' · ')+(access.moon?' · '+access.moon.name:'')+'</span></p>';
+    }
     const connected = [...access.stations].filter(type => type !== 'hand');
     if (connected.length) {
       const label = access.mode === 'orbit' ? 'ORBITAL STATION LINK' : 'SURFACE STATIONS';
@@ -1567,7 +1658,7 @@ const Colony = (() => {
       $('#slots').insertAdjacentHTML('beforeend', I18n.html('<p class="inventory-hint">RECEIVER ONLINE · Automatically detects wormholes within 6.5 km. Press M for the local and global charts.</p>'));
 
     if (focus && items[focus.type].repair) {
-      $('#slots').insertAdjacentHTML('beforeend', I18n.html(`<div class="equip-row"><span>${items[focus.type].name} · +20% HULL</span><button id="useRepairPack" ${carried || ship.hull >= 100 ? 'disabled' : ''}>USE REPAIR PACK</button></div>`));
+      $('#slots').insertAdjacentHTML('beforeend', I18n.html(`<div class="equip-row"><span>${items[focus.type].name} · +${repairPackAmount()}% HULL</span><button id="useRepairPack" ${carried || ship.hull >= 100 ? 'disabled' : ''}>USE REPAIR PACK</button></div>`));
       $('#useRepairPack').onclick = useRepairPack;
     }
 
@@ -1770,6 +1861,24 @@ const Colony = (() => {
   }
 
   // Create a persistent tile grid once per moon. The landing area is kept level.
+  // Overlay small veins only when generating a brand-new moon. Existing saved
+  // terrain is returned untouched, so mined tunnels and player structures stay intact.
+  function addMoonOreVeins(map,moon) {
+    const [gx,gy]=moon.id.split(':').map(Number),rng=random(Math.imul(gx,9563)^Math.imul(gy,3911)^827141);
+    const deposits=[
+      {type:'titanium_ore',count:2+Math.floor(rng()*3),min:25,max:46,size:2.3},
+      {type:'cobalt_ore',count:1+Math.floor(rng()*2),min:35,max:53,size:1.9},
+      {type:'iridium_ore',count:moon.id==='0:0'?0:rng()<.38?1:0,min:49,max:59,size:1.6}
+    ];
+    for(const deposit of deposits)for(let vein=0;vein<deposit.count;vein++){
+      const cx=3+Math.floor(rng()*(cols-6)),cy=deposit.min+Math.floor(rng()*(deposit.max-deposit.min));
+      for(let y=Math.max(0,cy-3);y<=Math.min(rows-2,cy+3);y++)for(let x=Math.max(0,cx-3);x<=Math.min(cols-1,cx+3);x++){
+        const distance=Math.pow((x-cx)/deposit.size,2)+Math.pow((y-cy)/(deposit.size*.7),2);
+        if(distance<1&&map[y][x]==='stone')map[y][x]=deposit.type;
+      }
+    }
+  }
+
   function terrainFor(m) {
     if (terrains.has(m.id))
       return terrains.get(m.id);
@@ -1790,6 +1899,7 @@ const Colony = (() => {
           : 'stone';
       }
     }
+    addMoonOreVeins(map,m);
     terrains.set(m.id, map);
     return map;
   }
@@ -2093,11 +2203,14 @@ const Colony = (() => {
     if (!placing) {
       if (!existing)
         return false;
-      if (existing === 'blue_ion_cube' && !['laser', 'mininglaser', 'fotron', 'piercer', 'seismic'].some(Weapons.unlocked)) {
+      if (items[existing]?.advancedCutter && !['laser','mininglaser','fotron','piercer','seismic', 'railgun', 'cluster'].some(Weapons.unlocked)) {
+        notify(I18n.t('ADVANCED CUTTER REQUIRED'));return false;
+      }
+      if (existing === 'blue_ion_cube' && !['laser', 'mininglaser', 'fotron', 'piercer', 'seismic', 'railgun', 'cluster'].some(Weapons.unlocked)) {
         notify(I18n.t('ADVANCED CUTTER REQUIRED'));
         return false;
       }
-      if (existing === 'bulterite' && !Weapons.unlocked('fotron') && !Weapons.unlocked('seismic')) {
+      if (existing === 'bulterite' && !Weapons.unlocked('fotron') && !Weapons.unlocked('seismic') && !Weapons.unlocked('railgun')) {
         notify(I18n.t('ADVANCED CUTTER REQUIRED · FOTRON / SEISMIC'));
         return false;
       }
@@ -2251,7 +2364,7 @@ const Colony = (() => {
         line([sx, sy], [sx + 32, sy], [.75, .8, .83, .15], 2);
         line([sx, sy], [sx, sy + 32], [.8, .8, .9, .07]);
         line([sx, sy + 31], [sx + 32, sy + 31], [0, 0, 0, .24], 2);
-        if (['metal', 'ice', 'crystal', 'bulterite', 'ion_cube', 'blue_ion_cube'].includes(t)) {
+        if (items[t]?.moonOre || ['metal', 'ice', 'crystal', 'bulterite', 'ion_cube', 'blue_ion_cube'].includes(t)) {
           disc(sx + 10, sy + 12, 4, [c[0] * 1.6, c[1] * 1.6, c[2] * 1.6, 1], 5);
           disc(sx + 22, sy + 22, 3, [c[0] * 1.4, c[1] * 1.4, c[2] * 1.4, 1], 4);
         }
@@ -2265,6 +2378,19 @@ const Colony = (() => {
           rect(sx+14,sy+11,4,10,[.85,.67,.32,1]);
           const bands=items[t].storageSlots===40?3:items[t].storageSlots===20?2:1;
           for(let n=0;n<bands;n++)rect(sx+6+n*8,sy+18,3,9,[.39,.5,.52,1]);
+        }
+        if (t === 'repair_station') {
+          rect(sx+4,sy+5,24,24,[.12,.23,.23,1]);
+          rect(sx+13,sy+9,6,16,[.5,.95,.7,1]);rect(sx+8,sy+14,16,6,[.5,.95,.7,1]);
+        }
+        if (t === 'solar_array') {
+          rect(sx+14,sy+20,4,10,[.4,.5,.6,1]);rect(sx+2,sy+4,28,18,[.12,.25,.48,1]);
+          for(let n=0;n<4;n++)line([sx+4+n*7,sy+5],[sx+4+n*7,sy+21],[.5,.7,.95,.8]);
+          line([sx+3,sy+13],[sx+29,sy+13],[.5,.7,.95,.8]);
+        }
+        if (t === 'fabrication_hub') {
+          rect(sx+3,sy+6,26,23,[.16,.2,.24,1]);rect(sx+7,sy+10,18,11,[.8,.6,.3,1]);
+          disc(sx+16,sy+16,5,[.3,.9,.9,1],8);rect(sx+7,sy+25,18,2,[.7,.8,.8,1]);
         }
         if (t === 'furnace') {
           rect(sx + 7, sy + 12, 18, 14, [.07, .09, .1, 1]);
@@ -2423,6 +2549,8 @@ const Colony = (() => {
     refuel,
     refuelBest,
     useRepairPack,
+    updateBaseServices,
+    get machineBonuses() { return {fuelMultiplier:count('fuel_optimizer') > 0 ? .85 : 1,repairAmount:repairPackAmount()}; },
     refreshRepairButton,
     count: ownedCount,
     availableCount: count,

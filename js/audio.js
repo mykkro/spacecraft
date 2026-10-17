@@ -28,6 +28,9 @@ const GameAudio = (() => {
   } catch {
   }
   const limits = {
+    plasma: .3,
+    railgun: .5,
+    cluster: .5,
     refuel: .25,
     bulshitter: .07,
     fotron: .2,
@@ -199,6 +202,18 @@ const GameAudio = (() => {
     const t = (f, end, d, v, type = 'sine', delay = 0) => tone(f, end, d, v * volume, pan, type, delay);
     const n = (d, v, cutoff, delay = 0) => noise(d, v * volume, cutoff, pan, delay);
     switch (name) {
+    case 'plasma':
+      t(480, 90, .25, .14, 'sawtooth');
+      n(.12, .12, 1800);
+      break;
+    case 'railgun':
+      t(2100, 80, .22, .18, 'triangle');
+      n(.09, .2, 5000);
+      break;
+    case 'cluster':
+      n(.35, .26, 1400);
+      t(240, 55, .3, .16, 'triangle');
+      break;
     case 'bulshitter':
       t(370, 160, .055, .055, 'square');
       break;

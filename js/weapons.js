@@ -120,7 +120,11 @@ const Weapons = (() => {
       blast: 130,
       color: '#eea466',
       tint: [.93, .64, .4]
-    }
+    },
+    // Append new weapons to preserve the existing numeric shortcuts.
+    plasma: {name:I18n.language==='cs'?'Plazmová brokovnice':'Plasma Scattergun',short:I18n.language==='cs'?'Plazma':'plasma',channel:'primary',tier:1,damage:1.6,cooldown:.7,speed:620,pellets:7,spread:.11,lifetime:.55,tint:[.93,.56,.71],color:'#ed8fb6',icon:'plasma.svg'},
+    railgun: {name:I18n.language==='cs'?'Elektromagnetický kanón':'Rail Cannon',short:I18n.language==='cs'?'EM kanón':'railgun',channel:'primary',tier:3,damage:18,cooldown:1.3,speed:2200,lifetime:1.2,ammo:'ammo_railgun',tint:[.7,.9,1],color:'#b2e5ff',icon:'railgun.svg'},
+    cluster: {name:I18n.language==='cs'?'Salvový raketomet':'Cluster Launcher',short:I18n.language==='cs'?'Salva':'cluster',channel:'missile',tier:2,damage:5,cooldown:3.2,speed:520,pellets:3,spread:.18,blast:65,ammo:'ammo_cluster',tint:[.96,.71,.46],color:'#f6b575',icon:'cluster.svg'}
   };
   const hardness = [
     {
@@ -141,7 +145,7 @@ const Weapons = (() => {
     {
       name: I18n.t('Ultradense core'),
       color: [.98, .55, .24],
-      requires: I18n.t('Fotron / Seismic Torpedo')
+      requires: I18n.t('Fotron / Seismic Torpedo') + ' / ' + definitions.railgun.short
     }
   ];
   const selected = {
@@ -207,7 +211,7 @@ const Weapons = (() => {
     select(options[(options.indexOf(selected[channel]) + 1) % options.length]);
   }
   function buildHUD() {
-    $('#weaponHud').innerHTML = `<div class="weapon-cards">${ Object.entries(definitions).map(([id, d], i) => I18n.html(`<button class="weapon-card" data-weapon="${ id }" style="--weapon-color:${ d.color }" title="${ d.name } · tier ${ d.tier } · ${ d.damage } damage · ${ d.cooldown }s cooldown" aria-label="Equip ${ d.name }"><span class="weapon-number">${ i < 9 ? i + 1 : 'Q' }</span><span class="cooldown-icon"><img src="assets/items/${ d.icon || id + '.png' }" alt="" width="48" height="48" draggable="false"><svg viewBox="0 0 60 60" role="progressbar" aria-label="${ d.name } recharge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><circle class="cooldown-track" cx="30" cy="30" r="25"/><circle class="cooldown-arc" cx="30" cy="30" r="25" stroke-dasharray="${ circumference }" stroke-dashoffset="0"/></svg></span><b>${ d.short }</b><small class="weapon-status">READY</small></button>`)).join('') }</div><div id="weaponDetails"></div>`;
+    $('#weaponHud').innerHTML = `<div class="weapon-cards">${ Object.entries(definitions).map(([id, d], i) => I18n.html(`<button class="weapon-card" data-weapon="${ id }" style="--weapon-color:${ d.color }" title="${ d.name } · tier ${ d.tier } · ${ d.damage } damage · ${ d.cooldown }s cooldown" aria-label="Equip ${ d.name }"><span class="weapon-number">${ i < 9 ? i + 1 : (d.channel === 'missile' ? 'R' : 'Q') }</span><span class="cooldown-icon"><img src="assets/items/${ d.icon || id + '.png' }" alt="" width="48" height="48" draggable="false"><svg viewBox="0 0 60 60" role="progressbar" aria-label="${ d.name } recharge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><circle class="cooldown-track" cx="30" cy="30" r="25"/><circle class="cooldown-arc" cx="30" cy="30" r="25" stroke-dasharray="${ circumference }" stroke-dashoffset="0"/></svg></span><b>${ d.short }</b><small class="weapon-status">READY</small></button>`)).join('') }</div><div id="weaponDetails"></div>`;
     $('#weaponHud').querySelectorAll('[data-weapon]').forEach(button => button.onclick = () => {
       if (!paused)
         select(button.dataset.weapon);

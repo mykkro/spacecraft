@@ -58,7 +58,7 @@ const Fuel = (() => {
   // An empty reactor retains 12% solar thrust, with boost disabled.
   function drive(thrust, boost, dt) {
     const available = amount + reserve,
-      requested = Number.isFinite(dt) && dt > 0 ? Math.min(1, Math.abs(thrust)) * dt * Shipyard.current.fuelBurn * (boost ? 3 : 1) * (typeof Starbases !== 'undefined' ? Starbases.fuelMultiplier : 1) : 0;
+      requested = Number.isFinite(dt) && dt > 0 ? Math.min(1, Math.abs(thrust)) * dt * Shipyard.current.fuelBurn * (boost ? 3 : 1) * (typeof Starbases !== 'undefined' ? Starbases.fuelMultiplier : 1) * (typeof Colony !== 'undefined' ? Colony.machineBonuses.fuelMultiplier : 1) : 0;
     const used = Math.min(available, requested),
       fraction = requested > 0 ? used / requested : available > 0 ? 1 : 0;
     if (requested > 0) {

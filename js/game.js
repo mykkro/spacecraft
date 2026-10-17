@@ -388,6 +388,7 @@ document.querySelector('#resume').onclick = resume;
 // Advance flight simulation in seconds. Moon exploration takes an early exit.
 // Order matters: movement, firing, swept projectile hits, rock collisions, then pickups.
 function update(dt) {
+  Colony.updateBaseServices(dt);
   if (typeof Shields !== 'undefined' && !Colony.onSurface) Shields.update(dt);
   if (typeof Starbases !== 'undefined') Starbases.update(dt);
   if (typeof StarChart !== 'undefined')

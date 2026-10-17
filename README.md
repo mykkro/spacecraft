@@ -326,3 +326,30 @@ Landable moons now have shaded spherical surfaces with crater bowls, raised rims
 **Characters / Postavy:** docking introduces hireable Rhea, Tarek and Ada even before recruitment. Their entries show specialist bonuses, recruitment price and **Available for hire / K najmutí** or **On board / Na palubě**. Named core crew replace the generic You/Vy entry: Mara Voss (Starfox), Viktor Vale (Nomad), Jegor Kokotovič and Bobo (Kraxna 1). Previously met core crew remain in the guide after ship changes. Existing generic captain records migrate to named captain IDs without resetting progress.
 
 Derelict ships use dedicated broken-hull models rather than intact ships covered with dark triangles. Surviving shaded plates surround open breaches, exposed ribs, tanks and severed cables; detached bow/wing pieces, unlit machinery, cracked canopy and small feathered scorch marks show dereliction. Seeded details remain stable and cache at most 48 models. Salvage collision, loot and saved damage remain unchanged.
+
+Rare lunar crafting materials are found **only in newly generated moon terrain**, never in asteroid fields, pirate salvage or station shops:
+
+| Ore | Deposit depth (tile rows) | Stack limit | Use after refining |
+| --- | --- | ---: | --- |
+| Titanium Ore / Titanová ruda | Around 25–46 | 32 | Three hull plates per ingot; advanced alloy |
+| Cobalt Ore / Kobaltová ruda | Around 35–53 | 24 | Larger ammo batches; advanced alloy |
+| Iridium Ore / Iridiová ruda | Around 49–59, on roughly 38% of moons | 12 | Fotron cells; advanced alloy |
+
+Small clustered veins replace regolith underground. Selene has titanium and cobalt but no iridium; explore other moons for iridium. Mining iridium requires an advanced cutter (Prism Laser, Enhanced Mining Laser, Fotron, Penetrator or Seismic equipment). Two pieces of each ore smelt into one corresponding ingot in a furnace.
+
+At a workbench, **2 titanium ingots + 1 cobalt ingot + 1 iridium ingot** produce **2 Advanced Alloy / Pokročilá slitina**. Alternate recipes use alloy for Mk II shields and portable workbenches. Cobalt-based Bulshitter recipes yield 160 cartridges, and cobalt/iridium Fotron recipes yield 48 cells. Original recipes remain available. Base Auto Craft can smelt these intermediates for you. Existing saved moons are not regenerated or modified; look for deposits on a moon you have not landed on yet.
+Additional portable machines work automatically while carried in **main cargo**:
+
+| Machine | Effect | Workbench craft time |
+| --- | --- | ---: |
+| Portable Furnace / Přenosná pec | Unlocks furnace recipes anywhere; independent ship furnace queue | 22.5 s |
+| Fuel Optimizer / Optimalizátor paliva | 15% less thrust/boost fuel consumption | 12.5 s |
+| Repair Controller / Servisní manipulátor | Repair packs restore 30 hull points instead of 20 | 12.5 s |
+
+The portable furnace has Bulterite-based and titanium/cobalt-based recipes. Its jobs follow the ship, pause if the furnace leaves main cargo, and resume when it returns. Physical moon furnaces still own their separate queues. A portable workbench plus portable furnace supports Auto Craft, including smelting intermediates, even in space. No placement or fuel consumable is required for portable crafting.
+
+The optimizer combines multiplicatively with Tarek's engineer bonus (32% total fuel savings). Extra optimizers/controllers do not stack. Repair packs still consume one pack and never waste it at full hull. Putting machines into a base container or removing them from main cargo disables their effects. Icons, recipes, descriptions and encyclopedia entries are available in English/Czech.
+
+Additional weapons: Plasma Scattergun fires seven short-range energy bolts; Rail Cannon uses craftable iridium slugs against ultradense rocks; Cluster Launcher fires three explosive missiles per craftable pod. Craft them at a workbench. Cycle primary weapons with Q and missile launchers with R, or select their weapon-bar icons. Existing 1–9 shortcuts remain unchanged. Advanced recipes use refined moon metals.
+
+Base support buildings: craft and place a Repair Station (20 hull per 5 seconds, costing one iron ingot from cargo), Solar Array (1 fuel/second), or Fabrication Hub (50% faster local workbench/furnace queues). Each requires a placed workbench on the same moon. Services operate on the surface or within landing range at speed 40 or below. Duplicate buildings do not multiply bonuses. Carrying a building without placing it grants no effect.
