@@ -32,14 +32,14 @@
   color: #e4b86c
 }
 
-#refuel {
+#refuel, #repair {
   width: 100%;
   padding: 7px 8px;
   font-size: 8px;
   letter-spacing: .4px
 }
 
-#refuel:disabled {
+#refuel:disabled, #repair:disabled {
   opacity: .4;
   cursor: default
 }
@@ -79,3 +79,5 @@
     margin-top: 13px
   }
 }
+
+#repair { margin-top: 5px; }

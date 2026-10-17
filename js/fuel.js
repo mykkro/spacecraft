@@ -11,7 +11,7 @@ const Fuel = (() => {
     emptyWarning = false,
     availableStock = 0;
   try {
-    const saved = (JSON.parse(localStorage.getItem('spacecraft-save-v1')||'null')?.fuel);
+    const saved = (JSON.parse((typeof Profiles === 'undefined' ? localStorage : Profiles).getItem('spacecraft-save-v1')||'null')?.fuel);
     if (saved && Number.isFinite(saved.amount)) {
       const total = Math.max(0, saved.amount) + (Number.isFinite(saved.reserve) ? Math.max(0, saved.reserve) : 0);
       amount = Math.min(Shipyard.current.fuelCapacity, total);
@@ -58,7 +58,7 @@ const Fuel = (() => {
   // An empty reactor retains 12% solar thrust, with boost disabled.
   function drive(thrust, boost, dt) {
     const available = amount + reserve,
-      requested = Number.isFinite(dt) && dt > 0 ? Math.min(1, Math.abs(thrust)) * dt * Shipyard.current.fuelBurn * (boost ? 3 : 1) : 0;
+      requested = Number.isFinite(dt) && dt > 0 ? Math.min(1, Math.abs(thrust)) * dt * Shipyard.current.fuelBurn * (boost ? 3 : 1) * (typeof Starbases !== 'undefined' ? Starbases.fuelMultiplier : 1) : 0;
     const used = Math.min(available, requested),
       fraction = requested > 0 ? used / requested : available > 0 ? 1 : 0;
     if (requested > 0) {

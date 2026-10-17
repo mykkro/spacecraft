@@ -1,0 +1,27 @@
+/* Dock screen keeps station actions above flight controls, with bounded scrolling. */
+.dock-prompt { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); max-width: min(680px, 85vw); font-size: 9px; line-height: 1.7; background: #102333ed; color: #acd7ff; z-index: 4; }
+#dockPrompt[hidden], #starbaseOverlay[hidden] { display: none; }
+#starbaseOverlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; background: #030b16d9; backdrop-filter: blur(9px); }
+.station-panel { width: min(1000px, 100%); max-height: 92vh; overflow: auto; padding: 26px; background: #0b1825; border: 1px solid #6a9dc975; box-shadow: 0 20px 100px #0009; }
+.station-heading { position: static; display: flex; justify-content: space-between; align-items: flex-start; padding: 0; border: 0; }
+.station-heading h2 { font-size: 32px; margin: 8px 0; }
+.station-heading p { color: #acd7ff; font-size: 12px; }
+.station-services { display: flex; gap: 18px; align-items: center; padding: 18px 0; border-block: 1px solid #7da7c42b; }
+.station-services span, #stationCrew p { font-size: 12px; line-height: 1.7; color: #9eb5c6; }
+.station-columns { display: grid; grid-template-columns: 1.3fr 1fr; gap: 26px; }
+.station-columns h3 { font-size: 14px; letter-spacing: 2px; color: #a8cce7; margin: 24px 0 16px; }
+.station-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #7da7c419; }
+.station-row span { flex: 1; font-size: 11px; }
+.station-row small { display: block; margin-top: 5px; color: #728da4; }
+.station-row img { object-fit: contain; image-rendering: pixelated; }
+.station-row button { padding: 9px; font-size: 9px; white-space: nowrap; }
+#stationCrew article { padding: 15px; margin: 12px 0; background: #152738; border: 1px solid #7da7c426; }
+#stationCrew b { font-size: 13px; }
+.station-panel button:disabled { opacity: .35; cursor: default; }
+@media (max-width: 700px) { .station-columns { grid-template-columns: 1fr; } .station-panel { padding: 16px; } .station-services { flex-direction: column; align-items: flex-start; } .dock-prompt { top: 115px; font-size: 8px; } }
+
+/* Artwork is decorative beside real names; fixed dimensions prevent layout shifts. */
+#stationCrew .crew-avatar { float: left; width: 64px; height: 64px; margin: 0 14px 8px 0; border: 1px solid #8db8d65c; border-radius: 8px; object-fit: cover; image-rendering: pixelated; background: #08121c; }
+#stationCrew article::after { content: ''; display: table; clear: both; }
+.starting-crew-portraits { display: flex; gap: 8px; margin-top: 12px; }
+.starting-crew-portraits .crew-avatar { width: 40px; height: 40px; border: 1px solid #8db8d65c; border-radius: 6px; object-fit: cover; image-rendering: pixelated; }

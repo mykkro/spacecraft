@@ -6,6 +6,27 @@
 // Presentation-only localization. Item IDs, recipes, key bindings, and save data stay stable.
 const I18n = (() => {
   const cs = {
+    "Shield Generator Mk I": "Generátor štítu Mk I",
+    "Shield Generator Mk II": "Generátor štítu Mk II",
+    "Ion Shield Generator": "Iontový generátor štítu",
+    "SHIELD ABSORBED HIT": "ŠTÍT POHLTIL ZÁSAH",
+    "Shield charge": "Energie štítu",
+    "EQUIP SHIELD": "NASADIT ŠTÍT",
+    "SHIELD": "ŠTÍT",
+    "Repair Pack": "Opravná sada",
+    "Consumables": "Spotřební předměty",
+    "USE REPAIR PACK": "POUŽÍT OPRAVNOU SADU",
+    "REPAIR PACK USED": "OPRAVNÁ SADA POUŽITA",
+    "REPAIR PACK": "OPRAVNÁ SADA",
+    "+20% HULL": "+20 % TRUPU",
+    "Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 8 seconds.": "Obnoví až 20 % trupu lodě. Použijte v inventáři, rychlém slotu nebo klávesou U během hry. Při plném trupu se nespotřebuje. Výroba na pracovním stole trvá 8 sekund.",
+    " Requires Fotron charge cells.": " Vyžaduje nábojové články Fotronu.",
+    " Requires Bulshitter cartridges; one per volley.": " Vyžaduje náboje do Bulšitru; jeden na salvu.",
+    "Fotron charge cells": "Nábojové články Fotronu",
+    "Bulshitter cartridges": "Náboje do Bulšitru",
+    " rounds remaining": " zbývajících nábojů",
+    "Special Fotron ammunition. One cell per shot; craft at a workbench from crystals, an Ion Cube and Bulterite.": "Speciální munice Fotronu. Jeden článek na výstřel; vyrobte na pracovním stole z krystalů, iontové kostky a Bulteria.",
+    "Special scatter ammunition. One cartridge fires the whole five-shot volley. Craft at a workbench from iron ingots and ore.": "Speciální rozptylová munice. Jeden náboj vystřelí celou pětirannou salvu. Vyrobte na pracovním stole ze železných ingotů a rudy.",
     "Deep space exploration": "Průzkum hlubokého vesmíru",
     "SPACECRAFT space flight and moon exploration game": "SPACECRAFT – vesmírná hra s průzkumem měsíců",
     "The Drift": "Proud",
@@ -455,6 +476,7 @@ const I18n = (() => {
     'Redwake patrol zone': 'Oblast hlídky Rudá brázda',
     '6.5 KM': '6,5 KM'
   });
+  Object.assign(cs, {HULL: 'TRUP', FUEL: 'PALIVO', SPEED: 'RYCHLOST', POS: 'POZ', ROCKS: 'KAMENY', CARGO: 'NÁKLAD', EXPEDITION: 'EXPEDICE', THRUST: 'TAH', TYPE: 'TYP', REPAIR: 'OPRAVIT'});
   let language = 'en';
   try {
     const saved = localStorage.getItem('spacecraft-language-v1');

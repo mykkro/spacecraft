@@ -70,6 +70,27 @@ function tri(a, b, c, col) {
     vertices.push(p[0], p[1], ...col);
 }
 
+// Per-vertex colors interpolate across shaded surfaces using the same buffer/shader.
+function triGradient(a, b, c, ca, cb, cc) {
+  for (const [p, col] of [[a, ca], [b, cb], [c, cc]]) vertices.push(p[0], p[1], ...col);
+}
+
+
+function flush2D() {
+  // The asteroid pass has its own attributes/program; restore the shared 2D batch.
+  gl.useProgram(program); gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.enableVertexAttribArray(pos); gl.enableVertexAttribArray(color);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 24, 0);
+  gl.vertexAttribPointer(color, 4, gl.FLOAT, false, 24, 8);
+  gl.uniform2f(resolution, width, height);
+  if (vertices.length) {
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 6);
+    vertices = [];
+  }
+}
+
 // A thick line is a pair of triangles, avoiding platform-dependent WebGL line widths.
 function line(a, b, col, w = 1) {
   const dx = b[0] - a[0],
@@ -251,6 +272,7 @@ function destroy(r) {
     intensity: Math.min(1.25, .35 + r.r / 120)
   });
   kills++;
+  if (typeof SpaceEffects !== 'undefined') SpaceEffects.spawn(r.x, r.y, r.r, r.type);
   burst(r.x, r.y, palettes[r.type], r.r, 120);
   if (r.r > 32) {
     for (let i = 0; i < 3; i++) {
@@ -280,15 +302,19 @@ function fire(missile = false) {
 // Collisions and pirate shots share hull damage, invulnerability, and emergency recovery.
 // Recovery keeps inventory and fuel; it does not start a new expedition.
 function damageShip(amount, message = I18n.t('HULL DAMAGE'), grace = 1) {
-  if (ship.invulnerable > 0)
+  if (!Number.isFinite(amount) || amount <= 0 || ship.invulnerable > 0)
     return false;
+  const remaining = typeof Shields !== 'undefined' ? Shields.absorb(amount) : amount;
+  const protectedHit = remaining < amount;
   GameAudio.play('collision', { intensity: Math.min(1.2, .55 + amount / 35) });
-  ship.hull = Math.max(0, ship.hull - amount * Shipyard.current.damageTaken);
+  ship.hull = Math.max(0, ship.hull - remaining * Shipyard.current.damageTaken);
   ship.invulnerable = grace;
-  shake = 5;
-  burst(ship.x, ship.y, [.8, .45, .25], 18, 90);
+  shake = protectedHit && remaining === 0 ? 1.5 : 5;
+  burst(ship.x, ship.y, protectedHit ? [.35, .68, 1] : [.8, .45, .25], 18, 90);
   if (ship.hull <= 0) {
     GameAudio.play('explosion', { intensity: 1.3 });
+    if (typeof SpaceEffects !== 'undefined') SpaceEffects.spawn(ship.x, ship.y, 75, 'metal');
+    if (typeof FlightTransitions !== 'undefined') FlightTransitions.start('respawn');
     ship.hull = 100;
     ship.vx = ship.vy = 0;
     ship.x = ship.y = 0;
@@ -297,7 +323,8 @@ function damageShip(amount, message = I18n.t('HULL DAMAGE'), grace = 1) {
       Raiders.resetEncounter();
     notify(I18n.t('EMERGENCY RECOVERY · VESSEL RESTORED'));
   } else
-    notify(message);
+    notify(remaining === 0 ? I18n.t('SHIELD ABSORBED HIT') : message);
+  if (typeof Colony !== 'undefined') Colony.save();
   return true;
 }
 
@@ -361,15 +388,21 @@ document.querySelector('#resume').onclick = resume;
 // Advance flight simulation in seconds. Moon exploration takes an early exit.
 // Order matters: movement, firing, swept projectile hits, rock collisions, then pickups.
 function update(dt) {
+  if (typeof Shields !== 'undefined' && !Colony.onSurface) Shields.update(dt);
+  if (typeof Starbases !== 'undefined') Starbases.update(dt);
   if (typeof StarChart !== 'undefined')
     StarChart.update(dt);
   if (typeof Raiders !== 'undefined')
     Raiders.update(dt);
+  if (typeof MissionContracts !== 'undefined') MissionContracts.update(dt);
   if (Colony.onSurface) {
     Colony.updateSurface(dt);
     return;
   }
   Colony.updateSpace();
+  if (typeof Salvage !== 'undefined') Salvage.update();
+  if (typeof BlackHoles !== 'undefined') BlackHoles.applyGravity(dt);
+  if (typeof SpaceEffects !== 'undefined') SpaceEffects.update(dt);
   time += dt;
   ship.invulnerable -= dt;
   toastTimer -= dt;
@@ -395,6 +428,7 @@ function update(dt) {
   }
   ship.x += ship.vx * dt;
   ship.y += ship.vy * dt;
+  if (typeof BlackHoles !== 'undefined' && BlackHoles.checkCapture()) return;
   GameAudio.setEngine(thrust * (drive.solar ? .2 : 1), boost);
   if (thrust && Math.random() < .7) {
     const d = thrust > 0 ? -1 : 1;
@@ -412,6 +446,7 @@ function update(dt) {
   Weapons.update(dt);
   generate();
   Weapons.updateProjectiles(dt);
+  if (typeof Salvage !== 'undefined') Salvage.collide();
   // Resolve hull overlap and reflect incoming velocity along the collision normal.
   for (const r of rocks) {
     r.x += r.vx * dt;
@@ -515,6 +550,7 @@ function render() {
   vertices = [];
   gl.clearColor(.024, .039, .061, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
+  if (typeof DeepSpace !== 'undefined') DeepSpace.render();
   for (const s of stars) {
     const x = mod(s.x - ship.x * s.z, width + 100) - 50,
       y = mod(s.y - ship.y * s.z, height + 100) - 50;
@@ -525,6 +561,9 @@ function render() {
     oy = height / 2 + (Math.random() - .5) * shake;
   const screen = (x, y) => [x - ship.x + ox, y - ship.y + oy];
   Colony.renderMoons(screen);
+  if (typeof BlackHoles !== 'undefined') BlackHoles.render(screen);
+  if (typeof Starbases !== 'undefined') Starbases.render(screen);
+  if (typeof MissionContracts !== 'undefined') MissionContracts.render(screen);
   if (typeof StarChart !== 'undefined')
     StarChart.renderWormholes(screen);
   // A quiet navigation grid that drifts with the world.
@@ -533,36 +572,10 @@ function render() {
       line([x - 4, y], [x + 4, y], [.4, .55, .65, .09]);
       line([x, y - 4], [x, y + 4], [.4, .55, .65, .09]);
     }
-  for (const r of rocks) {
-    const [x, y] = screen(r.x, r.y);
-    if (x < -r.r || x > width + r.r || y < -r.r || y > height + r.r)
-      continue;
-    const c = Math.cos(r.angle),
-      s = Math.sin(r.angle),
-      pts = r.points.map(p => [x + p[0] * c - p[1] * s, y + p[0] * s + p[1] * c]);
-    const base = palettes[r.type],
-      rng = random(r.seed + 55),
-      center = [x - r.r * .13, y - r.r * .11];
-    disc(x + 7, y + 10, r.r * .88, [0, 0, 0, .12], 12);
-    for (let i = 0; i < pts.length; i++) {
-      const a = pts[i],
-        b = pts[(i + 1) % pts.length],
-        light = .65 + rng() * .55 + Math.max(0, -((a[1] + b[1]) / 2 - y) / r.r) * .2;
-      tri(center, a, b, [base[0] * light, base[1] * light, base[2] * light, 1]);
-      line(a, b, [base[0] * 1.35, base[1] * 1.35, base[2] * 1.35, .45]);
-      if (i % 3 === 0)
-        line(center, a, [.1, .14, .18, .28]);
-    }
-    for (let j = 0; j < 3; j++) {
-      const a = rng() * 6.28,
-        rr = r.r * (.15 + rng() * .4),
-        cr = r.r * (.08 + rng() * .08),
-        cx = x + Math.cos(a) * rr,
-        cy = y + Math.sin(a) * rr;
-      disc(cx, cy, cr, [.04, .07, .1, .24], 7);
-      line([cx - cr * .7, cy + cr * .6], [cx + cr * .5, cy + cr * .7], [.65, .72, .75, .13]);
-    }
-  }
+  flush2D();
+  Asteroid3D.render(gl, rocks, screen, width, height, typeof DisplayOptions !== 'undefined' ? DisplayOptions.asteroidQuality : 'balanced');
+  flush2D();
+  if (typeof Salvage !== 'undefined') Salvage.render(screen);
   Weapons.renderRockMarks(screen);
   if (typeof Raiders !== 'undefined')
     Raiders.render(screen);
@@ -586,8 +599,10 @@ function render() {
       y - b.vy / l * (b.weaponId === 'laser' ? 48 : b.missile ? 18 : 13)
     ], [...b.tint, .95], b.missile ? 3 : b.weaponId === 'laser' ? 3.5 : 1.7);
   }
+  if (typeof SpaceEffects !== 'undefined') SpaceEffects.render(screen);
   const blink = ship.invulnerable > 0 && Math.sin(time * 20) > 0 ? .45 : 1;
   Shipyard.drawFlightShip(ox, oy, ship.angle, blink);
+  if (typeof Shields !== 'undefined') Shields.render(ox, oy, ship.angle);
   // Heading ticks remain centered on the vessel.
   for (let i = 0; i < 32; i++) {
     const a = i / 32 * Math.PI * 2;
@@ -596,8 +611,7 @@ function render() {
   const a = ship.angle;
   line([ox + Math.sin(a) * 75, oy - Math.cos(a) * 75], [ox + Math.sin(a) * 83, oy - Math.cos(a) * 83], [.88, .71, .45, .8], 2);
   // Submit the accumulated triangles in one draw call rather than one call per shape.
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
-  gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 6);
+  flush2D();
 }
 const ctx = document.querySelector('#radar').getContext('2d');
 
@@ -638,6 +652,11 @@ function radar() {
   ctx.restore();
   if (typeof StarChart !== 'undefined')
     StarChart.drawRadar(ctx);
+  if (typeof Starbases !== 'undefined') Starbases.drawRadar(ctx);
+  if (typeof BlackHoles !== 'undefined') BlackHoles.drawRadar(ctx);
+  if (typeof Salvage !== 'undefined') Salvage.drawRadar(ctx);
+  if (typeof MissionContracts !== 'undefined') MissionContracts.drawRadar(ctx);
+  if (typeof QuestTracker !== 'undefined') QuestTracker.drawRadar(ctx);
   if (typeof Raiders !== 'undefined')
     Raiders.drawRadar(ctx);
 }
@@ -648,11 +667,17 @@ function frame(now) {
   const dt = Math.min((now - last) / 1000, .033);
   last = now;
   if (typeof Colony !== 'undefined') {
+    // Fabrication progresses in menus, while flight and combat stay paused.
+    Colony.updateCrafting(dt);
+    Colony.refreshRepairButton();
+    if (typeof QuestTracker !== 'undefined') QuestTracker.update(dt);
     if (paused || Colony.onSurface)
       GameAudio.setEngine(0);
-    if (!paused)
+    if (typeof FlightTransitions !== 'undefined') FlightTransitions.update(dt);
+    if (!paused && !(typeof FlightTransitions !== 'undefined' && FlightTransitions.active))
       update(dt);
     render();
+    if (typeof FlightTransitions !== 'undefined') FlightTransitions.render();
   }
   requestAnimationFrame(frame);
 }

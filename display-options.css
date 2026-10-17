@@ -1,0 +1,52 @@
+/* A readable HUD baseline, independently scalable from the game canvas. */
+:root { --hud-scale: 1.25; }
+.telemetry .eyebrow, .telemetry .type, .telemetry label, .telemetry small,
+.coordinates small, .sector, .manifest .eyebrow, .manifest .stat, .manifest .cargo,
+#scannerStatus, #baseBearing, #baseRadarKey, .controls, #weaponDetails,
+.weapon-card small, .weapon-card b, .header-actions button, .header-actions summary,
+#dockPrompt, #missionStatus, #surfaceHud, #surfaceHud small {
+  font-size: calc(10px * var(--hud-scale));
+  line-height: 1.6;
+}
+.manifest p { font-size: calc(11px * var(--hud-scale)); }
+.controls { flex-wrap: wrap; gap: 8px 15px; }
+.header-actions { flex-wrap: wrap; justify-content: flex-end; }
+.weapon-cards { overflow-x: auto; max-width: 100%; }
+.weapon-card { flex-shrink: 0; min-width: 70px; }
+.hide-flight-hints footer .controls { display: none; }
+.high-contrast-hud .telemetry, .high-contrast-hud .manifest, .high-contrast-hud .coordinates,
+.high-contrast-hud #surfaceHud { background: #07111cf5; border: 1px solid #a6cad866; padding: 14px; }
+#displayOptions[hidden] { display: none; }
+#displayOptions { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #030b16d9; backdrop-filter: blur(8px); }
+#displayOptions section { width: min(500px, 95vw); max-height: 90dvh; overflow: auto; padding: 28px; border: 1px solid #769cb066; background: #0c1b29; }
+#displayOptions h2 { font-size: 30px; margin: 0 0 15px; }
+#displayOptions p, #displayOptions label { font-size: 14px; line-height: 1.8; }
+#displayOptions label { display: block; margin: 20px 0 10px; color: #c9dce5; }
+#hudTextScale { width: 100%; accent-color: #8dcbdc; }
+#hudScaleValue { float: right; color: #e9c37e; }
+.options-actions { display: flex; justify-content: space-between; margin-top: 24px; }
+@media(max-width:800px) { header .sector { display: none; } }
+
+.telemetry .stat > span, .telemetry .stat > b, .telemetry h1 span,
+.coordinates > span, .location .eyebrow, .location small, #refuel, #repair,
+.weapon-number, .weapon-status, #toast { font-size: calc(10px * var(--hud-scale)); line-height: 1.6; }
+
+#shieldGauge[hidden] { display: none; }
+#shieldGauge { margin: 12px 0; }
+#shieldBar { background: linear-gradient(90deg, #386ba4, #8ad5ff); height: 100%; }
+#shieldStatus { color: #91c7f4; font-size: calc(9px * var(--hud-scale, 1.25)); line-height: 1.6; }
+
+#blackHoleWarning[hidden], .on-surface #blackHoleWarning { display: none; }
+#blackHoleWarning { position: absolute; top: 190px; left: 50%; transform: translateX(-50%); max-width: 85vw; background: #27132de8; border: 1px solid #da9ce37a; padding: 12px 18px; color: #f3b8df; font-size: calc(11px * var(--hud-scale,1.25)); line-height: 1.6; text-align: center; z-index: 5; pointer-events: none; }
+#asteroidQuality { width: 100%; padding: 10px; background: #102638; color: #d6e6ef; border: 1px solid #7fa5bc66; font-size: 14px; }
+
+/* Profile menu uses its own scroll area and fits small viewports. */
+#profileOverlay[hidden] { display: none; }
+#profileOverlay { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 18px; background: #030b16e8; }
+#profileOverlay section { width: min(520px, 95vw); max-height: 90dvh; overflow: auto; box-sizing: border-box; padding: 25px; border: 1px solid #769cb066; background: #0c1b29; }
+#profileOverlay h2 { margin: 0 0 16px; font-size: 28px; }
+#profileOverlay p, #profileOverlay label { font-size: 14px; line-height: 1.6; }
+#profileOverlay label { display: block; margin: 20px 0 8px; }
+#profileOverlay input, #profileOverlay select { box-sizing: border-box; width: 100%; padding: 10px; font: inherit; background: #102638; color: #d6e6ef; border: 1px solid #7fa5bc66; }
+.profile-actions { display: flex; gap: 12px; justify-content: space-between; margin-top: 18px; }
+#profileError { color: #f5a09b; }

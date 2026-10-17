@@ -100,11 +100,11 @@ const StarChart = (() => {
     });
   }
   function signals() {
-    return online() ? portals().filter(p => Math.hypot(p.x - ship.x, p.y - ship.y) <= range) : [];
+    return portals().filter(p => (online() || links.has(edge(p.from, p.to))) && Math.hypot(p.x - ship.x, p.y - ship.y) <= range);
   }
   function save() {
     try {
-      localStorage.setItem('spacecraft-chart-v1', JSON.stringify({
+      (typeof Profiles === 'undefined' ? localStorage : Profiles).setItem('spacecraft-chart-v1', JSON.stringify({
         located: [...located],
         visited: [...visited],
         links: [...links],
@@ -117,7 +117,7 @@ const StarChart = (() => {
   }
   function load() {
     try {
-      const data = JSON.parse(localStorage.getItem('spacecraft-chart-v1') || 'null');
+      const data = JSON.parse((typeof Profiles === 'undefined' ? localStorage : Profiles).getItem('spacecraft-chart-v1') || 'null');
       if (!data)
         return;
       if (Array.isArray(data.located))
@@ -185,7 +185,17 @@ const StarChart = (() => {
     $('#systemLabel').textContent = s.name.toUpperCase();
     const found = signals();
     $('#scannerStatus').textContent = online() ? I18n.t(`${ found.length } BEARINGS · 6.5 KM`) : I18n.t('RECEIVER OFFLINE');
-    $('#scannerStatus').classList.toggle('online', online());
+    if (!online() && found.length) $('#scannerStatus').textContent = `${found.length} ` + (I18n.language === 'cs' ? 'ZNÁMÉ SOUŘADNICE' : 'CHARTED BEARINGS');
+    $('#scannerStatus').classList.toggle('online', online() || found.length > 0);
+  }
+  // Coordinate rewards reveal a real neighboring gate, without counting a visit.
+  function revealRoute(from, to) {
+    const a = fromId(from), b = fromId(to);
+    if (!a || !b || Math.abs(a.gx - b.gx) + Math.abs(a.gy - b.gy) !== 1) return false;
+    located.add(from); located.add(to); links.add(edge(from, to));
+    save();
+    if (open) refreshMap();
+    return true;
   }
   function nearbyPortal() {
     return portals().find(p => Math.hypot(p.x - ship.x, p.y - ship.y) < 300) || null;
@@ -193,7 +203,7 @@ const StarChart = (() => {
 
   // Move to the paired exit and clear transient objects from the previous local area.
   function enter() {
-    if (paused || Colony.onSurface || cooldown > 0)
+    if (paused || Colony.onSurface || cooldown > 0 || (typeof FlightTransitions !== 'undefined' && FlightTransitions.active))
       return false;
     const p = nearbyPortal();
     if (!p)
@@ -234,6 +244,7 @@ const StarChart = (() => {
     radar();
     $('#wormholePrompt').hidden = true;
     GameAudio.play('wormhole');
+    if (typeof FlightTransitions !== 'undefined') FlightTransitions.start('wormhole');
     notify(I18n.t(`TRANSIT COMPLETE · ${ destination.name.toUpperCase() }`));
     return true;
   }
@@ -257,8 +268,6 @@ const StarChart = (() => {
   }
   function drawRadar(c) {
     drawBaseRadar(c);
-    if (!online())
-      return;
     for (const p of signals()) {
       const dx = p.x - ship.x,
         dy = p.y - ship.y,
@@ -535,6 +544,15 @@ const StarChart = (() => {
         id: b.dataset.pirateZone
       }));
     }
+    if (typeof Starbases !== 'undefined') {
+      const stations = Starbases.known().filter(b => view === 'global' || b.id === s.id);
+      $('#mapObjects').insertAdjacentHTML('beforeend', `<div class="eyebrow map-list-label">${I18n.language === 'cs' ? 'VESMÍRNÉ STANICE' : 'STARBASES'}</div>` + stations.map(b => `<button class="map-object" data-starbase="${b.id}"><span>▣ ${b.name}</span><small>${distance(b)} · ${I18n.language === 'cs' ? 'Obchod / opravy / posádka' : 'Trade / repairs / crew'}</small></button>`).join(''));
+      $('#mapObjects').querySelectorAll('[data-starbase]').forEach(b => b.onclick = () => selectMarker({type: 'starbase', id: b.dataset.starbase}));
+    }
+    if (view === 'local' && typeof BlackHoles !== 'undefined') {
+      $('#mapObjects').insertAdjacentHTML('beforeend', `<div class="eyebrow map-list-label">${I18n.language === 'cs' ? 'GRAVITAČNÍ HROZBY' : 'GRAVITY HAZARDS'}</div>` + BlackHoles.nearby().map(hole => `<button class="map-object" data-black-hole="${hole.id}"><span>◉ ${hole.name}</span><small>${distance(hole)} · ${hole.influence} m ${I18n.language === 'cs' ? 'GRAVITAČNÍ POLE' : 'GRAVITY FIELD'}</small></button>`).join(''));
+      $('#mapObjects').querySelectorAll('[data-black-hole]').forEach(button => button.onclick = () => selectMarker({type: 'blackHole', id: button.dataset.blackHole}));
+    }
     renderDetails();
     resizeChart();
     drawChart();
@@ -544,6 +562,22 @@ const StarChart = (() => {
     let title = s.name,
       description = I18n.t(`CURRENT SYSTEM · ${ s.id }`),
       hint = Colony.onSurface ? I18n.t('Surface expedition. Your ship is parked on this moon.') : I18n.t('Your local chart covers this system. Select a signal to track its bearing.');
+    if (chosen?.type === 'blackHole' && typeof BlackHoles !== 'undefined') {
+      const hole = BlackHoles.getById(chosen.id);
+      if (hole) {
+        title = hole.name;
+        description = I18n.language === 'cs' ? 'NEBEZPEČNÁ GRAVITACE' : 'DANGEROUS GRAVITY';
+        hint = I18n.language === 'cs' ? 'Pole přitahuje lodě i asteroidy. Držte se mimo 1900 m. Štíty gravitaci nezastaví; použijte zrychlení včas.' : 'Pulls ships and asteroids inward. Stay outside 1900 m. Shields cannot stop gravity; boost away early.';
+      }
+    }
+    if (chosen?.type === 'starbase' && typeof Starbases !== 'undefined') {
+      const base = Starbases.known().find(b => b.id === chosen.id);
+      if (base) {
+        title = base.name;
+        description = I18n.language === 'cs' ? 'CIVILNÍ STANICE' : 'CIVILIAN STARBASE';
+        hint = I18n.language === 'cs' ? 'Obchod, opravy a nábor posádky. Přibližte se na 260 m, zpomalte pod 100 m/s a stiskněte H.' : 'Trade, repairs and crew recruitment. Approach within 260 m, slow below 100 m/s and press H.';
+      }
+    }
     if ((chosen?.type) === 'system') {
       const target = fromId(chosen.id);
       title = target.name;
@@ -603,6 +637,14 @@ const StarChart = (() => {
   function label(text, x, y, color = '#839daa') {
     pen.fillStyle = color;
     pen.font = '10px monospace';
+    if (view === 'global') {
+      pen.save();
+      pen.strokeStyle = '#08121ce8';
+      pen.lineWidth = 4;
+      pen.lineJoin = 'round';
+      pen.strokeText(text, x, y);
+      pen.restore();
+    }
     pen.fillText(text, x, y);
   }
   function marker(x, y, r, color, filled = false) {
@@ -615,6 +657,58 @@ const StarChart = (() => {
       pen.fillStyle = color;
       pen.fill();
     }
+  }
+
+  // A seeded, decorative atlas: soft spiral arms, nebula knots and distant stars.
+  // Generate geometry once; redraw only on map interaction, never in the flight loop.
+  // These clouds are scenery, not undiscovered systems or extra wormhole routes.
+  const galacticScenery = (() => {
+    const rng = random(61429), clouds = [], stars = [];
+    for (const [cx, cy, radius, tint] of [
+      [.44, .51, .48, '63,113,172'],
+      [.83, .24, .22, '141,78,170'],
+      [.12, .87, .25, '40,143,151']
+    ]) {
+      for (let i = 0; i < 100; i++) {
+        const distance = Math.sqrt(rng()) * radius;
+        const angle = distance / radius * 7 + (i % 3) * Math.PI * 2 / 3 + (rng() - .5) * .65;
+        clouds.push({
+          x: cx + Math.cos(angle) * distance,
+          y: cy + Math.sin(angle) * distance * .52,
+          r: .025 + rng() * .055,
+          tint,
+          alpha: .055 + rng() * .09
+        });
+      }
+      clouds.push({x: cx, y: cy, r: radius * .2, tint: '180,178,218', alpha: .2});
+    }
+    for (let i = 0; i < 700; i++)
+      stars.push({x: rng(), y: rng(), r: rng() < .96 ? .7 : 1.4, alpha: .12 + rng() * .55});
+    return {clouds, stars};
+  })();
+
+  function drawGalacticScenery() {
+    // Gentle parallax keeps the scenery continuous while dragging/zooming the atlas.
+    const width = chartWidth * 1.7, height = chartHeight * 1.7;
+    const scale = Math.pow(zoom, .25);
+    pen.save();
+    pen.translate(chartWidth / 2 + pan.x * .18, chartHeight / 2 + pan.y * .18);
+    pen.scale(scale, scale);
+    pen.globalCompositeOperation = 'screen';
+    for (const cloud of galacticScenery.clouds) {
+      const x = (cloud.x - .5) * width, y = (cloud.y - .5) * height;
+      const r = cloud.r * Math.max(width, height);
+      const glow = pen.createRadialGradient(x, y, 0, x, y, r);
+      glow.addColorStop(0, `rgba(${cloud.tint},${cloud.alpha})`);
+      glow.addColorStop(1, `rgba(${cloud.tint},0)`);
+      pen.fillStyle = glow;
+      pen.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    for (const star of galacticScenery.stars) {
+      pen.fillStyle = `rgba(190,211,239,${star.alpha})`;
+      pen.fillRect((star.x - .5) * width, (star.y - .5) * height, star.r, star.r);
+    }
+    pen.restore();
   }
   function drawChart() {
     if (!open)
@@ -632,9 +726,18 @@ const StarChart = (() => {
       drawLocal();
     else
       drawGlobal();
+    if (view === 'local' && typeof Salvage !== 'undefined') Salvage.drawLocal(pen, projectLocal);
+    if (view === 'local' && typeof QuestTracker !== 'undefined') QuestTracker.drawLocal(pen, projectLocal);
   }
   function drawLocal() {
     const s = current();
+    if (typeof MissionContracts !== 'undefined') MissionContracts.drawMap(pen, projectLocal);
+    if (typeof BlackHoles !== 'undefined') BlackHoles.drawLocal(pen, projectLocal);
+    if (typeof Starbases !== 'undefined') {
+      const base = Starbases.currentStation(), p = projectLocal(base.x, base.y);
+      Starbases.drawMarker(pen, p.x, p.y, base.name);
+      hits.push({...p, type: 'starbase', id: base.id});
+    }
     pen.strokeStyle = '#5c7f9220';
     pen.lineWidth = 1;
     for (let n = -6000; n <= 6000; n += 2000) {
@@ -773,8 +876,9 @@ const StarChart = (() => {
   // Fit known systems and base locations together. Multiple bases share a system marker
   // but keep individual sidebar entries and selectable destinations.
   function drawGlobal() {
+    drawGalacticScenery();
     const baseSystems = Colony.getBases().map(baseSystem),
-      systemIds = new Set([...located, ...baseSystems.map(s => s.id)]);
+      systemIds = new Set([...located, ...baseSystems.map(s => s.id), ...(typeof QuestTracker !== 'undefined' && QuestTracker.target() ? [QuestTracker.target().system] : [])]);
     const systems = [...systemIds].map(fromId),
       xs = systems.map(s => s.gx),
       ys = systems.map(s => s.gy);
@@ -787,23 +891,36 @@ const StarChart = (() => {
       x: chartWidth / 2 + (s.gx - (minX + maxX) / 2) * scale + pan.x,
       y: chartHeight / 2 + (s.gy - (minY + maxY) / 2) * scale + pan.y
     });
-    pen.strokeStyle = '#4c8a9f66';
-    pen.lineWidth = 1.5;
+    // Only recorded wormhole edges become routes; never connect systems by list order.
     for (const e of links) {
       const [a, b] = e.split('|').map(fromId);
       if (!a || !b)
         continue;
       const p = project(a),
         q = project(b);
+      const selected = (chosen?.type === 'system' && [a.id, b.id].includes(chosen.id)) ||
+        (tracked && edge(...tracked.split('>')) === e);
+      pen.save();
+      pen.strokeStyle = selected ? '#efc685' : '#83d6e3';
+      pen.lineWidth = selected ? 2 : 1.2;
+      pen.shadowColor = pen.strokeStyle;
+      pen.shadowBlur = selected ? 9 : 4;
+      pen.setLineDash(visited.has(a.id) && visited.has(b.id) ? [] : [5, 6]);
       pen.beginPath();
       pen.moveTo(p.x, p.y);
       pen.lineTo(q.x, q.y);
       pen.stroke();
+      pen.restore();
     }
     for (const s of systems) {
       const p = project(s),
         here = s.id === current().id,
         color = here ? '#dfb878' : visited.has(s.id) ? '#a8d1d2' : '#6f929e';
+      // An opaque halo separates interactive markers from the nebula and routes.
+      pen.beginPath();
+      pen.arc(p.x, p.y, here ? 10 : 8, 0, Math.PI * 2);
+      pen.fillStyle = '#08121ce8';
+      pen.fill();
       marker(p.x, p.y, here ? 7 : 5, color, visited.has(s.id));
       if (here)
         marker(p.x, p.y, 12, '#dfb87866');
@@ -816,6 +933,20 @@ const StarChart = (() => {
         type: 'system',
         id: s.id
       });
+    }
+    if (typeof Starbases !== 'undefined') {
+      for (const base of Starbases.known()) {
+        const p = project({gx: base.x / spacing, gy: base.y / spacing});
+        Starbases.drawMarker(pen, p.x, p.y, base.name);
+        hits.unshift({...p, type: 'starbase', id: base.id});
+      }
+    }
+    if (typeof BlackHoles !== 'undefined') {
+      for (const system of systems) for (const hole of BlackHoles.forSystem(system.gx, system.gy)) {
+        const p = project({gx: hole.x / spacing, gy: hole.y / spacing});
+        BlackHoles.drawMarker(pen, p.x, p.y);
+        hits.unshift({...p, type: 'blackHole', id: hole.id});
+      }
     }
     const groups = new Map();
     for (const b of Colony.getBases()) {
@@ -862,6 +993,8 @@ const StarChart = (() => {
           label(cleared ? I18n.t('PATROLS CLEARED') : I18n.t('⚠ PIRATE PATROLS'), p.x + 13, p.y + 22, cleared ? '#82aa93' : '#ca8273');
         }
       }
+    if (typeof Salvage !== 'undefined') Salvage.drawGlobal(pen, project);
+    if (typeof QuestTracker !== 'undefined') QuestTracker.drawGlobal(pen, project);
   }
   $('#mapButton').onclick = openMap;
   $('#closeMap').onclick = closeMap;
@@ -969,6 +1102,7 @@ const StarChart = (() => {
   load();
   discover();
   return {
+    revealRoute,
     get mapOpen() {
       return open;
     },

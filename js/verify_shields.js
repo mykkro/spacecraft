@@ -1,0 +1,83 @@
+// Shield physics, real damageShip integration, crafting and persistence. No browser.
+const assert = require('node:assert/strict');
+const fs = require('node:fs'), path = require('node:path');
+const {boot} = require('./verify_ships.js');
+const {functionSource} = require('./test_source_utils.js');
+const w = boot(undefined, {withShields: true}), {Colony: c, Shipyard} = w.model;
+const s = w.run('Shields');
+const close = (a, b) => assert(Math.abs(a - b) < 1e-7, a + ' != ' + b);
+assert.equal(s.equipped, null);
+assert.equal(s.equip('shield_generator'), false);
+for (const id of Object.keys(s.definitions)) assert(c.addItem(id, 1));
+assert(c.equipShipSlot('shield', 'shield_generator'));
+assert.equal(s.capacity, 35); assert.equal(s.charge, 0);
+s.update(5); assert.equal(s.charge, 0);
+s.update(1); close(s.charge, 1.5);
+s.update(100); assert.equal(s.charge, 35);
+w.run(functionSource(fs.readFileSync(path.join(__dirname, 'game.js'), 'utf8'), 'damageShip'));
+w.run('damageShip(10)');
+assert.equal(w.ctx.ship.hull, 73);
+assert.equal(s.charge, 25);
+assert.equal(JSON.parse(w.store.get('spacecraft-save-v1')).shield.charge, 25);
+// Invulnerability consumes no additional charge.
+assert.equal(w.run('damageShip(10)'), false); assert.equal(s.charge, 25);
+w.ctx.ship.invulnerable = 0;
+w.run('damageShip(40)');
+assert.equal(s.charge, 0); assert.equal(w.ctx.ship.hull, 58);
+const hitSave = JSON.parse(w.store.get('spacecraft-save-v1'));
+assert.equal(hitSave.ship.hull, 58); assert.equal(hitSave.shield.charge, 0);
+s.update(5); assert.equal(s.charge, 0);
+s.update(2); close(s.charge, 3);
+assert(s.equip('shield_generator_advanced'));
+assert.equal(s.capacity, 65); close(s.charge, 3); // Switching never fills charge.
+s.update(4); close(s.charge, 3);
+s.update(1); close(s.charge, 6);
+c.assignQuickSlot(0, 'shield_generator_ion');
+c.selectQuickSlot(0);
+assert.equal(s.equipped, 'shield_generator_advanced');
+c.selectQuickSlot(0, true);
+assert.equal(s.capacity, 100); close(s.charge, 6);
+s.update(100); assert.equal(s.charge, 100);
+Shipyard.choose('kraxna');
+w.ctx.ship.hull = 100; w.ctx.ship.invulnerable = 0;
+w.run('damageShip(110)');
+assert.equal(s.charge, 0); close(w.ctx.ship.hull, 92.8); // Armor applies only to spillover.
+s.update(10); close(s.charge, 35);
+let segments = 0;
+w.ctx.line = (a, b, color, width) => {
+  assert([...a, ...b, ...color, width].every(Number.isFinite));
+  assert(color[3] > 0 && color[3] < .3); segments++;
+};
+s.render(300, 200, .4);
+assert.equal(segments, 48);
+c.save();
+const reload = boot(w.store, {withShields: true}), restored = reload.run('Shields');
+assert.equal(restored.equipped, 'shield_generator_ion');
+close(restored.charge, 35);
+assert(reload.model.Colony.consumeItem('shield_generator_ion'));
+assert.equal(restored.equipped, null); assert.equal(restored.charge, 0);
+s.unequip(); assert(s.equip('shield_generator')); assert.equal(s.charge, 0);
+// Craft a real generator, then upgrade the installed one without ghost protection.
+const seed = boot(undefined, {withShields: true});
+Object.assign(seed.ctx.ship, {x: 720, y: -870});
+seed.model.Colony.land(); seed.model.Colony.surface[13][40] = 'bench'; seed.model.Colony.save();
+const craftWorld = boot(seed.store, {withShields: true}), craft = craftWorld.model.Colony;
+for (const [id, qty] of [['ingot', 3], ['plate', 4], ['glass', 1], ['bulterite', 2]]) assert(craft.addItem(id, qty));
+assert(craft.selectRecipe(craft.recipes.findIndex(r => r.out === 'shield_generator')));
+assert(craft.craft()); assert.equal(craft.craftingQueue[0].duration, 25);
+for (let i = 0; i < 25; i++) craft.updateCrafting(1);
+assert(craft.equipShipSlot('shield', 'shield_generator'));
+assert(craft.selectRecipe(craft.recipes.findIndex(r => r.out === 'shield_generator_advanced')));
+assert(craft.craft());
+assert.equal(craftWorld.run('Shields.equipped'), null);
+assert.equal(craft.craftingQueue[0].duration, 30);
+for (let i = 0; i < 30; i++) craft.updateCrafting(1);
+assert.equal(craft.availableCount('shield_generator_advanced'), 1);
+assert(craft.equipShipSlot('shield', 'shield_generator_advanced'));
+assert.equal(craftWorld.run('Shields.charge'), 0);
+console.log('PASS: generator ownership/equipment, three capacities, delayed regeneration rates, shield-first hits, armor spillover, invulnerability, safe swapping, faint outline geometry, charge/hull saves and timed upgrades. No browser started.');
+
+assert.equal(s.collisionRadius, 14);
+s.update(20);
+assert.equal(s.collisionRadius, 40);
+console.log('PASS: shield projectile radius expands only while charged.');

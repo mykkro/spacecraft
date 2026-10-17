@@ -1,0 +1,85 @@
+/* Compact spacing, without changing HUD font sizes or the user's text scale. */
+body > header { top: 16px; left: 20px; right: 20px; gap: 12px; }
+.wordmark > span { display: none; }
+.header-actions { gap: 5px; }
+.header-actions button, .header-actions summary { padding: 5px 8px; letter-spacing: 0; line-height: 1.35; }
+body:not(.on-surface) .telemetry, body:not(.on-surface) .manifest {
+  top: 110px; max-height: calc(50dvh - 130px); overflow-y: auto;
+  overscroll-behavior: contain; scrollbar-width: thin;
+}
+.telemetry { left: 20px; }
+body:not(.on-surface) .telemetry { max-height: calc(100dvh - 280px); }
+.manifest { right: 20px; }
+.telemetry > .eyebrow, .manifest > h2, .manifest > p, .manifest > .eyebrow > span { display: none; }
+.telemetry h1 { margin: 0; line-height: 1; }
+.telemetry h1 span { margin-top: 4px; letter-spacing: 0; line-height: 1.35; }
+.telemetry .rule, .manifest .rule { margin: 8px 0; }
+.telemetry .stat, .manifest .stat { margin: 6px 0; gap: 8px; letter-spacing: 0; }
+.telemetry .stat > span, .telemetry .stat > b { line-height: 1.35; }
+.telemetry .lower, .telemetry .fuel-heading { margin-top: 9px; }
+#shieldGauge { margin: 7px 0; }
+#shieldStatus, .fuel-status { margin: 4px 0; line-height: 1.35; }
+#refuel, #repair { display: inline-block; width: calc(50% - 3px); padding: 4px 2px; margin: 3px 0; letter-spacing: 0; line-height: 1.35; }
+.manifest .cargo { margin-top: 8px; letter-spacing: 0; }
+.manifest .cargo > div { display: grid; grid-template-columns: auto 1fr auto 1fr; align-items: baseline; gap: 3px 6px; margin-top: 5px; }
+.manifest .cargo div span { margin-right: 0; }
+.manifest > button { width: 100%; padding: 5px 8px; margin: 5px 0 0; letter-spacing: 0; line-height: 1.35; }
+body .coordinates { left: auto; right: 20px; bottom: 150px; max-height: calc(50dvh - 150px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; letter-spacing: 0; }
+.coordinates > span { margin-bottom: 4px; }
+.coordinates small { margin-top: 3px; line-height: 1.35; letter-spacing: 0; }
+#baseRadarKey { display: none; } /* Shapes and bearings remain visible on the radar. */
+.location { top: 78px; gap: 5px; letter-spacing: .5px; }
+.location small { display: none; }
+#dockPrompt { top: 106px; padding: 5px 9px; line-height: 1.35; }
+#trackedQuest { top: 148px; padding: 5px 9px; line-height: 1.35; }
+body > footer { left: 20px; right: 20px; bottom: 10px; padding-top: 7px; display: grid; grid-template-columns: minmax(0,1fr); gap: 5px; }
+#weaponHud { min-width: 0; }
+.weapon-cards { gap: 4px; }
+.weapon-card { padding: 3px 3px 4px; gap: 2px; }
+.weapon-card b, .weapon-status { line-height: 1.2; }
+.cooldown-icon, .cooldown-icon svg { width: 44px; height: 44px; }
+.cooldown-icon img { inset: 4px; width: 36px; height: 36px; }
+#weaponDetails { margin-top: 3px; line-height: 1.3; }
+footer .controls { flex-wrap: nowrap; overflow-x: auto; max-width: none; margin: 0; gap: 10px; padding-bottom: 2px; line-height: 1.35; }
+.controls > span { flex-shrink: 0; white-space: nowrap; }
+.controls kbd { padding: 1px 3px; margin-right: 2px; }
+#toast { bottom: 155px; padding: 5px 9px; line-height: 1.35; }
+
+/* Reclaim workshop height by compressing explanatory copy, not ingredient text. */
+body #overlay > section { padding: 14px 18px; }
+#overlay h2 { margin: 3px 0; }
+#overlayDescription { display: none; }
+body #slots { margin: 7px 0; gap: 5px; }
+#overlay .inventory-hint { margin: 4px 0; line-height: 1.35; }
+#overlay .fuel-hint, #overlay .quick-inventory-hint { display: none; }
+.inventory-workspace { gap: 12px; }
+.inventory-craft-pane .station-access { padding: 5px 7px; margin-bottom: 5px; line-height: 1.35; }
+.station-access span { display: inline; }
+.inventory-craft-pane .station-tabs button { padding: 5px 7px; }
+.inventory-craft-pane .craft-layout { gap: 7px; margin-top: 7px; }
+.inventory-craft-pane .recipe-book button { padding: 6px; }
+#overlay .quick-inventory-editor { padding-top: 5px; margin-top: 4px; }
+.craft-queue { padding-top: 5px; margin-top: 5px; }
+.craft-job { gap: 6px; padding: 5px 0; }
+.craft-queue .inventory-label { margin-bottom: 3px; }
+#overlay .inventory-ship-pane .ship-blueprint { height: 105px; min-height: 105px; }
+.ship-blueprint svg { height: 90px; }
+.ship-equipment-slot { min-height: 80px; padding: 5px 3px; gap: 3px; }
+.encyclopedia-heading h2, .station-heading h2 { margin: 5px 0; }
+.encyclopedia-toolbar { margin-top: 10px; gap: 10px; }
+.encyclopedia-card { padding: 8px; }
+.station-panel { padding: 18px; }
+.station-services { gap: 10px; padding: 10px 0; }
+.station-columns { gap: 16px; }
+.station-columns h3 { margin: 12px 0 8px; }
+.station-row { gap: 7px; padding: 6px 0; }
+#stationCrew article { padding: 9px; margin: 7px 0; }
+@media(max-width:700px) {
+  body > header { left: 12px; right: 12px; top: 10px; }
+  .header-actions { max-width: 70vw; }
+  .header-actions button, .header-actions summary { padding: 4px 6px; }
+  .telemetry { left: 12px; }
+  .manifest { right: 12px; }
+  body .coordinates { left: auto; right: 12px; }
+  body > footer { left: 12px; right: 12px; }
+}

@@ -80,6 +80,7 @@ const Weapons = (() => {
       icon: 'mininglaser.svg'
     },
     fotron: {
+      ammo: 'ammo_fotron',
       name: I18n.t('Fotron Cannon'),
       short: I18n.t('Fotron'),
       channel: 'primary',
@@ -92,6 +93,7 @@ const Weapons = (() => {
       icon: 'fotron.svg'
     },
     bulshitter: {
+      ammo: 'ammo_bulshitter',
       name: I18n.t('Bulshitter'),
       short: I18n.t('Bulshitter'),
       channel: 'primary',
@@ -166,12 +168,12 @@ const Weapons = (() => {
   }
   function saveSelection() {
     try {
-      localStorage.setItem('spacecraft-weapons-v1', JSON.stringify(selected));
+      (typeof Profiles === 'undefined' ? localStorage : Profiles).setItem('spacecraft-weapons-v1', JSON.stringify(selected));
     } catch {
     }
   }
   try {
-    const stored = JSON.parse(localStorage.getItem('spacecraft-weapons-v1') || 'null');
+    const stored = JSON.parse((typeof Profiles === 'undefined' ? localStorage : Profiles).getItem('spacecraft-weapons-v1') || 'null');
     for (const channel of ['primary', 'missile'])
       if ((definitions[stored?.[channel]]?.channel) === channel)
         selected[channel] = stored[channel];
@@ -231,7 +233,7 @@ const Weapons = (() => {
       button.querySelector('svg').setAttribute('aria-valuetext', !ready ? I18n.t('Craft at a workbench') : cd.remaining > 0 ? I18n.t(`Recharging: ${ cd.remaining.toFixed(1) } seconds`) : I18n.t('Ready'));
       const ammo = d.ammo ? Colony.availableCount(d.ammo) : null;
       button.querySelector('.weapon-status').textContent = !ready ? I18n.t('CRAFT') : ammo === 0 ? I18n.t('EMPTY') : `${ cd.remaining > 0 ? cd.remaining.toFixed(1) + 's' : I18n.t('READY') }${ ammo === null ? '' : ' · ' + ammo }`;
-      button.querySelector('svg').setAttribute('aria-valuetext', !ready ? I18n.t('Craft at a workbench') : ammo === 0 ? I18n.t('Out of ammunition') : `${ cd.remaining > 0 ? I18n.t('Recharging') : I18n.t('Ready') }${ ammo === null ? '' : ', ' + ammo + I18n.t(' missiles remaining') }`);
+      button.querySelector('svg').setAttribute('aria-valuetext', !ready ? I18n.t('Craft at a workbench') : ammo === 0 ? I18n.t('Out of ammunition') : `${ cd.remaining > 0 ? I18n.t('Recharging') : I18n.t('Ready') }${ ammo === null ? '' : ', ' + ammo + I18n.t(' rounds remaining') }`);
       button.title = I18n.t(`${ d.name } · T${ d.tier } · ${ d.damage } damage · ${ d.cooldown }s${ ready ? '' : I18n.t(' · Craft at a workbench') }`);
     }
     $('#weaponDetails').textContent = `[SPACE] ${ definitions[selected.primary].name } · T${ definitions[selected.primary].tier }     [F] ${ definitions[selected.missile].name } · T${ definitions[selected.missile].tier }`;
@@ -304,7 +306,7 @@ const Weapons = (() => {
       }
       return false;
     }
-    r.hp -= (projectile.rockDamage??projectile.damage);
+    r.hp -= (projectile.rockDamage??projectile.damage) * (typeof Starbases !== 'undefined' ? Starbases.miningMultiplier : 1);
     if (feedback)
       GameAudio.play('impact', {
         x: r.x,
@@ -365,6 +367,10 @@ const Weapons = (() => {
           }
         }
       }
+      if (typeof Salvage !== 'undefined') {
+        const wreck = Salvage.sweep(x0,y0,s.x,s.y);
+        if(wreck && wreck.t < first) { hit=wreck.object;first=wreck.t;kind='wreck'; }
+      }
       if (typeof Raiders !== 'undefined') {
         const pirate = Raiders.sweep(x0, y0, s.x, s.y);
         if (pirate && pirate.t < first) {
@@ -380,13 +386,17 @@ const Weapons = (() => {
         const nearby = s.blast ? rocks.filter(r => r !== hit && Math.hypot(r.x - s.x, r.y - s.y) < s.blast + r.r * .5) : [];
         if (kind === 'rock')
           damageRock(s, hit);
+        else if (kind === 'wreck')
+          Salvage.hit(s, hit);
         else
           Raiders.hit(s, hit);
         for (const r of nearby)
           damageRock(s, r, false);
+        if (s.blast && typeof Salvage !== 'undefined') Salvage.blast(s, kind === 'wreck' ? hit : null);
         if (s.blast && typeof Raiders !== 'undefined')
           Raiders.blast(s, kind === 'pirate' ? hit : null);
         if (s.blast) {
+          if (typeof SpaceEffects !== 'undefined') SpaceEffects.spawn(s.x, s.y, Math.min(120, s.blast * .6), 'metal');
           burst(s.x, s.y, s.tint, 60, 220);
           GameAudio.play('explosion', {
             x: s.x,

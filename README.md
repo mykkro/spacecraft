@@ -1,5 +1,7 @@
 # SPACECRAFT
 
+The global chart includes a seeded nebula and spiral-galaxy backdrop. Markers remain selectable above the scenery, and lines represent discovered wormhole connections: solid between visited systems, dashed toward located systems. Selecting a system highlights its connected routes.
+
 ## GitHub Pages deployment
 
 The game is a static site and needs no package installation or build server.
@@ -125,14 +127,14 @@ Left click a stack, then another slot to move or merge it. **Right click a stack
 
 **Return to Bag** returns held items to available space. Closing the inventory attempts the same; if the held items cannot fit, place them before closing. Held items are saved, so reloading does not discard them. Older oversized stacks are split automatically. Any excess that cannot fit stays in **Saved Cargo Overflow**; free slots and choose **Recover Cargo** to bring it into the bag.
 
-Select an item or hold a split stack and click crafting cells to assign ingredients; right click a cell to clear it. Place held items before crafting. Recipe buttons fill the required pattern automatically. Ingredients are consumed only when you press **Craft**, and output capacity is checked before consuming anything.
+Select an item or hold a split stack and click crafting cells to assign ingredients; right click a cell to clear it. Place held items before crafting. Recipe buttons fill the required pattern automatically. Ingredients are reserved when you press **Queue Craft**. Finished batches wait safely in the crafting queue until there is room for the full output.
 
 - Handcraft (2×2): regolith → base blocks or workbench.
 - Workbench (3×3): regolith → furnace; iron ingots → hull plates; ingots + crystal → beacon; ingots + plates + crystals → advanced weapons.
 - Workbench (3×3): ingots + plates + glass + crystal → scanner receiver.
 - Furnace (2×2): iron ore → iron ingot; ice + crystal → glass blocks.
 
-Place stations on a moon to access their grids through **I** anywhere on that surface or from low orbit (within 220 world units of the moon’s edge). The inventory shows the connected moon and its stations; use the Workbench and Furnace tabs to switch grids. Carrying an unplaced station does not unlock it. Mining the last station of a type disables that grid immediately. This first prototype uses instant processing without fuel. Hull plates are stored items for future ship upgrades.
+Place stations on a moon to access their grids through **I** anywhere on that surface or from low orbit (within 220 world units of the moon’s edge). The inventory shows the connected moon and its stations; use the Workbench and Furnace tabs to switch grids. Carrying an unplaced station does not unlock it. Mining the last station of a type disables that grid immediately. Fabrication uses a timed, saved queue without additional furnace fuel. Hull plates are stored items for future ship upgrades.
 
 ## Landing and bases
 
@@ -142,12 +144,12 @@ On the surface: **A/D** move, **Space/W** jump, hold **left click** to mine, **r
 
 You start with a small supply of regolith, ore, ice, crystal, base blocks, and one workbench. Your inventory, built moon surfaces, ship position/hull, and surface location save automatically in browser local storage. No account or server is needed. Saves are specific to the browser and origin; file URLs and localhost may have separate saves. Crafting/building saves immediately; movement saves periodically.
 
-Rendering uses native WebGL with procedural faceted asteroid meshes and no runtime JavaScript dependencies. Generated pixel-art item icons are bundled locally in `assets/items/`; their prompts are documented in `ICON_ART.md`. Google Fonts are optional; system fonts are fallbacks. Flight lives in `js/game.js`; combat and the weapon HUD live in `js/weapons.js`; item definitions, recipes, persistent moon terrain, and surface play live in `js/systems.js`; navigation and exploration knowledge live in `js/navigation.js`. Larger ships and ship equipment editing remain future work. Desktop keyboard and mouse are required.
+Rendering uses native WebGL with procedural volumetric asteroid meshes and no runtime JavaScript dependencies. Generated pixel-art item icons are bundled locally in `assets/items/`; their prompts are documented in `ICON_ART.md`. Google Fonts are optional; system fonts are fallbacks. Flight lives in `js/game.js`; combat and the weapon HUD live in `js/weapons.js`; item definitions, recipes, persistent moon terrain, and surface play live in `js/systems.js`; navigation and exploration knowledge live in `js/navigation.js`. Larger ships and ship equipment editing remain future work. Desktop keyboard and mouse are required.
 
 Browser regression checks: `python verify_browser.py --file`, `python verify_weapons.py`, and `python verify_navigation.py` (Python Playwright required). They use isolated contexts and leave the player's save alone.
 
 
-Missiles use finite ammunition: you start with 8 Rockbreaker rounds. Workbenches craft separate Rockbreaker (4), Penetrator (3), and Seismic (1) ammo batches; stack limits are 16, 8, and 4. Weapon cards show remaining rounds beside the circular cooldown. Empty launchers cannot fire. Primary weapons remain energy powered. Pirate salvage always includes basic ammo, heavy ships also carry advanced rounds, and some ships drop equipment. Fly close to collect salvage; free inventory space for each pack. Existing saves receive the starter ammo once.
+Missiles use finite ammunition: you start with 8 Rockbreaker rounds. Workbenches craft separate Rockbreaker (4), Penetrator (3), and Seismic (1) ammo batches; stack limits are 16, 8, and 4. Weapon cards show remaining rounds beside the circular cooldown. Empty launchers cannot fire. Most primary weapons use energy; Fotron and Bulshitter consume their own craftable ammunition. Pirate salvage always includes basic ammo, heavy ships also carry advanced rounds, and some ships drop equipment. Fly close to collect salvage; free inventory space for each pack. Existing saves receive the starter ammo once.
 
 
 Czech localization: choose **CZ** or **EN** in the header. Czech is selected automatically for browsers with a Czech language preference on first visit. Changing language saves your expedition and reloads the interface; the choice is stored separately from gameplay. Item IDs, recipes, controls, and existing saves are unchanged. Translations live in `js/i18n.js`; dynamic UI uses `I18n.t` for plain text and `I18n.html` for markup, keeping identifiers and asset paths intact.
@@ -170,3 +172,125 @@ Open the **Encyclopedia** with **B** or its button in the expedition log, invent
 
 
 Customize **Quick inventory** in the inventory screen: select a stack and click a numbered slot, or press **1–6** while the inventory is open. Drag a bag item onto a quick slot to assign it, drag one quick slot onto another to swap, and right-click a slot to clear it. Assignments are saved and reference bag contents without moving or duplicating items. Surface **1–6** uses the assigned slot: building items select a block, fuel refuels, and weapons equip. Other materials can be pinned for counts but cannot be placed as terrain. Flight weapon shortcuts remain shown on the weapon cards.
+
+## Starbases and crew
+
+The first civilian station, **Wayfarer Exchange**, is southeast of the start at **(1800, 1100)**. Every system has a station, with a blue square bearing on the minimap and markers on local/global maps. Approach within **260 m**, slow below **100 m/s**, then press **H** or click the station prompt. Docking pauses play. **H / Escape / Undock** resumes flight.
+
+You start with **120 credits** and yourself as captain. Sell minerals to earn credits, buy fuel or missile ammunition, and repair your hull for one credit per missing percentage point (rounded up). Market buttons trade one item at a time; purchases require cargo space. Stations offer three permanent hires, for a maximum crew of four:
+
+- **Rhea, miner (80 cr):** +25% asteroid damage. Weapon hardness gates still apply; pirate damage is unchanged.
+- **Tarek, engineer (110 cr):** 20% lower flight fuel use, including boost.
+- **Ada, mechanic (100 cr):** repairs 1% hull per five seconds after eight seconds without damage, during active flight.
+
+Each specialist can be hired once. Credits, crew and station discoveries share the expedition save with cargo. The station interface supports English and Czech. Run `node js/verify_starbases.js` for browser-free model checks.
+
+Kraxna's player captain is **Jegor Kokotovič**, captain and space garbage man. Its starting two-member crew includes repair robot **Bobo**, who makes station hull repairs **50% cheaper**, rounded up to whole credits. Bobo has a separate robot berth, so Kraxna can still hire all three specialists (five crew in total). Starfox and Nomad start with you alone as captain. Built-in crew follows the selected ship; hired specialists are retained when switching, and Bobo is never duplicated. The ship picker and station roster show this crew in English/Czech.
+
+## Delivery, escort and navigation rewards
+
+Open **J** for contracts, or choose **Contracts** while docked. Mining/base contracts still track automatically; delivery and escort contracts have **Accept** buttons.
+
+- **Crystal prospecting:** its existing item rewards now also reveal the real **0:0 → 1:0 wormhole**. Coordinates work without a scanner and do not mark the destination as visited. Older saves with this quest already claimed also receive the coordinates.
+- **Metal across the void:** accept to receive the route from 0:0 to 1:0. Bring **8 iron ingots** to the civilian starbase in **system 1:0**, dock, open Contracts, and claim. Claiming consumes the ingots and pays **180 credits**, plus wormhole coordinates **1:0 → 1:1**. The destination station appears on the global map after acceptance.
+- **A courier needs cover:** accept in space in system **0:0**. Meet the transport at **(-1800, -900)** and escort it to **Wayfarer Exchange (1800, 1100)**. It moves while you stay within **900 m**; the HUD, minimap and local map show its position. Two pirate ambushes target it along the route. Shoot them with your normal weapons or intercept their fire; asteroids block bullets. Completion requires the courier to reach the station alive, all attackers/bullets cleared, and you within **650 m**. Claim **180 credits and 4 hull plates** in the quest log.
+
+A destroyed courier or leaving system 0:0 fails the escort. Return to that system and choose **Retry Escort**; contract pirates drop no salvage to avoid restart farming. Docking, menus and surface play pause the simulation. Mission progress, courier hull, live attackers/bullets and credit rewards persist with the expedition. Full cargo holds block item payouts without losing completion; claims pay only once.
+
+Run `node js/verify_missions.js` for dependency-free mission checks without opening a browser.
+
+## Display, realistic surfaces and outfitting
+
+Asteroids now use cached irregular surface meshes, world-space lighting, crater bowls and mineral seams. Player ships, pirates and the mission courier use shaded hull plates with thickness, canopy reflections, engine housings and navigation lamps. Ships and effects use the existing triangle batch; volumetric asteroids now use a dedicated depth-tested pass. Flight is top-down, with gravity hazards affecting trajectories.
+
+Choose **OPTIONS** in the header, or **DISPLAY OPTIONS** in inventory. HUD text starts at **125%**, with a saved **100–160%** size slider, high-contrast panels and an option to hide flight-control hints. These preferences stay local to the browser.
+
+Inventory fits inside the viewport: its shell and footer stay fixed while cargo, workshop/recipe lists and ship equipment scroll internally. Drag stacks between bag slots to move, merge up to the stack limit, or swap different items. **Shift-drag** moves half (rounded up); partial stacks do not swap with incompatible items. Right-click half-stack controls still work. Drop items on crafting cells to assign ingredients; the items remain in cargo until crafting. The inventory quickbar and surface quickbar accept item assignments and shortcut swaps.
+
+The ship outline has sockets for the primary cannon, cannon ammo, missile launcher, missile magazine, built-in fuel tank and scanner. Drop or select/click a compatible weapon to equip it. Ammo sockets show the compatible stock used directly from cargo; they do not create duplicate stacks. Drop fuel on the tank socket to refuel. Tank capacity belongs to the selected ship; this screen does not add interchangeable tank upgrades.
+
+**Fotron** now needs **Fotron charge cells** (32 per stack): a workbench crafts **24** from two crystals, one green Ion Cube and one Bulterite. **Bulshitter** needs **cartridges** (128 per stack): a workbench crafts **80** from two iron ingots and one iron ore. A cartridge fires the whole five-projectile volley. Empty weapons cannot fire, and cooldown failures do not spend ammo. Both ammo types appear in the encyclopedia.
+
+Focused checks: `node js/verify_visual_models.js`, `node js/verify_special_ammo.js`, `node js/verify_inventory_drag.js`, and `node js/verify_display_options.js`. All run without browsers or graphics contexts.
+
+## Timed crafting queue
+
+Crafting is no longer instant. Choose a recipe and press **Queue Craft** to reserve its ingredients and add one recipe batch to a **12-job FIFO queue**. Only the first job advances. Recipe buttons show the duration, and the workshop has progress bars, remaining seconds, station status and cancellation buttons. The flight HUD also shows queued fabrication.
+
+| Output | Time per recipe batch |
+| --- | --- |
+| Basic handcraft | 2 seconds |
+| Refined materials and parts | 4 seconds |
+| Ammunition | 6 seconds |
+| Fuel items | 8 seconds |
+| Weapons | 18 seconds |
+| Machines, workbenches and furnaces | 25 seconds |
+| Scanner receiver | 35 seconds |
+
+Fabrication continues while menus/inventory pause flight and combat. Workbench/furnace jobs require their original moon's station network: stay on that surface or in low orbit. Leaving range, visiting another moon or removing the required station pauses that job and the jobs behind it. Reconnect to resume. Handcraft jobs can run anywhere.
+
+Ingredients leave the usable bag when queued and remain accounted for as cargo mass. **Cancel** an unfinished job to refund them; refunds that cannot fit remain safe in Saved Cargo Overflow. Completed output is delivered automatically when the entire batch fits. A full hold leaves the finished job in the queue, blocking the next job until space is freed; completed jobs cannot be cancelled into ingredients.
+
+Queue order, source workshop and remaining time save with the expedition. Reloading does not restart jobs or repeat completed output. The queue does not advance while the game is closed. Progress meters update without rebuilding inventory on every frame. Run `node js/verify_crafting_queue.js` for browser-free checks.
+
+## Repair packs
+
+Craft a **Repair Pack** at a workbench from **1 hull plate + 1 iron ingot + 1 ice**. Each pack takes **8 seconds** in the crafting queue, stacks up to **8**, and restores **20 hull percentage points**, capped at 100%. At full hull, the pack is not consumed.
+
+Select it in inventory and press **Use Repair Pack**, assign it to a quick slot for surface use, or press **U** during active flight/surface play. Assigning a quick slot in the editor does not use it. Partial repairs near full hull consume one pack and restore only the missing hull. Repair packs and their recipe appear in the encyclopedia under **Consumables**, with English/Czech text. Consumption and repaired hull save together.
+
+Check: `node js/verify_repair_packs.js` (no browser).
+
+## Shield generators
+
+Craft a generator at a workbench, then select it and choose **Equip Shield**, drop it into the ship's **shield socket**, or use an assigned quick slot. Only one generator runs at a time. Right-click the shield socket to switch it off. Generators remain real cargo items, stack to one, and appear in the encyclopedia.
+
+| Generator | Capacity | Regeneration | Delay after a hit | Crafting |
+| --- | --- | --- | --- | --- |
+| Mk I | 35 | 1.5 points/s | 5 seconds | 25 seconds |
+| Mk II | 65 | 3 points/s | 4 seconds | 30 seconds |
+| Ion | 100 | 5 points/s | 3 seconds | 35 seconds |
+
+Mk I uses 3 ingots, 2 hull plates, 1 crystal, 1 green Ion Cube and 1 glass. Mk II consumes a Mk I plus 2 Bulterite, 2 plates, 1 crystal and 1 green Ion Cube. Ion consumes a Mk II plus 2 Bulterite, 2 glass, 1 crystal and 1 Blue Ion Cube. Recipe grids show the exact arrangement.
+
+A charged shield draws a faint blue outline around your ship and intercepts enemy projectiles at its perimeter. Incoming damage drains shield charge first; any remainder reaches hull armor. Impacts briefly brighten the outline. Shields absorb shots rather than reflecting them back at enemies. Recharge pauses after hits, runs during active flight, and consumes no fuel; it pauses in menus, on surfaces and while the game is closed.
+
+The HUD shows shield charge and recharge state. New generators start empty. Switching tiers preserves existing charge up to the new capacity; equipping never refills it. Unequipping drops stored charge. Upgrading consumes the old generator and removes its protection while the upgrade is in the crafting queue. Equipped generator, charge, recharge delay and hull save with the expedition.
+
+Check: `node js/verify_shields.js` (no browser).
+
+## Volumetric asteroids, explosions and black holes
+
+Asteroids are closed XYZ meshes with surface normals, real crater indentations and rotation on three axes, rendered with depth testing in the existing WebGL context. Six seeded generation presets cover **rubble, cratered, elongated, metallic, ice and crystal** bodies. Procedural mineral seams, grain, roughness, metallic highlights and ice rim lighting shade the surfaces. Flight and mining remain on the top-down plane.
+
+Choose **Options → 3D asteroid detail → Low / Balanced / High** to adjust mesh density. Balanced is the default. Only visible rocks are submitted, and the GPU cache holds at most 96 models, deleting old buffers. If a driver rejects the shader, the game reports it once and falls back to the previous renderer. No runtime packages or texture downloads are required.
+
+Rock destruction, pirate/courier-pirate destruction, missile blasts and ship loss produce bounded plasma flashes, expanding rings and glowing debris. Effects expire after 1.4 seconds and are capped at 48 simultaneous explosions.
+
+**Black holes are dangerous.** The starting system has one at **(-3500, 3500)**, and about 38% of other systems have one at a seeded corner location. Their **1900 m gravity fields** pull your ship, asteroids and loose salvage inward. Purple minimap markers and local/global map markers show them; the local chart shows the field radius and a selectable warning entry. An on-screen warning starts before entering the field and becomes critical within 700 m.
+
+Turn away and boost early. Shields cannot stop gravity. Crossing the event horizon triggers emergency recovery at the starting origin: you lose **35 hull points** (with a 15% floor), shields drain, and nearby transient world objects reset. Carried inventory and fuel are preserved. The force is a gameplay-scaled inverse-square attraction, not a general-relativity simulation; accretion bands and a photon ring provide the visual warning.
+
+Browser-free checks: `node js/verify_asteroids_3d.js`, `node js/verify_black_holes.js`, `node js/verify_display_options.js`. They validate geometry, render-call/state ordering using a GL spy, cache limits, gravity, capture and map integration. They do not compile shaders on a real GPU or launch a browser.
+
+Distant scenery includes ocean planets, banded gas giants, rocky moons, luminous stars and nebula wisps. These decorative bodies sit behind the playable world and move on slow parallax layers; you fly over them. They are separate from landable moons and cannot collide with the ship. Seeded tiles preserve scenery when revisiting, and a bounded cache limits memory during long flights.
+
+Use **Game > New Game** to enter a profile name and begin a fresh expedition with ship selection. **Game > Load Profile** resumes another named expedition. Names must be unique (up to 40 characters). Each profile has independent inventory, bases, quests, crew, map discoveries, weapons and pirate progress. Existing progress is copied into **Original expedition**. Display, sound and language preferences are shared. Saves are local to this browser and website origin; they are not cloud accounts.
+
+Crafting has minus/plus controls, a numeric recipe-run count and **Max**. Output shows the total number of items, including multi-item ammunition recipes. Max uses usable ingredients in your inventory, capped so the output can fit an emptied cargo hold. One batch occupies one queue slot; ingredients, duration and cancellation refunds scale with the run count. Completed batches wait for enough cargo space.
+
+Asteroid surfaces include rotating procedural bump detail, fractured seams, dust pockets and stronger shaded relief. Low asteroid detail skips the extra bump samples. Recipe lists subdue recipes missing ingredients for one recipe run; they remain selectable for inspection, while grid warnings reflect the chosen batch quantity.
+
+The encyclopedia includes a **Characters** category with crew portraits, roles, bonuses and current onboard/met status. Confirming a ship records its starting crew; docking introduces the station specialists. Recruited specialists from older saves are included automatically. Character encounters remain known after ship changes and are saved with each expedition profile. Names, roles and biographies are searchable in English and Czech.
+
+**Portable Workbench** (CZ: Přenosný pracovní stůl) is advanced reusable equipment: carrying one in your main cargo inventory unlocks the 3×3 workbench grid even in space. Craft it at a workbench in 45 seconds using 2 Bulterite, 2 plates, 2 glass, 1 crystal, 1 Blue Ion Cube and 1 ordinary workbench. It weighs 8 and occupies one slot. It does not unlock furnace recipes or establish a moon base. Portable queue jobs travel with you and pause without the device or an available moon workbench.
+
+**Parallel crafting:** furnaces now have a separate 12-job queue from workbench/handcrafting. The head job in each queue progresses simultaneously. Station disconnects or cargo-space waits block only that queue. The inventory shows both queues, and existing saved jobs retain their order within each station queue.
+
+Use **J > Track Quest** to track one contract. Yellow diamond markers appear on the minimap, local chart and global map, with a compact flight objective readout. Deliveries point at the destination station in the same system; elsewhere the local marker and minimap bearing point at the next cardinal wormhole toward that system. The global map marks the destination system and next hop. Escort targets follow the courier; mining quests highlight a nearby matching asteroid and base quests a nearby moon without a base. Track selection persists per profile. Tracking does not accept contracts or claim rewards; use the quest buttons for those actions.
+
+Wormhole entry plays a short blue tunnel transition (1.1 seconds). Ship destruction and black-hole recovery play a fragment/reconstruction transition (1.35 seconds). Flight physics waits for the effect while saved transit/recovery results remain unchanged. Reduced-motion preferences use a short dark fade instead of moving rings and debris. Effects use the existing WebGL batch, without extra canvases or timers.
+
+The interface uses compact spacing while preserving the configured HUD text size. Decorative flight prose and repeated helper paragraphs are suppressed, labels are shortened, weapon icons are smaller, and control hints use a single scrolling row. The minimap sits below the right-hand cargo/menu panel, leaving more height for ship gauges on the left. Long docking requirements remain available in the dock prompt tooltip; the visible prompt shows station, distance and the docking action.
+
+Ore fields also contain **jagged**, **fractured**, and dark **basalt-like** asteroid shapes. Chipped ridges, angular shelves and deep clefts change the actual mesh silhouette. Seeded charcoal, brown and slate shades vary surface brightness while mineral seams retain their identifying colors. These are visual presets, not new inventory materials; mesh budgets and the bounded GPU cache are unchanged.

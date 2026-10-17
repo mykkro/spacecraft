@@ -40,10 +40,12 @@ for (const station of ['bench', 'furnace']) {
 assert(Colony.addItem('ingot', 2));
 assert(Colony.selectRecipe(3));
 assert(Colony.craft());
+for (let tick = 0; tick < 40; tick++) Colony.updateCrafting(1);
 assert.equal(Colony.count('plate'), 2);
 const metalBefore = Colony.count('metal');
 assert(Colony.selectRecipe(5));
 assert(Colony.craft());
+for (let tick = 0; tick < 40; tick++) Colony.updateCrafting(1);
 assert.equal(Colony.count('metal'), metalBefore - 1);
 
 // Leaving the surface puts the ship in the same low-orbit range as landing access.
@@ -55,6 +57,7 @@ Colony.openInventory();
 assert(connection.includes('ORBITAL STATION LINK'));
 assert(Colony.selectRecipe(5));
 assert(Colony.craft());
+for (let tick = 0; tick < 40; tick++) Colony.updateCrafting(1);
 Colony.save();
 const restored = boot(world.store).model.Colony;
 assert.deepEqual(stations(restored), ['bench', 'furnace', 'hand']);
@@ -103,6 +106,7 @@ assert.equal(c.craft(), false);
 assert.equal(JSON.stringify(c.bag), beforeBlockedCraft);
 assert(c.selectRecipe(5));
 assert(c.craft());
+for (let tick = 0; tick < 40; tick++) c.updateCrafting(1);
 c.player.x = 41.5;
 c.player.y = 14;
 assert(c.editTile(41, 13, false));

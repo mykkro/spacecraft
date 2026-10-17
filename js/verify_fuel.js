@@ -106,6 +106,7 @@ assert(c.Colony.addItem('ion_cube', 1));
 const blueRecipe = c.Colony.recipes.findIndex(r => r.out === 'blue_ion_cube');
 assert(c.Colony.selectRecipe(blueRecipe));
 assert(c.Colony.craft());
+for (let tick = 0; tick < 40; tick++) c.Colony.updateCrafting(1);
 assert.equal(c.Colony.count('blue_ion_cube'), 1);
 assert.equal(c.Colony.count('ion_cube'), 0);
 // An old save gains the initial tank and two cubes once, without resetting other cargo.

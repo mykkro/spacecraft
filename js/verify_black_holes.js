@@ -1,0 +1,67 @@
+// Black-hole physics and bounded explosion checks. No browser or graphics context.
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const {boot}=require('./verify_ships.js');
+const w=boot(undefined,{withShields:true});
+w.ctx.drops=[];
+for(const file of ['space-effects.js','black-holes.js'])w.run(fs.readFileSync(path.join(__dirname,file),'utf8'));
+const holes=w.run('BlackHoles'),effects=w.run('SpaceEffects'),shields=w.run('Shields');
+const hole=holes.forSystem(0,0)[0];
+assert.deepEqual(JSON.parse(JSON.stringify(hole)),JSON.parse(JSON.stringify(holes.forSystem(0,0)[0])));
+assert(Math.hypot(hole.x,hole.y)>hole.influence+1000);
+assert.equal(holes.getById('invalid'),null);
+const far=holes.acceleration(hole,hole.x+2000,hole.y);
+assert.deepEqual(Array.from(far),[0,0]);
+const outer=holes.acceleration(hole,hole.x+1500,hole.y),inner=holes.acceleration(hole,hole.x+500,hole.y);
+assert(outer[0]<0&&Math.abs(inner[0])>Math.abs(outer[0]));
+Object.assign(w.ctx.ship,{x:hole.x+1000,y:hole.y,vx:0,vy:0});
+holes.applyGravity(.1);
+assert(w.ctx.ship.vx<0);
+assert.equal(w.ctx.document.querySelector('#blackHoleWarning').hidden,false);
+assert.equal(holes.checkCapture(),false);
+assert(w.model.Colony.addItem('shield_generator',1));
+assert(shields.equip('shield_generator'));shields.update(100);
+const cargo=JSON.stringify(w.model.Colony.bag);
+// A fast segment crossing the horizon must not tunnel through it.
+Object.assign(w.ctx.ship,{x:hole.x-300,y:hole.y,vx:0,vy:0,hull:100});
+holes.applyGravity(.01);
+w.ctx.ship.x=hole.x+300;
+assert(holes.checkCapture());
+assert.equal(w.ctx.ship.x,0);assert.equal(w.ctx.ship.y,0);
+assert.equal(w.ctx.ship.hull,65);
+assert.equal(shields.charge,0);
+assert.equal(JSON.stringify(w.model.Colony.bag),cargo);
+const saved=JSON.parse(w.store.get('spacecraft-save-v1'));
+assert.equal(saved.ship.hull,65);
+assert.equal(saved.shield.charge,0);
+assert(effects.count>0);
+for(let i=0;i<80;i++)effects.spawn(0,0,80,'ice');
+assert(effects.count<=48);
+effects.update(2);
+assert.equal(effects.count,0);
+const markerCalls=[];
+const pen=new Proxy({}, {get:(t,k)=>(...args)=>markerCalls.push({key:k,args}),set:(t,k,v)=>{t[k]=v;return true;}});
+holes.drawRadar(pen);
+assert(markerCalls.some(c=>c.key==='arc'));
+console.log('PASS: deterministic safe-distance placement, increasing gravity, warnings, swept event-horizon capture, shield bypass, saved hull penalty, cargo preservation, radar and bounded explosion lifetime. No browser started.');
+
+// Hazards are discoverable in the real local/global chart without a browser.
+const chartPen=new Proxy({}, {get(target,key){
+  if(key in target)return target[key];
+  if(key==='createRadialGradient')return ()=>({addColorStop(){}});
+  return ()=>{};
+}});
+const canvas=w.ctx.document.querySelector('#chart');
+canvas.getContext=()=>chartPen;canvas.getBoundingClientRect=()=>({width:800,height:500});
+const objects=w.ctx.document.querySelector('#mapObjects');
+objects.insertAdjacentHTML=function(position,html){this.innerHTML=position==='afterbegin'?html+(this.innerHTML||''):(this.innerHTML||'')+html;};
+w.ctx.devicePixelRatio=1;w.ctx.radar=()=>{};
+w.run(fs.readFileSync(path.join(__dirname,'navigation.js'),'utf8'));
+const nav=w.run('StarChart');
+nav.openMap();
+assert(objects.innerHTML.includes('data-black-hole="0:0"'));
+nav.selectMarker({type:'blackHole',id:'0:0'});
+assert(w.ctx.document.querySelector('#mapDetails').innerHTML.includes('DANGEROUS GRAVITY'));
+nav.setView('global');
+nav.closeMap();
+console.log('PASS: local gravity coverage, hazard list/details and global black-hole markers.');

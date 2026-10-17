@@ -32,6 +32,8 @@ function chart(saved) {
     calls = [];
   const pen = new Proxy({}, {
     get(target, key) {
+      if (key === 'createRadialGradient')
+        return () => ({addColorStop() {}});
       if (key in target)
         return target[key];
       return (...args) => calls.push({

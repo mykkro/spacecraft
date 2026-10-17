@@ -172,6 +172,23 @@ const Colony = (() => {
       machine: true
     }
   };
+
+  Object.assign(items, {
+    shield_generator: {name: I18n.t('Shield Generator Mk I'), asset: 'shield_generator.svg', shield: true, shieldTier: 1, machine: true, weight: 5, description: I18n.language === 'cs' ? 'Generátor modrého štítu: 35 bodů, obnova 1,5 bodu/s po 5 sekundách bez zásahu. Nasaďte do slotu štítu.' : 'Blue shield generator: 35 points, regenerates 1.5 points/s after 5 seconds without a hit. Equip in the shield socket.'},
+    shield_generator_advanced: {name: I18n.t('Shield Generator Mk II'), asset: 'shield_generator_advanced.svg', shield: true, shieldTier: 2, machine: true, weight: 7, description: I18n.language === 'cs' ? 'Pokročilý generátor: 65 bodů štítu, obnova 3 body/s po 4 sekundách bez zásahu. Výroba spotřebuje Mk I.' : 'Advanced generator: 65 shield points, regenerates 3 points/s after 4 seconds without a hit. Crafting consumes a Mk I.'},
+    shield_generator_ion: {name: I18n.t('Ion Shield Generator'), asset: 'shield_generator_ion.svg', shield: true, shieldTier: 3, machine: true, weight: 9, description: I18n.language === 'cs' ? 'Iontový generátor: 100 bodů štítu, obnova 5 bodů/s po 3 sekundách bez zásahu. Výroba spotřebuje Mk II.' : 'Ion generator: 100 shield points, regenerates 5 points/s after 3 seconds without a hit. Crafting consumes a Mk II.'}
+  });
+
+  items.portable_workbench = {
+    name: I18n.language === 'cs' ? 'Přenosný pracovní stůl' : 'Portable Workbench',
+    asset: 'portable_workbench.svg', machine: true, weight: 8,
+    description: I18n.language === 'cs'
+      ? 'Pokročilá skládací dílna. V hlavním inventáři zpřístupní výrobu 3×3 i ve vesmíru. Nevyžaduje umístění a nespotřebovává se. Nenahrazuje pec ani nezakládá základnu. Výroba trvá 45 sekund.'
+      : 'Advanced folding workshop. Carry in your main inventory to unlock 3×3 workbench crafting even in space. Reusable without placement. Does not provide smelting or establish a base. Takes 45 seconds to craft.'
+  };
+  items.repair_pack = {name: I18n.t('Repair Pack'), asset: 'repair_pack.svg', color: '#9ae0bb', repair: 20, weight: 2, description: I18n.t('Restores up to 20% ship hull. Use from inventory, a quick slot or U during play. Not consumed at full hull. Craft at a workbench; takes 8 seconds.')};
+  items.ammo_fotron = {name: I18n.t('Fotron charge cells'), asset: 'ammo_fotron.svg', color: '#78e8c0', ammoFor: 'fotron', description: I18n.t('Special Fotron ammunition. One cell per shot; craft at a workbench from crystals, an Ion Cube and Bulterite.')};
+  items.ammo_bulshitter = {name: I18n.t('Bulshitter cartridges'), asset: 'ammo_bulshitter.svg', color: '#e7b767', ammoFor: 'bulshitter', description: I18n.t('Special scatter ammunition. One cartridge fires the whole five-shot volley. Craft at a workbench from iron ingots and ore.')};
   // Every catalogue entry has a description; keep it next to the shared item model.
   const itemDescriptions = {
     "stone": "Common moon regolith. Mine it near the surface and use it to make base blocks, workbenches and furnaces.",
@@ -202,7 +219,14 @@ const Colony = (() => {
   for (const [type, item] of Object.entries(items)) {
     item.description = item.description || I18n.t(itemDescriptions[type] || 'A useful item for your expedition.');
   }
+  items.fotron.description += I18n.t(' Requires Fotron charge cells.');
+  items.bulshitter.description += I18n.t(' Requires Bulshitter cartridges; one per volley.');
   const stackLimits = {
+    portable_workbench: 1,
+    shield_generator: 1,
+    shield_generator_advanced: 1,
+    shield_generator_ion: 1,
+    repair_pack: 8,
     fuel_cell: 16,
     ion_cube: 8,
     blue_ion_cube: 4,
@@ -214,6 +238,8 @@ const Colony = (() => {
     ammo_rockbreaker: 16,
     ammo_piercer: 8,
     ammo_seismic: 4,
+    ammo_fotron: 32,
+    ammo_bulshitter: 128,
     stone: 64,
     metal: 64,
     ice: 32,
@@ -435,6 +461,147 @@ const Colony = (() => {
     buildType = 'block',
     saveClock = 0,
     miningClock = 0;
+  recipes.push({station: 'bench', name: I18n.t('Fotron charge cells'), pattern: ['crystal', 'ion_cube', 'crystal', null, 'bulterite', null, null, null, null], out: 'ammo_fotron', qty: 24},
+    {station: 'bench', name: I18n.t('Bulshitter cartridges'), pattern: ['ingot', 'metal', 'ingot', null, null, null, null, null, null], out: 'ammo_bulshitter', qty: 80});
+
+  recipes.push({station: 'bench', name: I18n.t('Repair Pack'), pattern: ['plate', 'ingot', null, null, 'ice', null, null, null, null], out: 'repair_pack', qty: 1});
+
+  recipes.push(
+    {station: 'bench', name: items.shield_generator.name, pattern: ['ingot', 'crystal', 'ingot', 'plate', 'ion_cube', 'plate', null, 'glass', null], out: 'shield_generator', qty: 1},
+    {station: 'bench', name: items.shield_generator_advanced.name, pattern: ['bulterite', 'crystal', 'bulterite', 'plate', 'ion_cube', 'plate', null, 'shield_generator', null], out: 'shield_generator_advanced', qty: 1},
+    {station: 'bench', name: items.shield_generator_ion.name, pattern: ['bulterite', 'crystal', 'bulterite', 'glass', 'blue_ion_cube', 'glass', null, 'shield_generator_advanced', null], out: 'shield_generator_ion', qty: 1}
+  );
+
+  recipes.push({station: 'bench', name: items.portable_workbench.name, pattern: ['bulterite','crystal','bulterite','plate','blue_ion_cube','plate','glass','bench','glass'], out: 'portable_workbench', qty: 1});
+
+  // Two independent FIFO lanes share inventory; ingredients are reserved on enqueue.
+  const craftQueueLimit = 12;
+  const craftLane = station => station === 'furnace' ? 'furnace' : 'workbench';
+  const laneJobs = station => craftQueue.filter(job=>craftLane(job.recipe.station)===craftLane(station));
+  let craftQueue = [], nextCraftJob = 1, craftSaveClock = 0, craftUiClock = 0, craftQuantity = 1;
+  const jobDuration = job => craftSeconds(job.recipe) * job.batches;
+  function craftSeconds(recipe) {
+    if (recipe.out === 'portable_workbench') return 45;
+    if (items[recipe.out].shield) return 20 + items[recipe.out].shieldTier * 5;
+    if (recipe.out === 'scanner') return 35;
+    if (items[recipe.out].machine || ['bench', 'furnace'].includes(recipe.out)) return 25;
+    if (items[recipe.out].weapon) return 18;
+    if (items[recipe.out].ammoFor) return 6;
+    if (items[recipe.out].fuel || items[recipe.out].repair) return 8;
+    return recipe.station === 'hand' ? 2 : 4;
+  }
+  const recipeKey = recipe => JSON.stringify([recipe.station, recipe.out, recipe.qty, recipe.pattern]);
+  function craftQueueSnapshot() {
+    return craftQueue.map(job => ({id: job.id, recipe: recipeKey(job.recipe), batches: job.batches, remaining: job.remaining, moonId: job.moonId}));
+  }
+  function restoreCraftQueue(saved) {
+    if (!Array.isArray(saved)) return;
+    const ids = new Set();
+    for (const job of saved.slice(0, craftQueueLimit * 2)) {
+      if (!job || !Number.isFinite(job.remaining)) continue;
+      const recipe = recipes.find(recipe => recipeKey(recipe) === job.recipe);
+      const batches = job.batches === undefined ? 1 : job.batches;
+      if (!recipe || !Number.isSafeInteger(batches) || batches < 1 || batches > 9999 || job.remaining < 0 || job.remaining > craftSeconds(recipe) * batches) continue;
+      if (recipe.station !== 'hand' && (typeof job.moonId !== 'string' || (!/^-?\d{1,7}:-?\d{1,7}$/.test(job.moonId) && !(recipe.station === 'bench' && job.moonId === 'portable')))) continue;
+      if (laneJobs(recipe.station).length >= craftQueueLimit) continue;
+      const id = Number.isSafeInteger(job.id) && job.id > 0 && job.id < 1e9 && !ids.has(job.id) ? job.id : nextCraftJob;
+      ids.add(id); nextCraftJob = Math.max(nextCraftJob, id + 1);
+      craftQueue.push({id, recipe, batches, remaining: job.remaining, moonId: recipe.station === 'hand' ? null : job.moonId});
+    }
+  }
+  function jobConnected(job) {
+    if (job.recipe.station === 'hand') return true;
+    const access = stationAccess();
+    if (job.recipe.station === 'bench' && (access.portable || job.moonId === 'portable')) return access.stations.has('bench');
+    return access.moon?.id === job.moonId && access.stations.has(job.recipe.station);
+  }
+  function craftJobStatus(job, index) {
+    const cs = I18n.language === 'cs';
+    if (job.remaining <= 0) return cs ? 'HOTOVO · ČEKÁ NA MÍSTO' : 'READY · WAITING FOR CARGO SPACE';
+    if (index > 0) return cs ? 'VE FRONTĚ' : 'QUEUED';
+    return jobConnected(job) ? (cs ? 'VÝROBA' : 'CRAFTING') : (cs ? 'POZASTAVENO · PŘIPOJTE DÍLNU' : 'PAUSED · RECONNECT WORKSHOP');
+  }
+  function renderCraftQueue() {
+    const host = $('#craftQueue');
+    if (!host) return;
+    const cs = I18n.language === 'cs';
+    host.innerHTML = ['workbench','furnace'].map(lane => {
+      const jobs = craftQueue.filter(job=>craftLane(job.recipe.station)===lane);
+      const title = lane==='furnace' ? (cs?'PEC':'FURNACE') : (cs?'DÍLNA / RUČNÍ VÝROBA':'WORKBENCH / HANDCRAFT');
+      return '<div class="inventory-label">' + title + ' <span>' + jobs.length + ' / ' + craftQueueLimit + '</span></div>' +
+        (jobs.length ? jobs.map((job,index) => {
+          const recipe=job.recipe;
+          return `<div class="craft-job">${icon(recipe.out)}<div><b>${recipe.qty*job.batches} ${items[recipe.out].name}</b>
+            <small id="craftJobStatus${job.id}">${craftJobStatus(job,index)}</small>
+            <progress id="craftJobProgress${job.id}" value="${jobDuration(job)-job.remaining}" max="${jobDuration(job)}" aria-label="${items[recipe.out].name}"></progress>
+            <small id="craftJobTime${job.id}">${Math.ceil(job.remaining)} s · ${job.moonId || (cs?'RUČNÍ VÝROBA':'HANDCRAFT')}</small></div>
+            ${job.remaining>0 ? `<button data-cancel-craft="${job.id}">${cs?'ZRUŠIT':'CANCEL'}</button>` : ''}</div>`;
+        }).join('') : '<p>'+(cs?'Fronta je prázdná.':'Queue is empty.')+'</p>');
+    }).join('');
+    host.querySelectorAll('[data-cancel-craft]').forEach(button=>button.onclick=()=>cancelCraft(Number(button.dataset.cancelCraft)));
+  }
+  function cancelCraft(id) {
+    const index = craftQueue.findIndex(job => job.id === id);
+    if (index < 0 || craftQueue[index].remaining <= 0) return false;
+    const job = craftQueue[index];
+    // Refund into cargo first, with preserved overflow if every slot is occupied.
+    for (const [type, qty] of Object.entries(costs(job.recipe.pattern))) {
+      const remaining = deposit(bag, type, qty * job.batches);
+      if (remaining) preserveOverflow(type, remaining);
+    }
+    craftQueue.splice(index, 1);
+    sync(); save();
+    if (!$('#overlay').hidden) renderInventory();
+    return true;
+  }
+  function updateCrafting(dt) {
+    const hud = $('#craftingStatus');
+    // Each lane has its own FIFO head; a disconnected/full lane cannot block the other.
+    const heads = ['workbench','furnace'].map(lane=>craftQueue.find(job=>craftLane(job.recipe.station)===lane)).filter(Boolean);
+    if (hud) {
+      hud.hidden = !craftQueue.length;
+      const text = heads.map(job=>(job.recipe.station==='furnace'
+        ? (I18n.language==='cs'?'PEC':'FURNACE') : (I18n.language==='cs'?'DÍLNA':'WORKBENCH'))+
+        ' · '+Math.ceil(job.remaining)+' s').join(' | ');
+      if (hud.textContent!==text) hud.textContent=text;
+    }
+    if (!Number.isFinite(dt) || dt<=0 || !heads.length) return;
+    let changed=false, completed=false, becameReady=false;
+    for (const job of heads) {
+      const previous=job.remaining;
+      if (job.remaining>0 && jobConnected(job)) job.remaining=Math.max(0,job.remaining-Math.min(dt,1));
+      changed ||= job.remaining!==previous;
+      if (job.remaining<=0) {
+        // Failed insertion never partially deposits output or blocks the other lane.
+        const next=bag.map(stack=>stack?{...stack}:null);
+        if (insert(next,job.recipe.out,job.recipe.qty*job.batches)) {
+          bag=next;craftQueue.splice(craftQueue.indexOf(job),1);
+          completed=true;
+          notify((I18n.language==='cs'?'VÝROBA HOTOVA · ':'CRAFT COMPLETE · ')+items[job.recipe.out].name);
+        } else if (previous>0) becameReady=true;
+      }
+    }
+    if (completed) {
+      sync();save();GameAudio.play('craft');
+      if (!$('#overlay').hidden) renderInventory();
+    } else if (becameReady) {save();renderCraftQueue();}
+    craftUiClock+=Math.min(dt,1);
+    if (!$('#overlay').hidden && craftUiClock>=.15) {
+      craftUiClock=0;
+      for (const queued of craftQueue) {
+        const index=laneJobs(queued.recipe.station).indexOf(queued);
+        const meter=$('#craftJobProgress'+queued.id),status=$('#craftJobStatus'+queued.id),time=$('#craftJobTime'+queued.id);
+        if(meter)meter.value=jobDuration(queued)-queued.remaining;
+        if(status)status.textContent=craftJobStatus(queued,index);
+        if(time)time.textContent=Math.ceil(queued.remaining)+' s · '+(queued.moonId || (I18n.language==='cs'?'RUČNÍ VÝROBA':'HANDCRAFT'));
+      }
+    }
+    if (changed) {
+      craftSaveClock+=Math.min(dt,1);
+      if(craftSaveClock>=2){craftSaveClock=0;save();}
+    }
+  }
+
   const moons = new Map(),
     terrains = new Map(),
     baseRecords = new Map(),
@@ -625,6 +792,7 @@ const Colony = (() => {
       $(`#${ type }`).textContent = cargo[type];
     }
     renderHotbar();
+    refreshRepairButton();
     Fuel.refresh(count('fuel_cell') + count('ion_cube') + count('blue_ion_cube'));
   }
 
@@ -648,7 +816,8 @@ const Colony = (() => {
 
   // Include held and reserve cargo so moving items cannot bypass the handling penalty.
   function cargoMass() {
-    return [...bag, ...overflow, carried].reduce((sum, s) => sum + (s ? s.qty * (items[s.type].weight || 1) : 0), 0);
+    const inProgress = craftQueue.flatMap(job => job.remaining <= 0 ? [{type: job.recipe.out, qty: job.recipe.qty * job.batches}] : Object.entries(costs(job.recipe.pattern)).map(([type, qty]) => ({type, qty: qty * job.batches})));
+    return [...bag, ...overflow, carried, ...inProgress].reduce((sum, s) => sum + (s ? s.qty * (items[s.type].weight || 1) : 0), 0);
   }
 
   // Trial insertion into a copy makes pickups all-or-nothing when space is tight.
@@ -664,12 +833,13 @@ const Colony = (() => {
   }
 
   // Check availability before mutating. Successful ammunition use is saved immediately.
-  function consumeItem(type, qty = 1) {
+  function consumeItem(type, qty = 1, persist = true) {
     if (!items[type] || !Number.isSafeInteger(qty) || qty < 1 || count(type) < qty)
       return false;
     remove(bag, type, qty);
+    if (items[type].shield && typeof Shields !== 'undefined') { Shields.reconcile(); Shields.refresh(); }
     sync();
-    save();
+    if (persist) save();
     return true;
   }
 
@@ -692,6 +862,32 @@ const Colony = (() => {
     notify(I18n.t('REFUELLED') + ' · ' + items[type].name);
     return true;
   }
+
+  // Commit the consumed pack and repaired hull together in the expedition save.
+  // Refresh for hull damage and cargo changes without rebuilding the inventory.
+  function refreshRepairButton() {
+    const button = $('#repair');
+    if (!button) return;
+    const stock = count('repair_pack');
+    button.disabled = !!carried || stock < 1 || !Number.isFinite(ship.hull) || ship.hull <= 0 || ship.hull >= 100;
+    const label = I18n.language === 'cs' ? 'OPRAVIT' : 'REPAIR';
+    const markup = label + ' (' + stock + ') <kbd>U</kbd>';
+    if (button.innerHTML !== markup) button.innerHTML = markup;
+    button.title = I18n.language === 'cs' ? 'Použít opravnou sadu: až +20 % trupu (U)' : 'Apply a repair pack: up to +20% hull (U)';
+  }
+
+  function useRepairPack() {
+    if (carried || count('repair_pack') < 1 || !Number.isFinite(ship.hull) || ship.hull <= 0 || ship.hull >= 100) return false;
+    remove(bag, 'repair_pack', 1);
+    ship.hull = Math.min(100, ship.hull + items.repair_pack.repair);
+    sync(); save(); GameAudio.play('craft');
+    $('#hullText').textContent = Math.ceil(ship.hull) + '%';
+    $('#hullBar').style.width = ship.hull + '%';
+    if (!$('#overlay').hidden) renderInventory();
+    notify(I18n.t('REPAIR PACK USED') + ' · ' + Math.ceil(ship.hull) + '%');
+    return true;
+  }
+
   function refuelBest() {
     if (carried) {
       notify(I18n.t('PLACE HELD STACK BEFORE REFUELLING'));
@@ -736,6 +932,8 @@ const Colony = (() => {
       };
     const next = bag.map(s => s ? { ...s } : null),
       quest = QuestLog.getDefinition(id);
+    // Delivery cargo is removed from the same trial inventory as the rewards.
+    if (quest.kind === 'delivery') remove(next, quest.material, quest.target);
     for (const [type, qty] of Object.entries(quest.rewards))
       if (!insert(next, type, qty))
         return {
@@ -744,13 +942,14 @@ const Colony = (() => {
         };
     bag = next;
     questState.claimed.push(id);
+    if (QuestLog.applyReward) QuestLog.applyReward(quest);
     sync();
     save();
     GameAudio.play('craft');
     QuestLog.refresh();
     return {
       ok: true,
-      message: I18n.t('Rewards added to your inventory.')
+      message: quest.credits || quest.coordinates ? (I18n.language === 'cs' ? 'Odměny připsány; souřadnice vormhoulu jsou na mapě, pokud je zakázka obsahuje.' : 'Rewards credited; any wormhole coordinates are now on your map.') : I18n.t('Rewards added to your inventory.')
     };
   }
   function remove(slots, type, qty) {
@@ -768,8 +967,14 @@ const Colony = (() => {
   // Keep inventory, fuel, ship selection, quest state, and terrain in one expedition record.
   function save() {
     try {
-      localStorage.setItem('spacecraft-save-v1', JSON.stringify({
+      (typeof Profiles === 'undefined' ? localStorage : Profiles).setItem('spacecraft-save-v1', JSON.stringify({
         fuel: Fuel.snapshot(),
+        shield: typeof Shields !== 'undefined' ? Shields.snapshot() : undefined,
+        starbases: typeof Starbases !== 'undefined' ? Starbases.snapshot() : undefined,
+        missions: typeof MissionContracts !== 'undefined' ? MissionContracts.snapshot() : undefined,
+        craftingQueue: craftQueueSnapshot(),
+        salvage: typeof Salvage !== 'undefined' ? Salvage.snapshot() : undefined,
+        trackedQuest: typeof QuestTracker !== 'undefined' ? QuestTracker.snapshot() : undefined,
         fuelInitialized: true,
         shipPreset: Shipyard.confirmed ? Shipyard.current.id : null,
         ammoInitialized: true,
@@ -803,7 +1008,7 @@ const Colony = (() => {
   // One-time starter grants are flagged so reloads never refill supplies.
   function load() {
     try {
-      const data = JSON.parse(localStorage.getItem('spacecraft-save-v1') || 'null');
+      const data = JSON.parse((typeof Profiles === 'undefined' ? localStorage : Profiles).getItem('spacecraft-save-v1') || 'null');
       if (!data)
         return false;
       const valid = s => s && Object.hasOwn(items, s.type) && Number.isSafeInteger(s.qty) && s.qty >= 1 && s.qty <= 65536;
@@ -817,6 +1022,7 @@ const Colony = (() => {
       if (Number.isInteger(data.activeQuickSlot) && data.activeQuickSlot >= 0 && data.activeQuickSlot < 6) {
         activeQuickSlot = data.activeQuickSlot;
       }
+      restoreCraftQueue(data.craftingQueue);
       updateQuickBuild();
       const pending = [];
       bag = Array(Shipyard.current.slots).fill(null);
@@ -922,9 +1128,10 @@ const Colony = (() => {
     const moon = surface ? activeMoon : nearestMoon();
     const counts = moon ? baseRecords.get(moon.id)?.counts : null;
     const stations = new Set(['hand']);
-    if (counts?.bench > 0) stations.add('bench');
+    const portable = count('portable_workbench') > 0;
+    if (counts?.bench > 0 || portable) stations.add('bench');
     if (counts?.furnace > 0) stations.add('furnace');
-    return { moon, mode: surface ? 'surface' : moon ? 'orbit' : 'space', stations };
+    return { moon, mode: surface ? 'surface' : moon ? 'orbit' : 'space', stations, portable };
   }
 
   function nearbyStations() {
@@ -945,6 +1152,10 @@ const Colony = (() => {
   }
 
   function stationAccessMarkup(access) {
+    if (access.portable) return '<p class="station-access" role="status"><b>' +
+      (I18n.language === 'cs' ? 'PŘENOSNÁ DÍLNA ONLINE' : 'PORTABLE WORKBENCH ONLINE') +
+      '</b><span>' + (I18n.language === 'cs' ? 'Výroba 3×3 dostupná z inventáře' : '3×3 crafting available from inventory') +
+      (access.stations.has('furnace') ? ' · ' + items.furnace.name : '') + '</span></p>';
     const connected = [...access.stations].filter(type => type !== 'hand');
     if (connected.length) {
       const label = access.mode === 'orbit' ? 'ORBITAL STATION LINK' : 'SURFACE STATIONS';
@@ -968,42 +1179,154 @@ const Colony = (() => {
         out[type] = (out[type] || 0) + 1;
     return out;
   }
-  function canCraft(r) {
-    return !carried && r && nearbyStations().has(r.station) && Object.entries(costs(r.pattern)).every(([t, n]) => count(t) >= n);
+  // Quantities count recipe runs, since ammunition and blocks have multi-item yields.
+  function maxCraftQuantity(r = matchedRecipe()) {
+    if (!r || carried || !nearbyStations().has(r.station)) return 0;
+    return Math.max(0, Math.min(9999,
+      Math.floor(bag.length * items[r.out].maxStack / r.qty),
+      ...Object.entries(costs(r.pattern)).map(([type, qty]) => Math.floor(count(type) / qty))));
+  }
+  function setCraftQuantity(value) {
+    if (!Number.isFinite(value)) return false;
+    craftQuantity = Math.max(1, Math.min(9999, Math.floor(value)));
+    renderInventory();
+    return true;
+  }
+  function craftQuantityMarkup(r) {
+    const cs = I18n.language === 'cs', max = maxCraftQuantity(r);
+    return `<div class="craft-quantity"><label for="craftQuantity">${cs ? 'Počet výrob' : 'Recipe runs'}</label><div>
+      <button id="craftLess" aria-label="${cs ? 'Snížit množství' : 'Decrease quantity'}" ${craftQuantity<=1?'disabled':''}>−</button>
+      <input id="craftQuantity" type="number" min="1" max="9999" step="1" value="${craftQuantity}">
+      <button id="craftMore" aria-label="${cs ? 'Zvýšit množství' : 'Increase quantity'}" ${craftQuantity>=9999?'disabled':''}>+</button></div>
+      <button id="craftMax" ${max<1?'disabled':''}>MAX · ${max}</button>
+      <small>${r ? craftQuantity*r.qty : 0} ${cs ? 'kusů celkem' : 'items total'}</small></div>`;
   }
 
-  // Remove ingredients and insert output into a copy, then commit both together.
+  function canCraft(r) {
+    return !carried && r && craftQuantity <= maxCraftQuantity(r) && laneJobs(r.station).length < craftQueueLimit && nearbyStations().has(r.station) && Object.entries(costs(r.pattern)).every(([t, n]) => count(t) >= n * craftQuantity);
+  }
+
+  // Reserve ingredients now; outputs arrive only after the queued timer finishes.
   function craft() {
     const r = matchedRecipe();
-    if (!nearbyStations().has(station) || !canCraft(r))
-      return false;
-    const next = bag.map(s => s ? { ...s } : null);
-    for (const [type, n] of Object.entries(costs(r.pattern)))
-      remove(next, type, n);
-    if (!insert(next, r.out, r.qty)) {
-      notify(I18n.t('INVENTORY FULL · FREE A SLOT'));
-      return false;
-    }
+    if (!nearbyStations().has(station) || !canCraft(r)) return false;
+    const next = bag.map(stack => stack ? {...stack} : null);
+    for (const [type, qty] of Object.entries(costs(r.pattern))) remove(next, type, qty * craftQuantity);
+    const access = stationAccess();
+    const moonId = r.station === 'hand' ? null : r.station === 'bench' && access.portable ? 'portable' : access.moon.id;
     bag = next;
-    sync();
-    save();
-    renderInventory();
-    GameAudio.play('craft');
+    if (typeof Shields !== 'undefined') { Shields.reconcile(); Shields.refresh(); }
+    craftQueue.push({id: nextCraftJob++, recipe: r, batches: craftQuantity, remaining: craftSeconds(r) * craftQuantity, moonId});
+    sync(); save(); renderInventory();
     return true;
+  }
+
+  // Dragging moves real stacks only between bag slots. Craft/quick/equipment
+  // drops are references or explicit item uses, so they cannot duplicate cargo.
+  function moveInventoryStack(from, to, quantity) {
+    if (carried || !Number.isInteger(from) || !Number.isInteger(to) || from < 0 || to < 0 || from >= bag.length || to >= bag.length || from === to) return false;
+    const source = bag[from], target = bag[to];
+    if (!source) return false;
+    const amount = quantity === undefined ? source.qty : quantity;
+    if (!Number.isInteger(amount) || amount <= 0 || amount > source.qty) return false;
+    if (!target || target.type === source.type) {
+      const moved = Math.min(amount, items[source.type].maxStack - (target?.qty || 0));
+      if (!moved) return false;
+      if (target) target.qty += moved;
+      else bag[to] = {type: source.type, qty: moved};
+      source.qty -= moved;
+      if (!source.qty) bag[from] = null;
+    } else {
+      if (amount !== source.qty) return false; // A split stack cannot displace another item.
+      [bag[from], bag[to]] = [target, source];
+    }
+    selected = -1; sync(); save(); renderInventory(); return true;
+  }
+  function equipShipSlot(slot, type) {
+    if (!Object.hasOwn(items, type) || carried) return false;
+    if (slot === 'fuel') return refuel(type);
+    if (slot === 'shield') {
+      if (!items[type].shield || typeof Shields === 'undefined' || !Shields.equip(type)) return false;
+      renderInventory(); return true;
+    }
+    if (slot === 'primary' || slot === 'missile') {
+      if (!items[type].weapon || Weapons.definitions[type].channel !== slot || !Weapons.select(type)) return false;
+    } else if (slot === 'primaryAmmo' || slot === 'missileAmmo') {
+      const channel = slot === 'primaryAmmo' ? 'primary' : 'missile';
+      if (Weapons.definitions[Weapons.selected[channel]].ammo !== type || count(type) < 1) return false;
+      // Magazines draw from cargo. This socket reports the compatible shared stock.
+    } else if (slot === 'scanner') {
+      if (type !== 'scanner' || count(type) < 1) return false;
+    } else return false;
+    save(); renderInventory(); return true;
+  }
+  function applyInventoryDrop(target, payload) {
+    if (carried || !target || !payload || typeof payload !== 'object') return false;
+    let type;
+    if (payload.kind === 'item' && Object.hasOwn(items, payload.type)) {
+      type = payload.type;
+      if (payload.slot !== undefined && (!Number.isInteger(payload.slot) || bag[payload.slot]?.type !== type)) return false;
+    } else if (payload.kind === 'quick' && validQuickSlot(payload.slot)) type = hotbar[payload.slot];
+    if (!type || count(type) < 1) return false;
+    if (target.kind === 'bag') return payload.kind === 'item' && payload.slot !== undefined ? moveInventoryStack(payload.slot, target.index, payload.quantity) : false;
+    if (target.kind === 'cell') {
+      if (!Number.isInteger(target.index) || target.index < 0 || target.index >= grid.length || !nearbyStations().has(station)) return false;
+      grid[target.index] = type; renderInventory(); return true;
+    }
+    if (target.kind === 'ship') return equipShipSlot(target.slot, type);
+    return false;
+  }
+  function bindDrop(button, target) {
+    button.ondragover = event => {
+      if (Array.from(event.dataTransfer.types).includes(quickDragType)) event.preventDefault();
+    };
+    button.ondragenter = () => button.classList?.add('drop-target');
+    button.ondragleave = () => button.classList?.remove('drop-target');
+    button.ondrop = event => {
+      event.preventDefault(); button.classList?.remove('drop-target');
+      try { applyInventoryDrop(target, JSON.parse(event.dataTransfer.getData(quickDragType))); } catch {}
+    };
+  }
+  function shipEquipmentMarkup() {
+    const tr = (en, cs) => I18n.language === 'cs' ? cs : en;
+    const primary = Weapons.selected.primary, missile = Weapons.selected.missile;
+    const slots = [
+      ['primary', tr('Primary cannon', 'Hlavní kanón'), primary],
+      ['primaryAmmo', tr('Cannon ammunition', 'Munice kanónu'), Weapons.definitions[primary].ammo],
+      ['missile', tr('Missile launcher', 'Raketomet'), missile],
+      ['missileAmmo', tr('Missile magazine', 'Zásobník raket'), Weapons.definitions[missile].ammo],
+      ['fuel', tr('Integral fuel tank', 'Vestavěná nádrž'), 'fuel_cell'],
+      ['shield', tr('Shield generator', 'Generátor štítu'), typeof Shields !== 'undefined' ? Shields.equipped : null],
+      ['scanner', tr('Scanner receiver', 'Přijímač skeneru'), 'scanner']
+    ];
+    return `<div class="inventory-label">${Shipyard.current.name} · ${tr('EQUIPMENT', 'VÝBAVA')}</div><div class="ship-blueprint">${Shipyard.preview(Shipyard.current.id)}<div class="ship-outline-caption">${tr('SHIP OUTLINE', 'OBRYS LODI')}</div></div><div class="ship-equipment-grid">${slots.map(([slot, label, type]) => `<button class="ship-equipment-slot" data-ship-slot="${slot}" title="${label}: ${type ? items[type].name : slot === 'shield' ? tr('Empty shield socket', 'Prázdný slot štítu') : tr('Energy weapon; no ammunition', 'Energetická zbraň; bez munice')}"><span>${label}</span>${type ? icon(type) : slot === 'shield' ? '<b>◇</b>' : '<b>∞</b>'}<small>${slot === 'shield' ? (typeof Shields !== 'undefined' ? Math.ceil(Shields.charge) + ' / ' + Shields.capacity : '—') : slot === 'fuel' ? Math.ceil(Fuel.amount) + ' / ' + Fuel.capacity : slot === 'primary' || slot === 'missile' ? items[type].name : type ? count(type) : tr('ENERGY', 'ENERGIE')}</small></button>`).join('')}</div><meter min="0" max="${Fuel.capacity}" value="${Fuel.amount}" aria-label="${tr('Fuel tank', 'Palivová nádrž')}"></meter><p class="inventory-hint">${tr('Drop weapons to equip. Drop matching ammo to check the magazine; ammo stays in cargo. Drop fuel to refuel the built-in tank.', 'Přetažením nasaďte zbraň. Odpovídající munice zůstává v nákladu a zásobník ji používá. Přetažením paliva doplníte vestavěnou nádrž.')}</p>`;
   }
 
   // Rebuild the inventory panel from model state and reconnect handlers afterwards.
   // Ingredient grids reference bag items; they do not hold a second copy of the cargo.
+  // Allocate each available unit to one cell, in reading order. Repeated ingredients
+  // must not all appear available when only one unit remains in the bag.
+  function craftingCellsMarkup() {
+    const used = {};
+    return grid.map((type, index) => {
+      const missing = type ? (used[type] = (used[type] || 0) + craftQuantity) > count(type) : false;
+      const warning = I18n.language === 'cs' ? 'Chybí materiál v inventáři' : 'Missing material in inventory';
+      const title = type ? items[type].name + (missing ? ' · ' + warning : I18n.t(' · click to replace, right click to clear')) : I18n.t('Assign selected ingredient');
+      return `<button class="item-slot${missing ? ' missing-material' : ''}" data-cell="${index}" title="${title}">${type ? icon(type) : '<span class="cell-plus">+</span>'}${missing ? '<span class="missing-material-badge" aria-label="' + warning + '">!</span>' : ''}</button>`;
+    }).join('');
+  }
+
   function renderInventory() {
+    const scrollPositions = ['.bag-grid', '.recipe-book', '.inventory-ship-pane', '.craft-queue'].map(selector => [selector, $(selector)?.scrollTop || 0]);
     const access = stationAccess(),
       available = access.stations,
       size = station === 'bench' ? 3 : 2,
       r = matchedRecipe();
-    $('#slots').innerHTML = I18n.html(`<div class="inventory-label">PERSONAL INVENTORY <span>${ bag.length } SLOTS · LIMITS VARY BY ITEM</span></div><div class="bag-grid">${ bag.map(slotMarkup).join('') }</div><p class="inventory-hint">${ selected >= 0 && bag[selected] ? I18n.t(`Selected: ${ items[bag[selected].type].name }. Click another slot to move / merge, or a grid cell to assign.`) : I18n.t('Click a stack to select it. Ingredients stay in inventory until you craft.') }</p><div class="station-tabs">${ [
+    $('#slots').innerHTML = I18n.html(`<div class="inventory-workspace"><div class="inventory-cargo-pane"><div class="inventory-label">PERSONAL INVENTORY <span>${ bag.length } SLOTS · LIMITS VARY BY ITEM</span></div><div class="bag-grid">${ bag.map(slotMarkup).join('') }</div><p class="inventory-hint">${ selected >= 0 && bag[selected] ? I18n.t(`Selected: ${ items[bag[selected].type].name }. Click another slot to move / merge, or a grid cell to assign.`) : I18n.t('Click a stack to select it. Ingredients stay in inventory until you craft.') }</p></div><div class="inventory-craft-pane"><div class="station-tabs">${ [
       ['hand', I18n.t('Handcraft · 2×2')],
       ['bench', I18n.t('Workbench · 3×3')],
       ['furnace', I18n.t('Furnace · 2×2')]
-    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ grid.map((t, i) => `<button class="item-slot" data-cell="${ i }" title="${ t ? items[t].name + I18n.t(' · click to replace, right click to clear') : I18n.t('Assign selected ingredient') }">${ t ? icon(t) : '<span class="cell-plus">+</span>' }</button>`).join('') }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b><button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }">${ icon(r.out) }<span>${ r.name }<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p>`);
+    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ Object.entries(costs(r.pattern)).some(([type, qty]) => count(type) < qty) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
     $('#slots .station-tabs').insertAdjacentHTML('beforebegin', stationAccessMarkup(access));
     renderQuickInventory();
     const focus = focusedStack();
@@ -1038,6 +1361,16 @@ const Colony = (() => {
       $('#slots').insertAdjacentHTML('beforeend', `<p class="inventory-hint">${ items[focus.type].description } · ${ I18n.t('MASS') }: ${ items[focus.type].weight || 1 }</p>`);
     if ((focus?.type) === 'scanner')
       $('#slots').insertAdjacentHTML('beforeend', I18n.html('<p class="inventory-hint">RECEIVER ONLINE · Automatically detects wormholes within 6.5 km. Press M for the local and global charts.</p>'));
+
+    if (focus && items[focus.type].repair) {
+      $('#slots').insertAdjacentHTML('beforeend', I18n.html(`<div class="equip-row"><span>${items[focus.type].name} · +20% HULL</span><button id="useRepairPack" ${carried || ship.hull >= 100 ? 'disabled' : ''}>USE REPAIR PACK</button></div>`));
+      $('#useRepairPack').onclick = useRepairPack;
+    }
+
+    if (focus && items[focus.type].shield) {
+      $('#slots').insertAdjacentHTML('beforeend', I18n.html('<div class="equip-row"><span>' + items[focus.type].name + '</span><button id="equipShield">EQUIP SHIELD</button></div>'));
+      $('#equipShield').onclick = () => equipShipSlot('shield', focus.type);
+    }
     if (focus && items[focus.type].weapon) {
       const type = focus.type,
         def = Weapons.definitions[type];
@@ -1056,8 +1389,8 @@ const Colony = (() => {
           event.preventDefault();
           return;
         }
-        event.dataTransfer.setData(quickDragType, JSON.stringify({ kind: 'item', type: stack.type }));
-        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData(quickDragType, JSON.stringify({ kind: 'item', type: stack.type, slot: Number(btn.dataset.slot), quantity: event.shiftKey ? Math.ceil(stack.qty / 2) : stack.qty }));
+        event.dataTransfer.effectAllowed = 'copyMove';
       };
       btn.oncontextmenu = e => {
         e.preventDefault();
@@ -1086,13 +1419,28 @@ const Colony = (() => {
     });
     $('#slots').querySelectorAll('[data-recipe]').forEach(btn => btn.onclick = () => {
       grid = [...recipes[Number(btn.dataset.recipe)].pattern];
+      craftQuantity = 1;
       renderInventory();
     });
     $('#clearGrid').onclick = () => {
       grid.fill(null);
       renderInventory();
     };
+    if (r && !carried) $('#craftItem').textContent = laneJobs(r.station).length >= craftQueueLimit ? (I18n.language === 'cs' ? 'FRONTA PLNÁ' : 'QUEUE FULL') : canCraft(r) ? (I18n.language === 'cs' ? 'DO FRONTY' : 'QUEUE CRAFT') + ' · ' + craftSeconds(r) * craftQuantity + ' s' : I18n.t('NEED MATERIALS');
+    renderCraftQueue();
     $('#craftItem').onclick = craft;
+    $('#craftLess').onclick = () => setCraftQuantity(craftQuantity - 1);
+    $('#craftMore').onclick = () => setCraftQuantity(craftQuantity + 1);
+    $('#craftMax').onclick = () => setCraftQuantity(maxCraftQuantity(r));
+    $('#craftQuantity').onchange = event => setCraftQuantity(Number(event.target.value));
+    $('#slots').querySelectorAll('[data-slot]').forEach(button => bindDrop(button, {kind: 'bag', index: Number(button.dataset.slot)}));
+    $('#slots').querySelectorAll('[data-cell]').forEach(button => bindDrop(button, {kind: 'cell', index: Number(button.dataset.cell)}));
+    $('#slots').querySelectorAll('[data-ship-slot]').forEach(button => {
+      bindDrop(button, {kind: 'ship', slot: button.dataset.shipSlot});
+      if (button.dataset.shipSlot === 'shield') button.oncontextmenu = event => { event.preventDefault(); if (typeof Shields !== 'undefined') { Shields.unequip(); renderInventory(); } };
+      button.onclick = () => { const type = focusedStack()?.type; if (type) equipShipSlot(button.dataset.shipSlot, type); };
+    });
+    for (const [selector, top] of scrollPositions) { const pane = $(selector); if (pane) pane.scrollTop = top; }
   }
 
   // Derive moon identity from chunk coordinates so revisiting gives the same location.
@@ -1250,6 +1598,7 @@ const Colony = (() => {
     if (on)
       $('#moonName').textContent = I18n.t(`${ activeMoon.name.toUpperCase() } / SURFACE`);
     renderHotbar();
+    refreshRepairButton();
   }
   function land() {
     if (surface) {
@@ -1338,6 +1687,7 @@ const Colony = (() => {
   function refreshQuickInventory(focusIndex = activeQuickSlot) {
     updateQuickBuild();
     renderHotbar();
+    refreshRepairButton();
     save();
     if (!$('#overlay').hidden) {
       renderInventory();
@@ -1374,10 +1724,13 @@ const Colony = (() => {
     updateQuickBuild();
     const type = hotbar[index];
     if (use && type) {
-      if (items[type].fuel) refuel(type);
+      if (items[type].shield) { if (typeof Shields !== 'undefined') Shields.equip(type); }
+      else if (items[type].repair) useRepairPack();
+      else if (items[type].fuel) refuel(type);
       else if (items[type].weapon) Weapons.select(type);
     }
     renderHotbar();
+    refreshRepairButton();
     save();
     return true;
   }
@@ -1386,7 +1739,7 @@ const Colony = (() => {
     const name = type ? items[type].name : I18n.t('Empty quick slot');
     return `<button class="item-slot quick-slot ${activeQuickSlot === index ? 'selected' : ''} ${type && !count(type) ? 'out-of-stock' : ''}"
       ${editor ? 'data-quick-slot' : 'data-quick-use'}="${index}"
-      draggable="${editor && !!type}" aria-pressed="${activeQuickSlot === index}"
+      draggable="${!!type}" aria-pressed="${activeQuickSlot === index}"
       aria-label="${I18n.t('Quick slot')} ${index + 1}: ${name}" title="${name}">
       <em class="quick-slot-key">${index + 1}</em>
       ${type ? icon(type) + '<small>' + count(type) + '</small>' : '<span class="cell-plus">+</span>'}
@@ -1396,7 +1749,7 @@ const Colony = (() => {
 
   function renderQuickInventory() {
     $('#slots .bag-grid').insertAdjacentHTML('afterend', `
-      <section class="quick-inventory-editor" aria-label="${I18n.t('Quick inventory')}">
+      <section class="quick-inventory-editor" title="${I18n.language === 'cs' ? 'Přetáhněte předměty do slotů 1–6; pravým tlačítkem vymažte.' : 'Drag items to slots 1–6; right click to clear.'}" aria-label="${I18n.t('Quick inventory')}">
         <div class="inventory-label">${I18n.t('QUICK INVENTORY')} <span>${I18n.t('SURFACE SHORTCUTS 1–6')}</span></div>
         <div id="quickInventory" class="quick-inventory-grid">
           ${hotbar.map((type, index) => quickSlotMarkup(type, index, true)).join('')}
@@ -1444,8 +1797,17 @@ const Colony = (() => {
     if (!$('#hotbar')) return;
     $('#hotbar').innerHTML = hotbar.map((type, index) => quickSlotMarkup(type, index)).join('');
     $('#hotbar').querySelectorAll('[data-quick-use]').forEach(button => {
-      button.onclick = () => {
-        if (!paused) selectQuickSlot(Number(button.dataset.quickUse), true);
+      const index = Number(button.dataset.quickUse);
+      button.onclick = () => { if (!paused) selectQuickSlot(index, true); };
+      button.ondragstart = event => {
+        if (!hotbar[index] || carried) { event.preventDefault(); return; }
+        event.dataTransfer.setData(quickDragType, JSON.stringify({kind: 'quick', slot: index}));
+        event.dataTransfer.effectAllowed = 'move';
+      };
+      button.ondragover = event => { if (Array.from(event.dataTransfer.types).includes(quickDragType)) event.preventDefault(); };
+      button.ondrop = event => {
+        event.preventDefault();
+        try { applyQuickDrop(index, JSON.parse(event.dataTransfer.getData(quickDragType))); } catch {}
       };
     });
   }
@@ -1753,6 +2115,7 @@ const Colony = (() => {
   addEventListener('keydown', e => {
     if (e.repeat || paused || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName))
       return;
+    if (e.code === 'KeyU') { e.preventDefault(); useRepairPack(); return; }
     if (e.code === 'KeyE') {
       if (!surface && typeof StarChart !== 'undefined' && StarChart.nearbyPortal())
         return;
@@ -1788,6 +2151,7 @@ const Colony = (() => {
     addItem('block', 12);
     notify(I18n.t('STARTER SUPPLIES LOADED · SELENE IS NORTHEAST · E TO LAND'));
   }
+  $('#repair').onclick = useRepairPack;
   rebuildBaseIndex();
   sync();
   save();
@@ -1798,6 +2162,10 @@ const Colony = (() => {
       return !!surface;
     },
     addItem,
+    moveInventoryStack,
+    applyInventoryDrop,
+    equipShipSlot,
+    get craftingGrid() { return [...grid]; },
     openInventory,
     updateSpace,
     renderMoons,
@@ -1817,10 +2185,19 @@ const Colony = (() => {
     get selectedBuild() { return buildType; },
     refuel,
     refuelBest,
+    useRepairPack,
+    refreshRepairButton,
     count: ownedCount,
     availableCount: count,
     consumeItem,
     craft,
+    craftSeconds,
+    setCraftQuantity,
+    maxCraftQuantity,
+    get craftQuantity() { return craftQuantity; },
+    updateCrafting,
+    cancelCraft,
+    get craftingQueue() { return craftQueue.map(job => ({id: job.id, out: job.recipe.out, qty: job.recipe.qty * job.batches, batches: job.batches, remaining: job.remaining, duration: jobDuration(job), moonId: job.moonId, station: job.recipe.station, lane: craftLane(job.recipe.station)})); },
     recipes,
     items,
     recordMined,
@@ -1851,6 +2228,7 @@ const Colony = (() => {
         return false;
       station = r.station;
       grid = [...r.pattern];
+      craftQuantity = 1;
       return true;
     },
     selectBuild(type) {

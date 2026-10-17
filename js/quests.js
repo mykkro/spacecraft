@@ -3,7 +3,8 @@
  * Colony commits rewards and claimed state together so inventory capacity failures are safe.
  */
 
-// Small fixed contracts: resource collection is cumulative; bases must exist.
+// Mining is cumulative, bases must exist, and missions have explicit acceptance.
+// Colony performs delivery handover and payouts together after canClaim succeeds.
 const QuestLog = (() => {
   const $ = s => document.querySelector(s);
   const definitions = [
@@ -14,6 +15,7 @@ const QuestLog = (() => {
       kind: 'mined',
       material: 'crystal',
       target: 12,
+      coordinates: ['0:0', '1:0'],
       rewards: {
         ingot: 8,
         plate: 4
@@ -66,6 +68,7 @@ const QuestLog = (() => {
       }
     }
   ];
+  if (typeof MissionContracts !== 'undefined') definitions.push(...MissionContracts.definitions);
   let open = false,
     previousPaused = false,
     returnFocus = null;
@@ -82,6 +85,7 @@ const QuestLog = (() => {
   overlay.hidden = true;
   overlay.innerHTML = I18n.html('<section role="dialog" aria-modal="true" aria-labelledby="questTitle"><div class="quest-heading"><div><div class="eyebrow">NOMAD / EXPEDITION CONTRACTS</div><h2 id="questTitle">Quest log</h2></div><button id="closeQuests" aria-label="Close quest log">×</button></div><p class="quest-intro">Objectives track automatically. Claim completed contracts for supplies and equipment.</p><div id="questSummary"></div><div id="questCards"></div><p id="questMessage" role="status" aria-live="polite"></p><small class="quest-footnote">Mining progress stays when materials are spent. Rewards are one-time and do not consume your mined cargo. J / ESC closes this log.</small></section>');
   document.body.append(overlay);
+  overlay.querySelector('.quest-footnote').textContent = I18n.language === 'cs' ? 'Těžební zakázky náklad nespotřebují. Doručení předá požadované suroviny v cílovém doku. Odměny jsou jednorázové. J / ESC zavře deník.' : 'Mining contracts keep your cargo. Deliveries hand over the required materials at the destination dock. Rewards are one-time. J / ESC closes the log.';
   function getDefinition(id) {
     return definitions.find(q => q.id === id);
   }
@@ -91,6 +95,7 @@ const QuestLog = (() => {
     const quest = getDefinition(id);
     if (!quest)
       return 0;
+    if (quest.kind === 'delivery' || quest.kind === 'escort') return MissionContracts.progress(id);
     return quest.kind === 'bases' ? Colony.getBases().filter(b => b.isBase).length : Colony.questProgress().mined[quest.material] || 0;
   }
   function canClaim(id) {
@@ -98,9 +103,24 @@ const QuestLog = (() => {
     return !!q && !Colony.questProgress().claimed.includes(id) && progress(id) >= q.target;
   }
   function rewardMarkup(q) {
-    return Object.entries(q.rewards).map(([type, qty]) => `<span class="quest-reward"><img src="assets/items/${ Colony.items[type].asset || (Colony.items[type].image || type) + '.png' }" width="30" height="30" alt=""><span>${ qty } ${ Colony.items[type].name }</span></span>`).join('');
+    const tr = (en, cs) => I18n.language === 'cs' ? cs : en;
+    const extra = (q.credits ? `<span class="quest-reward">${q.credits} ${tr('credits', 'kreditů')}</span>` : '') +
+      (q.coordinates ? `<span class="quest-reward">◇ ${tr('Wormhole coordinates', 'Souřadnice vormhoulu')}: ${q.coordinates.join(' → ')}</span>` : '');
+    return extra + Object.entries(q.rewards).map(([type, qty]) => `<span class="quest-reward"><img src="assets/items/${ Colony.items[type].asset || (Colony.items[type].image || type) + '.png' }" width="30" height="30" alt=""><span>${ qty } ${ Colony.items[type].name }</span></span>`).join('');
   }
 
+  function applyReward(q) {
+    if (q.credits) Starbases.addCredits(q.credits);
+    if (q.coordinates) StarChart.revealRoute(...q.coordinates);
+    if (typeof Starbases !== 'undefined') Starbases.refreshDock();
+  }
+  function missionMarkup(q, done) {
+    if (done || !['delivery', 'escort'].includes(q.kind)) return '';
+    const status = MissionContracts.state(q.id), tr = (en, cs) => I18n.language === 'cs' ? cs : en;
+    const action = status === 'available' || status === 'failed';
+    return `<p>${status === 'failed' ? tr('ESCORT FAILED. ', 'DOPROVOD SELHAL. ') : ''}${MissionContracts.detail(q.id)}</p>` +
+      (action ? `<button data-accept="${q.id}">${status === 'failed' ? tr('RETRY ESCORT', 'OPAKOVAT DOPROVOD') : tr('ACCEPT CONTRACT', 'PŘIJMOUT ZAKÁZKU')}</button>` : '');
+  }
   // Update the ready badge even when the log is closed; build cards only while visible.
   function refresh() {
     const claimed = Colony.questProgress().claimed,
@@ -115,8 +135,12 @@ const QuestLog = (() => {
       const done = claimed.includes(q.id),
         value = Math.min(progress(q.id), q.target),
         ready = !done && value >= q.target;
-      return I18n.html(`<article class="quest-card ${ done ? 'claimed' : ready ? 'ready' : '' }"><div class="quest-state">${ done ? I18n.t('REWARD CLAIMED') : ready ? I18n.t('COMPLETE · REWARD READY') : I18n.t('IN PROGRESS') }</div><h3>${ q.title }</h3><p>${ q.description }</p><div class="quest-progress-label"><span>${ q.kind === 'bases' ? I18n.t('BASES ESTABLISHED') : q.material === 'metal' ? I18n.t('IRON ORE MINED') : q.material.toUpperCase() + ' MINED' }</span><b>${ done ? q.target : value } / ${ q.target }</b></div><progress value="${ done ? q.target : value }" max="${ q.target }" aria-label="${ q.title } progress">${ value } / ${ q.target }</progress><div class="quest-rewards">${ rewardMarkup(q) }</div><button data-claim="${ q.id }" ${ ready ? '' : 'disabled' }>${ done ? I18n.t('CLAIMED') : ready ? I18n.t('CLAIM REWARD') : I18n.t('KEEP EXPLORING') }</button></article>`);
+      return I18n.html(`<article class="quest-card ${ done ? 'claimed' : ready ? 'ready' : '' }"><div class="quest-state">${ done ? I18n.t('REWARD CLAIMED') : ready ? I18n.t('COMPLETE · REWARD READY') : I18n.t('IN PROGRESS') }</div><h3>${ q.title }</h3><p>${ q.description }</p><div class="quest-progress-label"><span>${ q.kind === 'escort' ? (I18n.language === 'cs' ? 'KURÝR V BEZPEČÍ' : 'COURIER SAFE') : q.kind === 'delivery' ? (I18n.language === 'cs' ? 'INGOTY V CÍLOVÉM DOKU' : 'INGOTS AT DESTINATION DOCK') : q.kind === 'bases' ? I18n.t('BASES ESTABLISHED') : q.material === 'metal' ? I18n.t('IRON ORE MINED') : q.material.toUpperCase() + ' MINED' }</span><b>${ done ? q.target : value } / ${ q.target }</b></div><progress value="${ done ? q.target : value }" max="${ q.target }" aria-label="${ q.title } progress">${ value } / ${ q.target }</progress><div class="quest-rewards">${ rewardMarkup(q) }</div>${missionMarkup(q, done)}${!done && typeof QuestTracker !== 'undefined' ? `<button data-track-quest="${q.id}" aria-pressed="${QuestTracker.selected===q.id}">${QuestTracker.selected===q.id ? (I18n.language==='cs'?'ZRUŠIT SLEDOVÁNÍ':'STOP TRACKING') : (I18n.language==='cs'?'SLEDOVAT':'TRACK QUEST')}</button>` : ''}<button data-claim="${ q.id }" ${ ready ? '' : 'disabled' }>${ done ? I18n.t('CLAIMED') : ready ? I18n.t('CLAIM REWARD') : I18n.t('KEEP EXPLORING') }</button></article>`);
     }).join('');
+    $('#questCards').querySelectorAll('[data-track-quest]').forEach(b=>b.onclick=()=>QuestTracker.track(QuestTracker.selected===b.dataset.trackQuest?null:b.dataset.trackQuest));
+    $('#questCards').querySelectorAll('[data-accept]').forEach(b => b.onclick = () => {
+      if (!MissionContracts.accept(b.dataset.accept)) $('#questMessage').textContent = I18n.language === 'cs' ? 'Doprovod přijměte v kosmu systému 0:0.' : 'Accept the escort in space in system 0:0.';
+    });
     $('#questCards').querySelectorAll('[data-claim]').forEach(b => b.onclick = () => {
       const result = Colony.claimQuest(b.dataset.claim);
       $('#questMessage').textContent = result.message;
@@ -196,12 +220,19 @@ const QuestLog = (() => {
       }
     }
   });
+  // Old claimed mining contracts gain their new coordinate reward once on upgrade.
+  // Revealing a route is idempotent; never replay credit/item payouts here.
+  if (typeof StarChart !== 'undefined') {
+    for (const q of definitions)
+      if (q.coordinates && Colony.questProgress().claimed.includes(q.id)) StarChart.revealRoute(...q.coordinates);
+  }
   refresh();
   return {
     get isOpen() {
       return open;
     },
     getDefinition,
+    applyReward,
     progress,
     canClaim,
     refresh,

@@ -187,3 +187,91 @@ body #inventoryCursor img {
   border-color: var(--line);
   color: var(--muted);
 }
+
+/* The shell never scrolls: cargo, workshop, recipes and outfitting own their scroll. */
+body #overlay { overflow: hidden; padding: 12px; align-items: center; }
+body #overlay > section { box-sizing: border-box; width: min(1400px, 97vw); height: min(900px, 96dvh); max-height: 96dvh; overflow: hidden; display: flex; flex-direction: column; padding: 20px 24px; min-height: 0; }
+#overlay > section > .eyebrow, #overlayTitle, #overlayDescription, .inventory-footer { flex-shrink: 0; }
+#overlay h2 { font-size: 30px; margin: 6px 0; }
+#overlayDescription { font-size: 12px; margin: 5px 30px 5px 0; }
+body #slots { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; margin: 12px 0; gap: 8px; }
+.inventory-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(180px, .65fr); gap: 18px; flex: 1; min-height: 0; }
+.inventory-cargo-pane, .inventory-craft-pane, .inventory-ship-pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.inventory-cargo-pane .bag-grid { flex: 1; min-height: 55px; overflow: auto; overscroll-behavior: contain; align-content: start; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); padding: 3px 5px 3px 0; }
+.inventory-craft-pane { overflow: auto; overscroll-behavior: contain; }
+.inventory-ship-pane { overflow: auto; overscroll-behavior: contain; padding-right: 5px; border-left: 1px solid var(--line); padding-left: 14px; }
+.inventory-workspace .inventory-label { font-size: 12px; margin: 0 0 9px; flex-wrap: wrap; gap: 5px; }
+.inventory-workspace .inventory-label > span { font-size: 10px; }
+#overlay .inventory-hint { font-size: 11px; line-height: 1.5; margin: 7px 0; }
+#slots > .inventory-hint { flex-shrink: 0; max-height: 30px; overflow: auto; margin: 0; }
+#overlay .quick-inventory-editor { width: auto; height: auto; max-height: none; overflow: visible; flex-shrink: 0; padding: 9px 0 0; margin: 7px 0 0; border: 0; border-top: 1px solid var(--line); background: none; box-shadow: none; }
+.quick-inventory-grid { width: 100%; gap: 4px; }
+.quick-inventory-grid .item-slot { min-height: 38px; }
+#overlay .quick-inventory-hint { font-size: 10px; line-height: 1.4; margin: 6px 0; }
+.inventory-craft-pane .station-access { margin: 0 0 8px; padding: 8px; font-size: 11px; flex-shrink: 0; }
+.inventory-craft-pane .station-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; flex-shrink: 0; }
+.inventory-craft-pane .station-tabs button { padding: 8px; font-size: 11px; }
+.inventory-craft-pane .craft-layout { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(75px, .8fr); grid-template-rows: auto minmax(70px, 1fr); gap: 12px; flex: 1; min-height: 250px; margin: 12px 0 0; align-items: stretch; }
+.inventory-craft-pane .craft-grid { width: min(160px, 100%); }
+.inventory-craft-pane .craft-grid .item-slot { max-height: 58px; }
+.inventory-craft-pane .craft-result { align-self: start; font-size: 12px; min-width: 0; }
+.inventory-craft-pane .craft-result .output { width: 54px; height: 54px; margin: 5px auto; }
+.inventory-craft-pane .recipe-book { grid-column: 1 / -1; min-height: 0; max-height: none; overflow: auto; overscroll-behavior: contain; padding-right: 5px; }
+.inventory-craft-pane .recipe-book button { width: 100%; font-size: 12px; padding: 9px; }
+.inventory-craft-pane .recipe-book small { font-size: 11px; }
+.inventory-footer { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 6px; }
+/* Override the legacy full-width resume and encyclopedia buttons. */
+#overlay .inventory-footer button { flex: 0 0 auto; width: auto; min-height: 28px; margin: 0; padding: 4px 9px; font-size: 11px; line-height: 1.4; letter-spacing: 0; white-space: nowrap; }
+#overlay .inventory-footer kbd { margin-left: 3px; padding: 1px 3px; font-size: 10px; }
+.item-slot[draggable=true] { cursor: grab; }
+.item-slot.drop-target, .ship-equipment-slot.drop-target { outline: 2px solid #97e3c4; background: #1b4036; }
+.ship-blueprint { position: relative; min-height: 140px; height: 140px; flex-shrink: 0; background: radial-gradient(ellipse, #1b394e66, transparent 70%); }
+.ship-blueprint svg { display: block; height: 125px; width: 130px; margin: auto; filter: drop-shadow(0 0 8px #8bcbe52a); }
+.ship-blueprint::before { content: ''; position: absolute; left: 7%; right: 7%; top: 60%; border-top: 1px dashed #8ab9d34a; }
+.ship-outline-caption { text-align: center; font-size: 10px; color: #7391a5; }
+.ship-equipment-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.ship-equipment-slot { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; min-width: 0; min-height: 100px; border: 1px solid #7c9eae55; background: #102330; letter-spacing: 0; gap: 5px; }
+.ship-equipment-slot span, .ship-equipment-slot small { font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+body .ship-equipment-slot img.item-icon { width: 30px; height: 30px; }
+.inventory-ship-pane meter { width: 100%; margin: 10px 0; flex-shrink: 0; accent-color: #a0d6a8; }
+@media(max-width:900px) { .inventory-workspace { gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 170px; } body #overlay > section { padding: 16px; } .inventory-ship-pane { padding-left: 8px; } }
+@media(max-height:650px) { #overlayDescription, #overlay .quick-inventory-hint, #slots > .fuel-hint { display: none; } .inventory-craft-pane .craft-layout { min-height: 215px; } }
+@media(max-width:650px) { .inventory-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .inventory-ship-pane { grid-column: 2; grid-row: 1; } .inventory-craft-pane { grid-column: 1 / -1; max-height: 34vh; } .inventory-workspace { grid-template-rows: minmax(100px, 1fr) minmax(100px, .8fr); } }
+
+/* Fabrication remains inside the workshop pane, with its own bounded list. */
+.craft-queue { flex: 0 0 auto; max-height: 180px; overflow: auto; overscroll-behavior: contain; border-top: 1px solid #89b9c54d; padding: 10px 4px 0 0; margin-top: 8px; }
+.craft-queue .inventory-label { position: sticky; top: 0; background: #0c1721; padding: 4px 0; z-index: 1; }
+.craft-queue p { font-size: 11px; }
+.craft-job { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #71889926; padding: 8px 0; }
+.craft-job > div { flex: 1; min-width: 0; }
+body .craft-job img.item-icon { width: 32px; height: 32px; flex-shrink: 0; }
+.craft-job b, .craft-job small { display: block; font-size: 11px; line-height: 1.5; }
+.craft-job small { color: #91acbb; font-size: 10px; }
+.craft-job progress { width: 100%; height: 8px; accent-color: #8cdbbd; }
+.craft-job button { padding: 7px; font-size: 10px; flex-shrink: 0; }
+#craftingStatus { color: #9dd7ba; font-size: calc(10px * var(--hud-scale, 1.25)); line-height: 1.6; }
+
+/* Missing ingredients remain assignable; the badge also conveys state without color. */
+.craft-grid .item-slot.missing-material {
+  border: 2px solid #f18d86;
+  background: repeating-linear-gradient(135deg, #4b252c 0 7px, #351f29 7px 14px);
+  box-shadow: inset 0 0 12px #ed6b6326;
+}
+.craft-grid .missing-material-badge {
+  position: absolute; top: 2px; right: 3px;
+  display: grid; place-items: center; width: 17px; height: 17px;
+  border-radius: 50%; background: #f18d86; color: #241318;
+  font: bold 13px/1 sans-serif; pointer-events: none;
+}
+.craft-quantity { display: grid; gap: 5px; width: 100%; margin: 8px 0; }
+.craft-quantity label, .craft-quantity small { font-size: 11px; line-height: 1.4; }
+.craft-quantity > div { display: flex; gap: 3px; min-width: 0; }
+.craft-quantity button { padding: 5px; min-width: 24px; }
+.craft-quantity input { width: 100%; min-width: 0; text-align: center; padding: 4px 0; box-sizing: border-box; background: #102638; color: #d6e6ef; border: 1px solid #7fa5bc66; font: inherit; }
+.inventory-craft-pane .craft-result { max-height: 100%; overflow-y: auto; }
+/* Unaffordable recipes stay selectable so players can inspect their ingredients. */
+.inventory-craft-pane .recipe-book button.recipe-unavailable { color: #8b9aa5; background: #101d27; border-color: #52677540; }
+.recipe-book button.recipe-unavailable .item-icon { filter: grayscale(.7); opacity: .45; }
+.recipe-book button.recipe-unavailable small { color: #81909b; }
+.inventory-craft-pane .recipe-book button.recipe-unavailable:hover,
+.inventory-craft-pane .recipe-book button.recipe-unavailable:focus-visible { border-color: #9ab7c2; color: #c6d5dd; }

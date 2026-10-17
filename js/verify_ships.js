@@ -6,7 +6,7 @@ const assert = require('node:assert/strict'),
   path = require('node:path'),
   vm = require('node:vm');
 const read = name => fs.readFileSync(path.join(__dirname, name), 'utf8');
-function boot(saved, { onEvent } = {}) {
+function boot(saved, { onEvent, withStarbases = false, withMissions = false, withShields = false, withTracker = false, withSalvage = false } = {}) {
   const store = new Map(saved || []),
     elements = new Map();
   function element() {
@@ -113,6 +113,11 @@ function boot(saved, { onEvent } = {}) {
   vm.runInContext(functionSource(game, 'random'), ctx);
   vm.runInContext(read('ships.js'), ctx);
   vm.runInContext(read('fuel.js'), ctx);
+  if (withShields) vm.runInContext(read('shields.js'), ctx);
+  if (withStarbases) vm.runInContext(read('starbases.js'), ctx);
+  if (withMissions) vm.runInContext(read('missions.js'), ctx);
+  if (withTracker) vm.runInContext(read('quest-tracker.js'), ctx);
+  if (withSalvage) vm.runInContext(read('salvage.js'), ctx);
   vm.runInContext(read('systems.js'), ctx);
   vm.runInContext(read('weapons.js'), ctx);
   const run = code => vm.runInContext(code, ctx);
@@ -195,6 +200,7 @@ if (require.main === module) {
   };
   c.Weapons.damageRock(combat.ctx.shots[0], mineRock, false);
   assert.equal(mineRock.hp, 12);
+  assert(c.Colony.addItem('ammo_bulshitter', 2));
   assert(c.Colony.addItem('bulshitter', 1));
   assert(c.Weapons.select('bulshitter'));
   combat.ctx.shots.length = 0;
@@ -211,6 +217,7 @@ if (require.main === module) {
   };
   assert.equal(c.Weapons.damageRock(combat.ctx.shots[0], hardRock, false), false);
   assert.equal(hardRock.hp, 20);
+  assert(c.Colony.addItem('ammo_fotron', 2));
   assert(c.Colony.addItem('fotron', 1));
   assert(c.Weapons.select('fotron'));
   c.Weapons.cooldowns.primary.remaining = 0;

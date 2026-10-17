@@ -6,11 +6,13 @@ const Encyclopedia = (() => {
   const $ = selector => document.querySelector(selector);
   const categoryLabels = {
     all: 'All categories',
+    characters: I18n.language === 'cs' ? 'Postavy' : 'Characters',
     materials: 'Materials',
     fuel: 'Fuel',
     weapons: 'Weapons',
     ammunition: 'Ammunition',
     machines: 'Machines',
+    consumables: 'Consumables',
     construction: 'Construction'
   };
   let open = false;
@@ -31,6 +33,7 @@ const Encyclopedia = (() => {
   }
 
   function categoryFor(id, item) {
+    if (item.repair) return 'consumables';
     if (item.fuel) return 'fuel';
     if (item.ammoFor) return 'ammunition';
     if (item.weapon) return 'weapons';
@@ -44,6 +47,7 @@ const Encyclopedia = (() => {
   }
 
   function getEntry(id) {
+    if (typeof id === 'string' && id.startsWith('character:')) return characterEntries().find(entry=>entry.id===id) || null;
     if (!Object.hasOwn(Colony.items, id)) return null;
     const item = Colony.items[id];
     return {
@@ -62,12 +66,16 @@ const Encyclopedia = (() => {
     };
   }
 
+  function characterEntries() {
+    return typeof Starbases === 'undefined' ? [] : Starbases.characters();
+  }
+
   // IDs remain searchable alongside translated names; nothing is hidden by ownership.
   function entries(query = '', category = 'all') {
     const terms = normalize(query).split(/\s+/).filter(Boolean);
-    return Object.keys(Colony.items).map(getEntry).filter(entry => {
+    return [...Object.keys(Colony.items).map(getEntry), ...characterEntries()].filter(entry => {
       if (category !== 'all' && entry.category !== category) return false;
-      const text = normalize(entry.id + ' ' + entry.name + ' ' + entry.description +
+      const text = normalize(entry.id + ' ' + entry.name + ' ' + (entry.role || '') + ' ' + (entry.status || '') + ' ' + entry.description +
         ' ' + I18n.t(categoryLabels[entry.category]));
       return terms.every(term => text.includes(term));
     }).sort((a, b) => a.name.localeCompare(b.name, I18n.language || 'en'));
@@ -156,6 +164,14 @@ const Encyclopedia = (() => {
       $('#encyclopediaDetails').innerHTML = '<p>' + escape(I18n.t('No matching entries. Try another search or category.')) + '</p>';
       return;
     }
+    if (entry.category === 'characters') {
+      $('#encyclopediaDetails').innerHTML = `<div class="encyclopedia-detail-heading character-detail">
+        <img src="${escape(entry.icon)}" width="112" height="112" alt="">
+        <div><span class="eyebrow">${escape(entry.role)}</span><h3>${escape(entry.name)}</h3></div></div>
+        <p class="encyclopedia-description">${escape(entry.description)}</p>
+        <p class="character-status">${escape(entry.status)}</p>`;
+      return;
+    }
     let stats = stat('Owned', entry.owned) + stat('Stack limit', entry.stackLimit) +
       stat('Mass per item', entry.weight);
     if (entry.fuel) stats += stat('Fuel units', entry.fuel);
@@ -194,13 +210,13 @@ const Encyclopedia = (() => {
       selectedId = visible[0]?.id || null;
     }
     $('#encyclopediaCount').textContent = visible.length + ' / ' +
-      Object.keys(Colony.items).length + ' · ' + I18n.t('ENTRIES');
+      (Object.keys(Colony.items).length + characterEntries().length) + ' · ' + I18n.t('ENTRIES');
     $('#encyclopediaItems').innerHTML = visible.length ? visible.map(entry => `
       <button class="encyclopedia-card ${entry.id === selectedId ? 'selected' : ''}"
         data-ency-entry="${entry.id}" aria-pressed="${entry.id === selectedId}">
         <img src="${entry.icon}" width="48" height="48" loading="lazy" alt="">
         <span class="encyclopedia-card-text"><b>${escape(entry.name)}</b>
-          <small>${escape(I18n.t(categoryLabels[entry.category]))}</small>
+          <small>${escape(entry.category === 'characters' ? entry.role + ' · ' + entry.status : I18n.t(categoryLabels[entry.category]))}</small>
           <span>${escape(entry.description)}</span>
         </span>
       </button>

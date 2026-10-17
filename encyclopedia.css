@@ -325,3 +325,6 @@
   }
 }
 
+
+.encyclopedia-details .character-detail img { width: 112px; height: 112px; object-fit: cover; border-radius: 8px; border: 1px solid #718eaa66; }
+.character-status { padding: 10px; border: 1px solid #80b9a655; color: #a6d9c2; font-size: 14px; }

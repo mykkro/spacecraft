@@ -46,3 +46,19 @@ Final shared prompt (replace `{subject}` with the row below):
 | `piercer.png` | one long slender armor-piercing missile, pointed hardened silver penetrator nose, dark teal blue body with one cyan band, four compact rear fins |
 | `seismic.png` | one heavy seismic torpedo, broad dark graphite cylindrical body, amber-orange hazard bands, prominent ribbed warhead, four sturdy metal tail fins and a warm orange engine nozzle |
 
+
+
+## Crew portraits
+
+Generated separately with the built-in image generation tool (not the CLI). Final assets are `assets/crew/{jegor,bobo,rhea,tarek,ada,captain}.png`. The station roster uses all six; ship selection shows the preset captain and Bobo for Kraxna. Names and roles stay in localized HTML, so portrait images have empty alt text beside their captions.
+
+Final prompt set: each subject below is appended verbatim to this shared prompt.
+
+> Use case: stylized-concept. Asset type: one square crew avatar portrait for SPACECRAFT, a retro space mining browser game. Style: polished pixel art, deliberate square pixel clusters, industrial sci-fi, muted navy backdrop with cyan rim lighting and warm face highlights, readable at 64 pixels. Composition: single centered head and shoulders filling 85% of square, face clearly visible. Background: simple dark navy gradient. No text, lettering, logo, watermark, UI, frame, montage, or additional characters. Subject:
+
+- **jegor.png:** Jegor Kokotovič, a fictional middle-aged captain and space garbage collector: stocky weathered man, thick dark moustache, warm mischievous eyes, patched olive work jacket and battered olive cap, friendly gruff expression.
+- **bobo.png:** Bobo, a friendly utilitarian repair robot: boxy cream and yellow metal head, two expressive cyan circular optical eyes, small antenna and visible screws, scuffed orange maintenance chassis, kind personality. Mechanical robot, no human face.
+- **rhea.png:** Rhea, a mining specialist: determined young adult woman with copper skin, short dark curls, orange industrial mining suit and protective goggles resting above forehead, a small headlamp.
+- **tarek.png:** Tarek, a spacecraft engineer: adult man with brown skin, close-cropped black hair, neat beard, teal engineering overalls, small diagnostic earpiece, thoughtful calm expression.
+- **ada.png:** Ada, a repair specialist: adult woman with pale skin, silver hair in a short practical cut, grease smudge on cheek, dark red utility jacket, confident welcoming expression.
+- **captain.png:** the player explorer captain: an anonymous astronaut with a fully closed dark reflective navy visor, cream flight helmet and blue pilot suit, cyan light reflected in visor, confident neutral pose, no identifiable human face.

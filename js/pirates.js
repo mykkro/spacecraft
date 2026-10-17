@@ -50,12 +50,12 @@ const Raiders = (() => {
   }
   function save() {
     try {
-      localStorage.setItem('spacecraft-pirates-v1', JSON.stringify({ defeated: [...defeated] }));
+      (typeof Profiles === 'undefined' ? localStorage : Profiles).setItem('spacecraft-pirates-v1', JSON.stringify({ defeated: [...defeated] }));
     } catch {
     }
   }
   try {
-    const data = JSON.parse(localStorage.getItem('spacecraft-pirates-v1') || 'null');
+    const data = JSON.parse((typeof Profiles === 'undefined' ? localStorage : Profiles).getItem('spacecraft-pirates-v1') || 'null');
     if (Array.isArray((data?.defeated)))
       for (const id of data.defeated)
         if (typeof id === 'string' && /^-?\d+:-?\d+:z\d+:p\d+$/.test(id))
@@ -132,7 +132,7 @@ const Raiders = (() => {
   }
   function sweep(x0, y0, x1, y1) {
     let found = null;
-    for (const enemy of enemies) {
+    for (const enemy of [...enemies, ...(typeof MissionContracts !== 'undefined' ? MissionContracts.hostiles : [])]) {
       if (enemy.hp <= 0)
         continue;
       const t = segmentCircle(x0, y0, x1, y1, enemy.x, enemy.y, enemy.r);
@@ -196,6 +196,7 @@ const Raiders = (() => {
 
   // Remove a defeated ship once, then create collectible loot packs instead of many tiny items.
   function hit(shot, enemy) {
+    if (typeof MissionContracts !== 'undefined' && MissionContracts.hostiles.includes(enemy)) return MissionContracts.hit(shot, enemy);
     if (enemy.hp <= 0 || !enemies.includes(enemy))
       return false;
     enemy.hp -= shot.damage;
@@ -207,6 +208,7 @@ const Raiders = (() => {
     burst(enemy.x, enemy.y, shot.tint || [.9, .5, .25], shot.missile ? 20 : 7, 90);
     if (enemy.hp <= 0) {
       defeated.add(enemy.id);
+      if (typeof SpaceEffects !== 'undefined') SpaceEffects.spawn(enemy.x, enemy.y, enemy.heavy ? 80 : 50, 'metal');
       burst(enemy.x, enemy.y, [1, .43, .22], 38, 170);
       GameAudio.play('explosion', {
         x: enemy.x,
@@ -227,7 +229,7 @@ const Raiders = (() => {
     return true;
   }
   function blast(shot, exclude) {
-    for (const e of [...enemies])
+    for (const e of [...enemies, ...(typeof MissionContracts !== 'undefined' ? MissionContracts.hostiles : [])])
       if (e !== exclude && Math.hypot(e.x - shot.x, e.y - shot.y) < shot.blast + e.r)
         hit(shot, e);
   }
@@ -271,7 +273,7 @@ const Raiders = (() => {
         if (t !== null)
           rockT = Math.min(rockT, t);
       }
-      const shipT = segmentCircle(x0, y0, p.x, p.y, ship.x, ship.y, 14);
+      const shipT = segmentCircle(x0, y0, p.x, p.y, ship.x, ship.y, typeof Shields !== 'undefined' ? Shields.collisionRadius : 14);
       if (rockT !== Infinity && (shipT === null || rockT <= shipT)) {
         const x = x0 + (p.x - x0) * rockT,
           y = y0 + (p.y - y0) * rockT;
@@ -376,17 +378,8 @@ const Raiders = (() => {
       const [x, y] = screen(e.x, e.y);
       if (x < -60 || x > width + 60 || y < -60 || y > height + 60)
         continue;
-      const c = Math.cos(e.angle),
-        s = Math.sin(e.angle),
-        p = (a, b) => [x + a * c - b * s, y + a * s + b * c],
-        r = e.heavy ? 1.25 : 1;
-      tri(p(0, -23 * r), p(-18 * r, 16 * r), p(-4 * r, 9 * r), [.48, .24, .22, 1]);
-      tri(p(0, -23 * r), p(-4 * r, 9 * r), p(17 * r, 16 * r), [.28, .2, .24, 1]);
-      tri(p(-18 * r, 16 * r), p(-21 * r, -1 * r), p(-10 * r, 4 * r), [.28, .32, .35, 1]);
-      tri(p(17 * r, 16 * r), p(21 * r, -1 * r), p(10 * r, 4 * r), [.28, .32, .35, 1]);
-      tri(p(0, -12 * r), p(-4 * r, 1 * r), p(4 * r, 1 * r), [1, .34, .19, 1]);
-      line(p(-18 * r, 16 * r), p(0, -23 * r), [.9, .39, .29, .9], 1.5);
-      line(p(-5 * r, 12 * r), p(5 * r, 12 * r), [1, .5, .22, 1], 3);
+      const r = e.heavy ? 1.25 : 1;
+      WorldArt.drawShip(e.heavy ? 'heavy' : 'pirate', x, y, e.angle, 1, r, e.aggro);
       if (e.aggro || e.hp < e.maxHp) {
         line([x - 21, y - 36 * r], [x + 21, y - 36 * r], [.2, .25, .3, 1], 3);
         line([x - 21, y - 36 * r], [x - 21 + 42 * e.hp / e.maxHp, y - 36 * r], [.95, .4, .3, 1], 3);
