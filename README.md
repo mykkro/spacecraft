@@ -1,18 +1,14 @@
 # SPACECRAFT
 
-The global chart includes a seeded nebula and spiral-galaxy backdrop. Markers remain selectable above the scenery, and lines represent discovered wormhole connections: solid between visited systems, dashed toward located systems. Selecting a system highlights its connected routes.
+SPACECRAFT is a browser space exploration and survival game with Asteroids-style flight and combat. Choose a ship, venture into an expanding universe, and blast asteroids for the materials you need to keep exploring.
 
-## GitHub Pages deployment
+Turn ore, ice, and crystals into fuel, ammunition, machines, and ship upgrades. Manage your cargo and equipment, unlock stronger weapons and shields, and land on moons to mine rare deposits and build bases with workshops, furnaces, storage, and support buildings.
 
-The game is a static site and needs no package installation or build server.
-The workflow in `.github/workflows/pages.yml` publishes the runtime files on every push to `main`, without running browser tests.
+Travel through wormholes to discover new systems, take on quests, trade at starbases, and recruit crew members with useful skills. Space pirates, tough asteroid fields, and dangerous black holes make preparation matter: watch your fuel, protect your hull, and build a network of outposts to support longer expeditions.
 
-1. Open [repository Settings → Pages](https://github.com/mykkro/spacecraft/settings/pages).
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Open [Actions](https://github.com/mykkro/spacecraft/actions), select **Deploy SPACECRAFT to GitHub Pages**, and choose **Run workflow** on `main` (or rerun the first deployment if it failed before Pages was enabled).
-4. After deployment succeeds, play at **https://mykkro.github.io/spacecraft/**.
+Play in English or Czech, with named local save profiles so you can return to your expedition.
 
-Future pushes to `main` deploy automatically. GitHub Pages has a separate browser origin from localhost, so local development saves do not transfer automatically.
+[Play SPACECRAFT in your browser](https://mykkro.github.io/spacecraft/).
 
 For code structure, shared-state rules, and lightweight development checks, see
 [SOURCE_GUIDE.md](SOURCE_GUIDE.md).
