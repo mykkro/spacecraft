@@ -208,7 +208,8 @@
   color: var(--accent)
 }
 
-#questMessage {
+#questMessage,
+.quest-claim-message {
   font-size: 10px;
   line-height: 1.8;
   color: #9dd6b0;
@@ -216,7 +217,8 @@
   min-height: 18px
 }
 
-#questMessage.quest-error {
+#questMessage.quest-error,
+.quest-claim-message.quest-error {
   color: #edaa8b
 }
 

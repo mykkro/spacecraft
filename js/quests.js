@@ -135,7 +135,7 @@ const QuestLog = (() => {
       const done = claimed.includes(q.id),
         value = Math.min(progress(q.id), q.target),
         ready = !done && value >= q.target;
-      return I18n.html(`<article class="quest-card ${ done ? 'claimed' : ready ? 'ready' : '' }"><div class="quest-state">${ done ? I18n.t('REWARD CLAIMED') : ready ? I18n.t('COMPLETE · REWARD READY') : I18n.t('IN PROGRESS') }</div><h3>${ q.title }</h3><p>${ q.description }</p><div class="quest-progress-label"><span>${ q.kind === 'escort' ? (I18n.language === 'cs' ? 'KURÝR V BEZPEČÍ' : 'COURIER SAFE') : q.kind === 'delivery' ? (I18n.language === 'cs' ? 'INGOTY V CÍLOVÉM DOKU' : 'INGOTS AT DESTINATION DOCK') : q.kind === 'bases' ? I18n.t('BASES ESTABLISHED') : q.material === 'metal' ? I18n.t('IRON ORE MINED') : q.material.toUpperCase() + ' MINED' }</span><b>${ done ? q.target : value } / ${ q.target }</b></div><progress value="${ done ? q.target : value }" max="${ q.target }" aria-label="${ q.title } progress">${ value } / ${ q.target }</progress><div class="quest-rewards">${ rewardMarkup(q) }</div>${missionMarkup(q, done)}${!done && typeof QuestTracker !== 'undefined' ? `<button data-track-quest="${q.id}" aria-pressed="${QuestTracker.selected===q.id}">${QuestTracker.selected===q.id ? (I18n.language==='cs'?'ZRUŠIT SLEDOVÁNÍ':'STOP TRACKING') : (I18n.language==='cs'?'SLEDOVAT':'TRACK QUEST')}</button>` : ''}<button data-claim="${ q.id }" ${ ready ? '' : 'disabled' }>${ done ? I18n.t('CLAIMED') : ready ? I18n.t('CLAIM REWARD') : I18n.t('KEEP EXPLORING') }</button></article>`);
+      return I18n.html(`<article class="quest-card ${ done ? 'claimed' : ready ? 'ready' : '' }"><div class="quest-state">${ done ? I18n.t('REWARD CLAIMED') : ready ? I18n.t('COMPLETE · REWARD READY') : I18n.t('IN PROGRESS') }</div><h3>${ q.title }</h3><p>${ q.description }</p><div class="quest-progress-label"><span>${ q.kind === 'escort' ? (I18n.language === 'cs' ? 'KURÝR V BEZPEČÍ' : 'COURIER SAFE') : q.kind === 'delivery' ? (I18n.language === 'cs' ? 'INGOTY V CÍLOVÉM DOKU' : 'INGOTS AT DESTINATION DOCK') : q.kind === 'bases' ? I18n.t('BASES ESTABLISHED') : q.material === 'metal' ? I18n.t('IRON ORE MINED') : q.material.toUpperCase() + ' MINED' }</span><b>${ done ? q.target : value } / ${ q.target }</b></div><progress value="${ done ? q.target : value }" max="${ q.target }" aria-label="${ q.title } progress">${ value } / ${ q.target }</progress><div class="quest-rewards">${ rewardMarkup(q) }</div>${missionMarkup(q, done)}${!done && typeof QuestTracker !== 'undefined' ? `<button data-track-quest="${q.id}" aria-pressed="${QuestTracker.selected===q.id}">${QuestTracker.selected===q.id ? (I18n.language==='cs'?'ZRUŠIT SLEDOVÁNÍ':'STOP TRACKING') : (I18n.language==='cs'?'SLEDOVAT':'TRACK QUEST')}</button>` : ''}<button data-claim="${ q.id }" ${ ready ? '' : 'disabled' }>${ done ? I18n.t('CLAIMED') : ready ? I18n.t('CLAIM REWARD') : I18n.t('KEEP EXPLORING') }</button><p class="quest-claim-message" data-claim-message="${q.id}" role="status" aria-live="polite" hidden></p></article>`);
     }).join('');
     $('#questCards').querySelectorAll('[data-track-quest]').forEach(b=>b.onclick=()=>QuestTracker.track(QuestTracker.selected===b.dataset.trackQuest?null:b.dataset.trackQuest));
     $('#questCards').querySelectorAll('[data-accept]').forEach(b => b.onclick = () => {
@@ -145,6 +145,11 @@ const QuestLog = (() => {
       const result = Colony.claimQuest(b.dataset.claim);
       $('#questMessage').textContent = result.message;
       $('#questMessage').classList.toggle('quest-error', !result.ok);
+      // Successful claims rebuild the cards, so find the current status element.
+      const message = $(`[data-claim-message="${b.dataset.claim}"]`);
+      message.textContent = result.message;
+      message.hidden = false;
+      message.classList.toggle('quest-error', !result.ok);
     });
   }
 
