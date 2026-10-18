@@ -174,6 +174,7 @@ const Colony = (() => {
   };
 
   Object.assign(items, {
+    resource_scanner:{name:I18n.language === 'cs' ? 'Skener surovin' : 'Resource Scanner',asset:'scanner.png',color:'#9af0c8',machine:true,weight:3,description:I18n.language === 'cs' ? 'V nakladu odhali vzacne suroviny na mesicich celeho mistniho systemu. Otevrete mistni mapu [M].' : 'Carry in cargo to reveal remaining rare resources on every moon in the current system. Open the local map [M] and select a moon for depth readings.'},
     shield_generator: {name: I18n.t('Shield Generator Mk I'), asset: 'shield_generator.svg', shield: true, shieldTier: 1, machine: true, weight: 5, description: I18n.language === 'cs' ? 'Generátor modrého štítu: 35 bodů, obnova 1,5 bodu/s po 5 sekundách bez zásahu. Nasaďte do slotu štítu.' : 'Blue shield generator: 35 points, regenerates 1.5 points/s after 5 seconds without a hit. Equip in the shield socket.'},
     shield_generator_advanced: {name: I18n.t('Shield Generator Mk II'), asset: 'shield_generator_advanced.svg', shield: true, shieldTier: 2, machine: true, weight: 7, description: I18n.language === 'cs' ? 'Pokročilý generátor: 65 bodů štítu, obnova 3 body/s po 4 sekundách bez zásahu. Výroba spotřebuje Mk I.' : 'Advanced generator: 65 shield points, regenerates 3 points/s after 4 seconds without a hit. Crafting consumes a Mk I.'},
     shield_generator_ion: {name: I18n.t('Ion Shield Generator'), asset: 'shield_generator_ion.svg', shield: true, shieldTier: 3, machine: true, weight: 9, description: I18n.language === 'cs' ? 'Iontový generátor: 100 bodů štítu, obnova 5 bodů/s po 3 sekundách bez zásahu. Výroba spotřebuje Mk II.' : 'Ion generator: 100 shield points, regenerates 5 points/s after 3 seconds without a hit. Crafting consumes a Mk II.'}
@@ -489,7 +490,8 @@ const Colony = (() => {
     mined: {
       metal: 0,
       ice: 0,
-      crystal: 0
+      crystal: 0,
+      bulterite: 0, titanium_ore: 0, cobalt_ore: 0, iridium_ore: 0
     },
     claimed: []
   };
@@ -514,6 +516,7 @@ const Colony = (() => {
     {station: 'bench', name: items.shield_generator_ion.name, pattern: ['bulterite', 'crystal', 'bulterite', 'glass', 'blue_ion_cube', 'glass', null, 'shield_generator_advanced', null], out: 'shield_generator_ion', qty: 1}
   );
 
+  recipes.push({station:'bench',name:items.resource_scanner.name,pattern:['crystal','glass','crystal','plate','scanner','plate',null,'ion_cube',null],out:'resource_scanner',qty:1});
   recipes.push({station: 'bench', name: items.portable_workbench.name, pattern: ['bulterite','crystal','bulterite','plate','blue_ion_cube','plate','glass','bench','glass'], out: 'portable_workbench', qty: 1});
 
   recipes.push(
@@ -1816,6 +1819,14 @@ const Colony = (() => {
   }
 
   // Generate only neighboring moons and keep the location cache bounded.
+  function systemMoons() {
+    const gx = Math.floor((ship.x + 6000) / 12000), gy = Math.floor((ship.y + 6000) / 12000), out = [];
+    for (let x = gx * 3 - 2; x <= gx * 3 + 1; x++) for (let y = gy * 3 - 2; y <= gy * 3 + 1; y++) {
+      const m = moonAt(x,y);
+      if (Math.floor((m.x + 6000) / 12000) === gx && Math.floor((m.y + 6000) / 12000) === gy) out.push(m);
+    }
+    return out;
+  }
   function localMoons() {
     const cx = Math.floor(ship.x / 4000),
       cy = Math.floor(ship.y / 4000),
@@ -1907,7 +1918,9 @@ const Colony = (() => {
   }
   // Preview new terrain without saving; existing moons use remaining deposits.
   function scanMoonMetals(m) {
-    if (!count('scanner') || !m || Math.hypot(ship.x - m.x, ship.y - m.y) > 6500) return null;
+    if (!m) return null;
+    const systemScan = count('resource_scanner') && systemMoons().some(moon => moon.id === m.id);
+    if (!systemScan && (!count('scanner') || Math.hypot(ship.x - m.x, ship.y - m.y) > 6500)) return null;
     const found = new Map(), map = terrainFor(m, false);
     for (let y = 0; y < map.length; y++) for (const type of map[y]) {
       if (!items[type]?.moonOre && type !== 'bulterite') continue;
@@ -2588,7 +2601,7 @@ const Colony = (() => {
     launch,
     editTile,
     closeInventory,
-    getMoons: localMoons,
+    getMoons: () => count('resource_scanner') ? systemMoons() : localMoons(),
     scanMoonMetals,
     getBases,
     getStationAccess: stationAccess,

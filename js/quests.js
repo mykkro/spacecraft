@@ -68,6 +68,12 @@ const QuestLog = (() => {
       }
     }
   ];
+  definitions.push(
+    {id:'rare-titanium',title:I18n.t('Titanium trail'),description:I18n.t('Mine 12 titanium ore from moon deposits.'),kind:'mined',material:'titanium_ore',target:12,rewards:{resource_scanner:1},credits:100},
+    {id:'rare-cobalt',title:I18n.t('Blue vein survey'),description:I18n.t('Mine 10 cobalt ore from moon deposits.'),kind:'mined',material:'cobalt_ore',target:10,rewards:{ion_cube:3},credits:160},
+    {id:'rare-iridium',title:I18n.t('Deep frontier'),description:I18n.t('Mine 6 iridium ore. Bring an advanced cutter.'),kind:'mined',material:'iridium_ore',target:6,rewards:{advanced_alloy:4},credits:240},
+    {id:'bulterite-reserve',title:I18n.t('Dense matter reserve'),description:I18n.t('Mine and collect 16 Bulterite.'),kind:'mined',material:'bulterite',target:16,rewards:{ammo_seismic:8},credits:180}
+  );
   if (typeof MissionContracts !== 'undefined') definitions.push(...MissionContracts.definitions);
   let open = false,
     previousPaused = false,

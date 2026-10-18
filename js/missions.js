@@ -9,8 +9,8 @@ const MissionContracts = (() => {
   const source = {x: -1800, y: -900}, destination = {x: 1800, y: 1100};
   const definitions = [
     {id: deliveryId, title: tr('Metal across the void', 'Kov přes prázdnotu'),
-      description: tr('Accept, then haul 8 iron ingots to the civilian starbase in system 1:0. Dock there and claim to hand over the cargo. The origin wormhole bearing is provided on acceptance.', 'Přijměte zakázku a dopravte 8 železných ingotů na civilní stanici v systému 1:0. Dokujte a vyzvedněte odměnu pro předání nákladu. Souřadnice výchozího vormhoulu dostanete při přijetí.'),
-      kind: 'delivery', target: 8, material: 'ingot', destination: '1:0', rewards: {}, credits: 180,
+      description: tr('Accept, then haul 100 iron ingots to the civilian starbase in system 1:0. Dock there and claim to hand over the cargo. The origin wormhole bearing is provided on acceptance.', 'Přijměte zakázku a dopravte 100 železných ingotů na civilní stanici v systému 1:0. Dokujte a vyzvedněte odměnu pro předání nákladu. Souřadnice výchozího vormhoulu dostanete při přijetí.'),
+      kind: 'delivery', target: 100, material: 'ingot', destination: '1:0', rewards: {}, credits: 180,
       coordinates: ['1:0', '1:1']},
     {id: escortId, title: tr('A courier needs cover', 'Kurýr potřebuje krytí'),
       description: tr('Accept, meet the courier at (-1800, -900) in system 0:0 and escort it to Wayfarer Exchange (1800, 1100). Stay within 900 m and destroy both pirate ambushes. Leaving the system fails the escort.', 'Přijměte zakázku, setkejte se s kurýrem na (-1800, -900) v systému 0:0 a doprovoďte jej na Wayfarer Exchange (1800, 1100). Zůstaňte do 900 m a zničte obě pirátské zálohy. Opuštění systému znamená neúspěch.'),
@@ -52,7 +52,7 @@ const MissionContracts = (() => {
     Colony.save(); QuestLog.refresh(); return true;
   }
   function progress(id) {
-    if (id === deliveryId) return deliveryAccepted && Starbases.isDockedAt('1:0') ? Math.min(8, Colony.availableCount('ingot')) : 0;
+    if (id === deliveryId) return deliveryAccepted && Starbases.isDockedAt('1:0') ? Math.min(definitions[0].target, Colony.availableCount('ingot')) : 0;
     return escort?.status === 'complete' ? 1 : 0;
   }
   function hit(shot, enemy) {
@@ -137,7 +137,7 @@ const MissionContracts = (() => {
     if (clock >= 2) { clock = 0; Colony.save(); QuestLog.refresh(); }
   }
   function detail(id) {
-    if (id === deliveryId) return tr('Delivery consumes 8 ingots at the destination dock.', 'Předání spotřebuje 8 ingotů v cílovém doku.');
+    if (id === deliveryId) return tr('Delivery consumes 100 ingots at the destination dock.', 'Předání spotřebuje 100 ingotů v cílovém doku.');
     if (!escort) return tr('Rendezvous: (-1800, -900). Two pirate waves; keep the courier alive.', 'Setkání: (-1800, -900). Dvě vlny pirátů; udržte kurýra naživu.');
     return tr('Courier hull', 'Trup kurýra') + ': ' + Math.ceil(escort.hp) + '% · ' + tr('Waves', 'Vlny') + ': ' + escort.waves + '/2 · ' + tr('Hostiles', 'Nepřátelé') + ': ' + escort.hostiles.length;
   }
