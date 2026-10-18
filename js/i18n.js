@@ -6,6 +6,19 @@
 // Presentation-only localization. Item IDs, recipes, key bindings, and save data stay stable.
 const I18n = (() => {
   const cs = {
+    "Titanium trail": "Titanov\u00e1 stopa",
+    "Mine 12 titanium ore from moon deposits.": "Vyt\u011b\u017ete 12 kus\u016f titanov\u00e9 rudy z m\u011bs\u00ed\u010dn\u00edch nalezi\u0161\u0165.",
+    "Blue vein survey": "Pr\u016fzkum modr\u00e9 \u017e\u00edly",
+    "Mine 10 cobalt ore from moon deposits.": "Vyt\u011b\u017ete 10 kus\u016f kobaltov\u00e9 rudy z m\u011bs\u00ed\u010dn\u00edch nalezi\u0161\u0165.",
+    "Deep frontier": "Hlubok\u00e9 pohrani\u010d\u00ed",
+    "Mine 6 iridium ore. Bring an advanced cutter.": "Vyt\u011b\u017ete 6 kus\u016f iridiov\u00e9 rudy. Vezm\u011bte si pokro\u010dil\u00fd \u0159ez\u00e1k.",
+    "Dense matter reserve": "Z\u00e1soba hust\u00e9 hmoty",
+    "Mine and collect 16 Bulterite.": "Vyt\u011b\u017ete a seberte 16 kus\u016f Bulteria.",
+    "SORT INVENTORY": "SE\u0158ADIT INVENT\u00c1\u0158",
+    "SORT CARGO": "SE\u0158ADIT N\u00c1KLAD",
+    "SORT STORAGE": "SE\u0158ADIT SKLAD",
+    "Merge stacks and sort by name.": "Slou\u010dit z\u00e1sobn\u00edky a se\u0159adit podle n\u00e1zvu.",
+
     "Shield Generator Mk I": "Generátor štítu Mk I",
     "Shield Generator Mk II": "Generátor štítu Mk II",
     "Ion Shield Generator": "Iontový generátor štítu",

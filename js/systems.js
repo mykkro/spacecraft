@@ -1327,6 +1327,23 @@ const Colony = (() => {
     if(!info||stationAccess().moon?.id!==info.moonId)return null;
     return (storageContents.get(id)||Array(info.capacity).fill(null)).map(s=>s?{...s}:null);
   }
+  // Repack only the requested inventory, preserving quantities and stack caps.
+  function sortInventory(id = null) {
+    if (carried) return false;
+    const source = id === null ? bag : storageSlots(id);
+    if (!source) return false;
+    const totals = new Map();
+    for (const stack of source) if (stack) totals.set(stack.type, (totals.get(stack.type) || 0) + stack.qty);
+    const types = [...totals.keys()].sort((a,b) => items[a].name.localeCompare(items[b].name, I18n.language) || a.localeCompare(b));
+    const sorted = Array(source.length).fill(null);
+    for (const type of types) if (deposit(sorted,type,totals.get(type))) return false;
+    if (id === null) { bag = sorted; selected = -1; }
+    else storageContents.set(id,sorted);
+    sync(); save();
+    if (!$('#overlay').hidden) renderInventory();
+    if (typeof BaseStorageUI !== 'undefined') BaseStorageUI.refresh();
+    return true;
+  }
   function restoreStorage(saved) {
     if(!Array.isArray(saved))return;
     for(const row of saved){
@@ -1608,11 +1625,12 @@ const Colony = (() => {
       available = access.stations,
       size = station === 'bench' ? 3 : 2,
       r = matchedRecipe();
-    $('#slots').innerHTML = I18n.html(`<div class="inventory-workspace"><div class="inventory-cargo-pane"><div class="inventory-label">PERSONAL INVENTORY <span>${ bag.length } SLOTS · LIMITS VARY BY ITEM</span></div><div class="bag-grid">${ bag.map(slotMarkup).join('') }</div><p class="inventory-hint">${ selected >= 0 && bag[selected] ? I18n.t(`Selected: ${ items[bag[selected].type].name }. Click another slot to move / merge, or a grid cell to assign.`) : I18n.t('Click a stack to select it. Ingredients stay in inventory until you craft.') }</p></div><div class="inventory-craft-pane"><div class="station-tabs">${ [
+    $('#slots').innerHTML = I18n.html(`<div class="inventory-workspace"><div class="inventory-cargo-pane"><div class="inventory-label">PERSONAL INVENTORY <span>${ bag.length } SLOTS · LIMITS VARY BY ITEM</span></div><button id="sortInventory" title="Merge stacks and sort by name." ${carried ? 'disabled' : ''}>SORT INVENTORY</button><div class="bag-grid">${ bag.map(slotMarkup).join('') }</div><p class="inventory-hint">${ selected >= 0 && bag[selected] ? I18n.t(`Selected: ${ items[bag[selected].type].name }. Click another slot to move / merge, or a grid cell to assign.`) : I18n.t('Click a stack to select it. Ingredients stay in inventory until you craft.') }</p></div><div class="inventory-craft-pane"><div class="station-tabs">${ [
       ['hand', I18n.t('Handcraft · 2×2')],
       ['bench', I18n.t('Workbench · 3×3')],
       ['furnace', I18n.t('Furnace · 2×2')]
     ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout" style="--craft-size:${ size }"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ !hasCraftMaterials(r,1) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
+    $('#sortInventory').onclick = () => sortInventory();
     $('#slots .station-tabs').insertAdjacentHTML('beforebegin', stationAccessMarkup(access));
     renderQuickInventory();
     const focus = focusedStack();
@@ -2552,7 +2570,7 @@ const Colony = (() => {
     },
     addItem,
     moveInventoryStack,
-    storageContainers, storageSlots, transferStorage,
+    storageContainers, storageSlots, transferStorage, sortInventory,
     applyInventoryDrop,
     equipShipSlot,
     get craftingGrid() { return [...grid]; },
@@ -2562,6 +2580,7 @@ const Colony = (() => {
     updateSurface,
     renderSurface,
     // Small public model API for deterministic gameplay checks and future extensions.
+    get holdingStack() { return !!carried; },
     get cargoMass() {
       return cargoMass();
     },

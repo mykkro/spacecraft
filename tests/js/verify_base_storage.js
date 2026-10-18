@@ -76,7 +76,7 @@ assert(c.storageContainers().every(s=>s.id!==id));
 // All variants restore their exact physical capacity, independently of ship slots.
 const variants=boot(setup.store),v=variants.model.Colony;
 v.surface[13][42]='storage_medium';v.surface[13][43]='storage_large';v.save();
-const sized=boot(variants.store).model.Colony;
+const sizedWorld=boot(variants.store),sized=sizedWorld.model.Colony;
 const medium=sized.storageContainers().find(s=>s.type==='storage_medium');
 const large=sized.storageContainers().find(s=>s.type==='storage_large');
 assert.equal(sized.storageSlots(medium.id).length,20);
@@ -88,3 +88,26 @@ assert(sized.storageSlots(large.id)[39].qty<=sized.items.ice.maxStack);
 assert.equal(sized.transferStorage(medium.id,'storage',39,1),false);
 
 console.log('PASS: timed crafting, placement, capacities, stack limits, moves/merges/swaps, mass, full-container safety, surface/orbit/range access, UI, save reload and dismantling. No browser started.');
+
+// Sorting merges partial stacks, keeps quantities, and persists each inventory.
+const total=slots=>JSON.stringify(Object.fromEntries([...new Set(slots.filter(Boolean).map(s=>s.type))].sort().map(t=>[t,slots.reduce((n,s)=>n+(s?.type===t?s.qty:0),0)])));
+const cargoBefore=total(sized.bag), storageBefore=total(sized.storageSlots(large.id));
+assert(sized.transferStorage(large.id,'storage',39,2));
+const iceSource=sized.bag.findIndex(s=>s?.type==='ice');
+assert(sized.transferStorage(large.id,'bag',iceSource,2,5));
+assert.equal(total(sized.bag),cargoBefore);
+assert.equal(total(sized.storageSlots(large.id)),storageBefore);
+assert(sized.sortInventory(large.id));
+assert.equal(total(sized.storageSlots(large.id)),storageBefore);
+assert.equal(sized.storageSlots(large.id)[0].type,'ice');
+assert.equal(sized.storageSlots(large.id).filter(Boolean).length,1);
+assert(sized.sortInventory());assert.equal(total(sized.bag),cargoBefore);
+const packed=sized.bag.filter(Boolean);
+assert.deepEqual(Array.from(packed,s=>s.type),[...packed].sort((a,b)=>sized.items[a.type].name.localeCompare(sized.items[b.type].name)||a.type.localeCompare(b.type)).map(s=>s.type));
+assert(sized.bag.slice(packed.length).every(s=>s===null));
+assert(packed.every(s=>s.qty<=sized.items[s.type].maxStack));
+assert.equal(sized.sortInventory('bad'),false);
+const sortedReload=boot(sizedWorld.store).model.Colony;
+assert.equal(total(sortedReload.bag),cargoBefore);
+assert.equal(total(sortedReload.storageSlots(large.id)),storageBefore);
+console.log('PASS: cargo/container sorting, stack consolidation, quantity conservation, limits, inaccessible storage and persistence.');

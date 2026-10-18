@@ -7,8 +7,8 @@ const BaseStorageUI = (() => {
     <div class="storage-heading"><h2 id="storageTitle">${tr('Base storage','Sklad základny')}</h2><button id="closeStorage">${tr('BACK','ZPĚT')} · ESC</button></div>
     <label for="storageSelect">${tr('Container','Kontejner')}</label><select id="storageSelect"></select>
     <p>${tr('Click: move stack · Right click: half · Shift-click: one · Drag between inventories','Kliknutí: přesun · Pravé tlačítko: polovina · Shift: jeden kus · Přetahujte mezi inventáři')}</p>
-    <div class="storage-panes"><div><h3>${tr('Ship cargo','Náklad lodi')}</h3><div id="storageCargo" class="storage-grid"></div></div>
-    <div><h3 id="storageCapacity"></h3><div id="storageItems" class="storage-grid"></div></div></div>
+    <div class="storage-panes"><div><h3>${tr('Ship cargo','Náklad lodi')}</h3><button id="sortStorageCargo" title="${I18n.t('Merge stacks and sort by name.')}">${I18n.t('SORT CARGO')}</button><div id="storageCargo" class="storage-grid"></div></div>
+    <div><h3 id="storageCapacity"></h3><button id="sortStorageItems" title="${I18n.t('Merge stacks and sort by name.')}">${I18n.t('SORT STORAGE')}</button><div id="storageItems" class="storage-grid"></div></div></div>
     <p id="storageMessage" role="status"></p></section>`;
   document.body.append(overlay);
   const button=document.createElement('button');button.id='inventoryStorage';button.textContent=tr('STORAGE','SKLAD');
@@ -37,6 +37,8 @@ const BaseStorageUI = (() => {
     const slots=selected?Colony.storageSlots(selected):null;
     $('#storageCapacity').textContent=slots?tr('Storage','Sklad')+' · '+slots.filter(Boolean).length+'/'+slots.length:tr('No accessible containers','Žádné dostupné kontejnery');
     $('#storageCargo').innerHTML=Colony.bag.map((s,i)=>markup(s,i,'bag')).join('');
+    $('#sortStorageCargo').disabled=Colony.holdingStack;
+    $('#sortStorageItems').disabled=!slots || Colony.holdingStack;
     $('#storageItems').innerHTML=slots?slots.map((s,i)=>markup(s,i,'storage')).join(''):'';
     overlay.querySelectorAll('[data-storage-side]').forEach(slot=>{
       const side=slot.dataset.storageSide,index=Number(slot.dataset.storageIndex);
@@ -82,6 +84,8 @@ const BaseStorageUI = (() => {
   }
   button.onclick=()=>show();
   $('#storageSelect').onchange=e=>{selected=e.target.value;render();};
+  $('#sortStorageCargo').onclick=()=>{Colony.sortInventory();render();};
+  $('#sortStorageItems').onclick=()=>{if(selected)Colony.sortInventory(selected);render();};
   $('#closeStorage').onclick=close;
   addEventListener('keydown',e=>{
     if(!open)return;e.stopImmediatePropagation();
