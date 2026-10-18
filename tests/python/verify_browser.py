@@ -6,6 +6,9 @@ from pathlib import Path
 import sys
 from playwright.sync_api import sync_playwright
 
+preview_dir = Path(__file__).resolve().parents[2] / 'docs'
+preview_dir.mkdir(exist_ok=True)
+
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True, args=['--enable-webgl', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])
     page = browser.new_page(viewport={'width': 1440, 'height': 1000})
@@ -60,7 +63,7 @@ with sync_playwright() as p:
     except Exception:
         print(page.locator('#slots img.item-icon').evaluate_all('(imgs) => imgs.map(img => ({src:img.src,complete:img.complete,width:img.naturalWidth}))'), flush=True)
         raise
-    page.screenshot(path='inventory-preview.png')
+    page.screenshot(path=str(preview_dir / 'inventory-preview.png'))
     assert page.locator('#slots img.item-icon').evaluate_all('(imgs) => imgs.length > 0 && imgs.every(img => img.complete && img.naturalWidth > 0)')
     page.locator('#resume').click()
     page.evaluate('Colony.save()')
@@ -73,7 +76,7 @@ with sync_playwright() as p:
     page.keyboard.up('Space')
     assert page.evaluate('Colony.player.y < 14')
     page.wait_for_timeout(1200)
-    page.screenshot(path='surface-preview.png')
+    page.screenshot(path=str(preview_dir / 'surface-preview.png'))
     page.evaluate('Colony.launch()')
     page.reload(wait_until='networkidle')
     assert not page.evaluate('Colony.onSurface')
@@ -84,10 +87,11 @@ with sync_playwright() as p:
     page.wait_for_timeout(450)
     page.keyboard.up('w')
     assert page.evaluate('ship.vy < 0')
-    page.screenshot(path='flight-preview.png')
+    page.screenshot(path=str(preview_dir / 'flight-preview.png'))
+    (preview_dir.parent / 'flight-preview.png').write_bytes((preview_dir / 'flight-preview.png').read_bytes())
     page.evaluate("for(const type of Object.keys(Colony.items))Colony.addItem(type,1);showPanel()")
     page.wait_for_function("[...document.querySelectorAll('#slots img.item-icon')].every(img => img.complete && img.naturalWidth > 0)")
-    page.screenshot(path='items-preview.png')
+    page.screenshot(path=str(preview_dir / 'items-preview.png'))
     assert page.evaluate('gl.getError()') == 0
     assert not errors, errors
     print('PASS: WebGL, crafting UI, capacity, landing, stations, refining, reach, save/reload, liftoff, flight')

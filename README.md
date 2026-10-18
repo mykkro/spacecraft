@@ -15,15 +15,15 @@ For code structure, shared-state rules, and lightweight development checks, see
 
 A dependency-free WebGL space game. Open `index.html` in a modern desktop browser, or serve this directory with `python -m http.server 3333` and visit http://localhost:3333.
 
-![SPACECRAFT flight among rendered asteroids and distant planets](flight-preview.png)
+![SPACECRAFT flight among rendered asteroids and distant planets](docs/flight-preview.png)
 
 Inventory, equipment slots, and portable crafting stations:
 
-![Ship inventory and crafting interface with new weapons and moon materials](inventory-preview.png)
+![Ship inventory and crafting interface with new weapons and moon materials](docs/inventory-preview.png)
 
 A Selene outpost with workbench, furnace, repair station, solar array, fabrication hub, storage, and beacon:
 
-![Moon base showing the new support buildings beside the landing pad](surface-preview.png)
+![Moon base showing the new support buildings beside the landing pad](docs/surface-preview.png)
 
 - **W / S**: thrust / reverse
 - **A / D**: rotate (arrow keys also work)

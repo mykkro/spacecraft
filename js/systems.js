@@ -280,7 +280,7 @@ const Colony = (() => {
     bulshitter: 1,
     ammo_rockbreaker: 16,
     ammo_piercer: 8,
-    ammo_seismic: 4,
+    ammo_seismic: 8,
     ammo_fotron: 32,
     ammo_bulshitter: 128,
     stone: 64,
@@ -784,10 +784,12 @@ const Colony = (() => {
     vy: 0,
     grounded: false
   };
+  let walkPhase = 0, walking = false, facing = 1;
   const pointer = {
     x: 0,
     y: 0,
-    down: false
+    down: false,
+    inside: false
   };
   const defaultHotbar = ['block', 'glass', 'bench', 'furnace', 'lamp', 'stone'];
   const quickDragType = 'application/x-spacecraft-quick';
@@ -1949,11 +1951,20 @@ const Colony = (() => {
     return [...found.values()];
   }
   function tile(x, y) {
-    if (x < 0 || x >= cols || y >= rows)
-      return 'stone';
-    if (y < 0)
-      return null;
+    if (y < 0) return null;
+    if (x < 0 || x >= cols || y >= rows - 1) return 'bedrock';
     return (surface?.[y]?.[x]) || null;
+  }
+  const tileLabel = document.createElement('div');
+  tileLabel.id = 'surfaceTileLabel';
+  tileLabel.hidden = true;
+  $('#surfaceHud').append(tileLabel);
+  function surfaceTileInfo(x,y) {
+    if (!surface || !Number.isInteger(x) || !Number.isInteger(y)) return null;
+    const type = tile(x,y);
+    if (!type) return null;
+    return {type, name:type === 'bedrock' ? I18n.t('Bedrock') : items[type]?.name || type,
+      protected:type === 'bedrock' || (x >= 10 && x <= 13 && y === 14), reachable:inReach(x,y)};
   }
   function setSurfaceUI(on) {
     document.body.classList.toggle('on-surface', on);
@@ -2245,6 +2256,7 @@ const Colony = (() => {
     if (!surface || paused || !inReach(x, y))
       return false;
     const existing = tile(x, y);
+    if (existing === 'bedrock') { notify(I18n.t('Bedrock / cannot mine')); return false; }
     if (!placing) {
       if (!existing)
         return false;
@@ -2336,7 +2348,11 @@ const Colony = (() => {
     $('#toast').style.opacity = toastTimer > 0 ? 1 : 0;
     miningClock -= dt;
     const direction = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+    const previousX = player.x;
     move('x', direction * 5 * dt);
+    walking = Math.abs(player.x - previousX) > .001;
+    if (direction) facing = direction;
+    if (walking) walkPhase += dt * 11;
     if ((keys.has('Space') || keys.has('KeyW') || keys.has('ArrowUp')) && player.grounded) {
       player.vy = -8;
       player.grounded = false;
@@ -2361,6 +2377,7 @@ const Colony = (() => {
     }
   }
   const tileColors = {
+    bedrock: [.12, .14, .18],
     ion_cube: [.18, .57, .3],
     blue_ion_cube: [.19, .4, .72],
     bulterite: [.25, .43, .32],
@@ -2396,8 +2413,8 @@ const Colony = (() => {
     }
     disc(width * .8 - cam.x * .015, 130, 58, [.21, .33, .39, 1], 40);
     disc(width * .8 + 20 - cam.x * .015, 112, 50, [.025, .043, .075, 1], 40);
-    for (let y = Math.max(0, Math.floor(cam.y / tileSize)); y < Math.min(rows, Math.ceil((cam.y + height) / tileSize)); y++)
-      for (let x = Math.max(0, Math.floor(cam.x / tileSize)); x < Math.min(cols, Math.ceil((cam.x + width) / tileSize)); x++) {
+    for (let y = Math.max(0, Math.floor(cam.y / tileSize)); y < Math.min(rows + 1, Math.ceil((cam.y + height) / tileSize)); y++)
+      for (let x = Math.max(-1, Math.floor(cam.x / tileSize)); x < Math.min(cols + 1, Math.ceil((cam.x + width) / tileSize)); x++) {
         const t = tile(x, y);
         if (!t)
           continue;
@@ -2412,6 +2429,11 @@ const Colony = (() => {
         if (items[t]?.moonOre || ['metal', 'ice', 'crystal', 'bulterite', 'ion_cube', 'blue_ion_cube'].includes(t)) {
           disc(sx + 10, sy + 12, 4, [c[0] * 1.6, c[1] * 1.6, c[2] * 1.6, 1], 5);
           disc(sx + 22, sy + 22, 3, [c[0] * 1.4, c[1] * 1.4, c[2] * 1.4, 1], 4);
+        }
+        if (t === 'bedrock') {
+          line([sx + 3, sy + 8], [sx + 20, sy + 15], [.36,.39,.43,1], 3);
+          line([sx + 20, sy + 15], [sx + 12, sy + 29], [.06,.07,.09,1], 3);
+          line([sx + 20, sy + 15], [sx + 30, sy + 9], [.27,.30,.34,1], 2);
         }
         if (t === 'bench') {
           rect(sx + 3, sy + 6, 26, 6, [.7, .5, .3, 1]);
@@ -2455,12 +2477,32 @@ const Colony = (() => {
     rect(bx - 35, by - 3, 70, 3, [.74, .62, .42, 1]);
     const px = player.x * 32 - cam.x,
       py = player.y * 32 - cam.y;
+    const step = walking && player.grounded ? Math.sin(walkPhase) * 5 : 0;
+    const mining = pointer.inside && pointer.down && !paused && inReach(target().x,target().y) && !!tile(target().x,target().y);
+    const aim = target().x + .5 < player.x ? -1 : 1;
+    const swing = mining ? Math.sin(time * 24) * 4 : 0;
+    // Separate sleeves and gloves keep both arms visible, even while holding a tool.
+    const arm = (side, reach, lift) => {
+      const shoulder = [px + side * 8, py - 27];
+      const elbow = [px + side * 13 + reach * .4, py - 19 + lift * .5];
+      const hand = [px + side * 12 + reach, py - 12 + lift];
+      line(shoulder,elbow,[.60,.67,.67,1],6);
+      line(elbow,hand,[.70,.75,.72,1],5);
+      disc(hand[0],hand[1],3,[.27,.36,.42,1],6);
+      return hand;
+    };
+    arm(-1, mining && aim === -1 ? -9 : step, mining && aim === -1 ? -14 + swing : 0);
+    const rightHand = arm(1, mining && aim === 1 ? 9 : -step, mining && aim === 1 ? -14 + swing : 0);
     rect(px - 9, py - 31, 18, 23, [.69, .74, .72, 1]);
-    rect(px - 8, py - 9, 6, 9, [.35, .44, .5, 1]);
-    rect(px + 2, py - 9, 6, 9, [.35, .44, .5, 1]);
+    line([px - 5,py - 9],[px - 5 + step,py - 1],[.35,.44,.5,1],6);
+    line([px + 5,py - 9],[px + 5 - step,py - 1],[.35,.44,.5,1],6);
     disc(px, py - 38, 10, [.77, .8, .77, 1], 10);
-    rect(px - 7, py - 42, 14, 8, [.23, .43, .55, 1]);
-    rect(px - 14, py - 30, 5, 17, [.44, .53, .56, 1]);
+    rect(px - 7 + facing, py - 42, 12, 8, [.23, .43, .55, 1]);
+    if (mining) {
+      const hx = aim === 1 ? rightHand[0] : px - 21, hy = py - 26 + swing;
+      line([hx,hy],[hx + aim * 11,hy - 6],[.35,.45,.52,1],4);
+      line([hx + aim * 8,hy - 10],[hx + aim * 14,hy - 2],[.9,.76,.42,1],3);
+    }
     const t = target(),
       sx = t.x * 32 - cam.x,
       sy = t.y * 32 - cam.y,
@@ -2484,16 +2526,22 @@ const Colony = (() => {
         ]
       ])
       line(a, b, col, 1.5);
+    const info = pointer.inside ? surfaceTileInfo(t.x,t.y) : null;
+    tileLabel.hidden = !info || paused;
+    if (info) tileLabel.textContent = info.name + (info.protected ? ' / ' + I18n.t('Cannot mine') : !info.reachable ? ' / ' + I18n.t('Out of reach') : '');
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
     gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 6);
   }
+  canvas.addEventListener('pointerleave', () => { pointer.inside = false; pointer.down = false; tileLabel.hidden = true; });
   canvas.addEventListener('pointermove', e => {
+    pointer.inside = true;
     pointer.x = e.clientX;
     pointer.y = e.clientY;
   });
   canvas.addEventListener('pointerdown', e => {
     if (!surface || paused)
       return;
+    pointer.inside = true;
     pointer.x = e.clientX;
     pointer.y = e.clientY;
     const t = target();
@@ -2621,7 +2669,7 @@ const Colony = (() => {
     editTile,
     closeInventory,
     getMoons: () => count('resource_scanner') ? systemMoons() : localMoons(),
-    scanMoonMetals,
+    scanMoonMetals, surfaceTileInfo,
     getBases,
     getStationAccess: stationAccess,
     get bag() {

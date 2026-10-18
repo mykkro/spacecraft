@@ -5,6 +5,9 @@ Run: python tests/python/verify_navigation.py
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+preview_dir = Path(__file__).resolve().parents[2] / 'docs'
+preview_dir.mkdir(exist_ok=True)
+
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,args=['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     page=browser.new_page(viewport={'width':1440,'height':1000})
@@ -48,7 +51,7 @@ with sync_playwright() as p:
     assert tracked
     # A receiver supplies offscreen bearing arrows to the minimap.
     assert page.evaluate("(() => {let n=0;const c=new Proxy({}, {get:(t,k)=>k==='fill'?()=>{if(['#7cd5e2','#dfb878'].includes(t.fillStyle))n++}:()=>{}});StarChart.drawRadar(c);return n===4})()")
-    page.screenshot(path='local-map-preview.png')
+    page.screenshot(path=str(preview_dir / 'local-map-preview.png'))
     page.locator('#globalMapTab').click()
     unvisited=page.locator('[data-system]').filter(has_text='NOT VISITED').first
     old_pos=page.evaluate('[ship.x,ship.y]')
@@ -56,7 +59,7 @@ with sync_playwright() as p:
     assert page.evaluate('[ship.x,ship.y]')==old_pos
     assert 'NOT YET VISITED' in page.locator('#mapDetails').inner_text()
     assert not page.evaluate('StarChart.enter()')
-    page.screenshot(path='global-map-preview.png')
+    page.screenshot(path=str(preview_dir / 'global-map-preview.png'))
     page.keyboard.press('m')
     assert page.evaluate('!paused&&Colony.onSurface')
     page.evaluate('Colony.launch()')
@@ -97,7 +100,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(150)
     assert page.locator('#mapOverlay section').bounding_box()['width']<=390
     assert page.locator('#chart').bounding_box()['height']>=230
-    page.screenshot(path='map-mobile-preview.png')
+    page.screenshot(path=str(preview_dir / 'map-mobile-preview.png'))
     page.keyboard.press('Escape')
     assert not page.evaluate('StarChart.mapOpen')
     page.evaluate('Colony.launch();ship.x=36000;ship.y=0;StarChart.update(0)')

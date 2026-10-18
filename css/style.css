@@ -1208,3 +1208,15 @@ footer {
     font-size: 8px
   }
 }
+
+#surfaceTileLabel {
+  margin: 10px auto 0;
+  width: fit-content;
+  padding: 7px 12px;
+  border: 1px solid #7595a7;
+  border-radius: 5px;
+  background: #07111cee;
+  color: #f0f5ed;
+  font-weight: 600;
+  pointer-events: none;
+}

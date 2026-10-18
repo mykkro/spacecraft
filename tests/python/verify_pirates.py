@@ -2,6 +2,9 @@
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+preview_dir = Path(__file__).resolve().parents[2] / 'docs'
+preview_dir.mkdir(exist_ok=True)
+
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,args=['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     page=browser.new_page(viewport={'width':1440,'height':1000})
@@ -19,13 +22,13 @@ with sync_playwright() as p:
     page.locator('#localMapTab').click()
     page.locator('[data-pirate-zone]').click()
     assert 'ARMED PIRATE TERRITORY' in page.locator('#mapDetails').inner_text()
-    page.screenshot(path='pirate-map-preview.png')
+    page.screenshot(path=str(preview_dir / 'pirate-map-preview.png'))
     page.keyboard.press('Escape')
     # Patrols acquire the player, move, fire, and damage the hull.
     page.evaluate("const z=Raiders.zones()[0];ship.x=z.x;ship.y=z.y+450;ship.vx=ship.vy=0;ship.invulnerable=0;rocks.length=0;Raiders.resetEncounter();for(let i=0;i<40;i++){ship.invulnerable=Math.max(0,ship.invulnerable-.1);Raiders.update(.1)};paused=true;update(0);Weapons.scan();radar()")
     assert page.evaluate('Raiders.enemies.some(e=>e.aggro)&&ship.hull<100'),page.evaluate('({ship,enemies:Raiders.enemies,shots:Raiders.projectiles})')
     assert page.locator('#pirateAlert').is_visible()
-    page.screenshot(path='pirate-combat-preview.png')
+    page.screenshot(path=str(preview_dir / 'pirate-combat-preview.png'))
     snapshot=page.evaluate('JSON.stringify([Raiders.enemies,Raiders.projectiles,ship.hull])')
     page.wait_for_timeout(200)
     assert page.evaluate('JSON.stringify([Raiders.enemies,Raiders.projectiles,ship.hull])')==snapshot

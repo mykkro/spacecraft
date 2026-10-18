@@ -6,6 +6,10 @@
 // Presentation-only localization. Item IDs, recipes, key bindings, and save data stay stable.
 const I18n = (() => {
   const cs = {
+    "Bedrock": "Podlo\u017e\u00ed",
+    "Bedrock / cannot mine": "Podlo\u017e\u00ed / nelze t\u011b\u017eit",
+    "Cannot mine": "Nelze t\u011b\u017eit",
+    "Out of reach": "Mimo dosah",
     "Titanium trail": "Titanov\u00e1 stopa",
     "Mine 12 titanium ore from moon deposits.": "Vyt\u011b\u017ete 12 kus\u016f titanov\u00e9 rudy z m\u011bs\u00ed\u010dn\u00edch nalezi\u0161\u0165.",
     "Blue vein survey": "Pr\u016fzkum modr\u00e9 \u017e\u00edly",

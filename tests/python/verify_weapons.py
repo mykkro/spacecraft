@@ -5,6 +5,9 @@ Uses local files and a fresh context; no player save is modified.
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+preview_dir = Path(__file__).resolve().parents[2] / 'docs'
+preview_dir.mkdir(exist_ok=True)
+
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,args=['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     page=browser.new_page(viewport={'width':1440,'height':1000})
@@ -68,7 +71,7 @@ with sync_playwright() as p:
     assert page.evaluate('Weapons.cooldowns.missile.remaining') == remaining
     page.wait_for_function("[...document.querySelectorAll('#weaponHud img')].every(i=>i.complete&&i.naturalWidth>0)")
     page.evaluate('update(0);Weapons.scan()')
-    page.screenshot(path='weapons-preview.png')
+    page.screenshot(path=str(preview_dir / 'weapons-preview.png'))
     page.evaluate('Weapons.update(2.2)')
     assert ring.get_attribute('aria-valuenow') == '100'
     # Seismic blast destroys compatible nearby rocks, without hitting fresh shards.
@@ -92,7 +95,7 @@ with sync_playwright() as p:
     scan=page.locator('#rockScan').bounding_box()
     landing=page.locator('#landingPrompt').bounding_box()
     assert scan and landing and scan['y']+scan['height'] <= landing['y']
-    page.screenshot(path='weapons-mobile-preview.png')
+    page.screenshot(path=str(preview_dir / 'weapons-mobile-preview.png'))
     assert not errors,errors
     print('PASS: weapon crafting/equip, tier immunity, reduced fragment hardness, swept hits, shared cooldown, radial HUD, pause, blast damage, persistence, narrow viewport')
     browser.close()
