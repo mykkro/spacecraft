@@ -357,3 +357,5 @@ The optimizer combines multiplicatively with Tarek's engineer bonus (32% total f
 Additional weapons: Plasma Scattergun fires seven short-range energy bolts; Rail Cannon uses craftable iridium slugs against ultradense rocks; Cluster Launcher fires three explosive missiles per craftable pod. Craft them at a workbench. Cycle primary weapons with Q and missile launchers with R, or select their weapon-bar icons. Existing 1–9 shortcuts remain unchanged. Advanced recipes use refined moon metals.
 
 Base support buildings: craft and place a Repair Station (20 hull per 5 seconds, costing one iron ingot from cargo), Solar Array (1 fuel/second), or Fabrication Hub (50% faster local workbench/furnace queues). Each requires a placed workbench on the same moon. Services operate on the surface or within landing range at speed 40 or below. Duplicate buildings do not multiply bonuses. Carrying a building without placing it grants no effect.
+
+Carry a Scanner Receiver and select a moon on the map within 6.5 km to survey remaining titanium, cobalt, iridium and Bulterite deposits and their depth in tile rows. Saved moons report actual remaining deposits.

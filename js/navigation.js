@@ -598,6 +598,15 @@ const StarChart = (() => {
         title = m.name;
         description = I18n.t(`LANDABLE MOON · ${ distance(m) }`);
         hint = I18n.t('Approach slowly and press E to land, mine, and build a base.');
+        const metals = Colony.scanMoonMetals(m);
+        if (metals === null) {
+          hint += ' ' + (I18n.language === 'cs' ? 'Pro průzkum kovů vezměte přijímač skeneru a přibližte se na 6,5 km.' : 'For a metal survey, carry a Scanner Receiver and approach within 6.5 km.');
+        } else {
+          const label = I18n.language === 'cs' ? 'Kovy / hloubka v řádcích' : 'Metals / depth in tile rows';
+          const none = I18n.language === 'cs' ? 'Žádná zbývající naleziště.' : 'No remaining deposits.';
+          hint += ' ' + label + ': ' + (metals.map(d => Colony.items[d.type].name + ' (' + d.min + '-' + d.max + ')').join(', ') || none);
+        }
+
       }
     }
     if ((chosen?.type) === 'base') {

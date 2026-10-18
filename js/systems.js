@@ -1476,9 +1476,9 @@ const Colony = (() => {
     const cs = I18n.language === 'cs', max = maxCraftQuantity(r);
     return `<div class="craft-quantity"><label for="craftQuantity">${cs ? 'Počet výrob' : 'Recipe runs'}</label><div>
       <button id="craftLess" aria-label="${cs ? 'Snížit množství' : 'Decrease quantity'}" ${craftQuantity<=1?'disabled':''}>−</button>
-      <input id="craftQuantity" type="number" min="1" max="9999" step="1" value="${craftQuantity}">
-      <button id="craftMore" aria-label="${cs ? 'Zvýšit množství' : 'Increase quantity'}" ${craftQuantity>=9999?'disabled':''}>+</button></div>
-      <button id="craftMax" ${max<1?'disabled':''}>MAX · ${max}</button>
+      <input id="craftQuantity" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" aria-label="${cs ? 'Po\u010det v\u00fdrob' : 'Recipe runs'}" value="${craftQuantity}">
+      <button id="craftMore" aria-label="${cs ? 'Zvýšit množství' : 'Increase quantity'}" ${craftQuantity>=9999?'disabled':''}>+</button>
+      <button id="craftMax" ${max<1?'disabled':''}>MAX · ${max}</button></div>
       <small>${r ? craftQuantity*r.qty : 0} ${cs ? 'kusů celkem' : 'items total'}</small></div>`;
   }
 
@@ -1609,7 +1609,7 @@ const Colony = (() => {
       ['hand', I18n.t('Handcraft · 2×2')],
       ['bench', I18n.t('Workbench · 3×3')],
       ['furnace', I18n.t('Furnace · 2×2')]
-    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ !hasCraftMaterials(r,1) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
+    ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout" style="--craft-size:${ size }"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ !hasCraftMaterials(r,1) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
     $('#slots .station-tabs').insertAdjacentHTML('beforebegin', stationAccessMarkup(access));
     renderQuickInventory();
     const focus = focusedStack();
@@ -1881,7 +1881,7 @@ const Colony = (() => {
     }
   }
 
-  function terrainFor(m) {
+  function terrainFor(m, persist = true) {
     if (terrains.has(m.id))
       return terrains.get(m.id);
     const rng = random(Math.imul(Math.round(m.x), 31) ^ Math.round(m.y)),
@@ -1902,8 +1902,20 @@ const Colony = (() => {
       }
     }
     addMoonOreVeins(map,m);
-    terrains.set(m.id, map);
+    if (persist) terrains.set(m.id, map);
     return map;
+  }
+  // Preview new terrain without saving; existing moons use remaining deposits.
+  function scanMoonMetals(m) {
+    if (!count('scanner') || !m || Math.hypot(ship.x - m.x, ship.y - m.y) > 6500) return null;
+    const found = new Map(), map = terrainFor(m, false);
+    for (let y = 0; y < map.length; y++) for (const type of map[y]) {
+      if (!items[type]?.moonOre && type !== 'bulterite') continue;
+      const deposit = found.get(type);
+      if (deposit) deposit.max = y;
+      else found.set(type, {type, min: y, max: y});
+    }
+    return [...found.values()];
   }
   function tile(x, y) {
     if (x < 0 || x >= cols || y >= rows)
@@ -2577,6 +2589,7 @@ const Colony = (() => {
     editTile,
     closeInventory,
     getMoons: localMoons,
+    scanMoonMetals,
     getBases,
     getStationAccess: stationAccess,
     get bag() {
