@@ -489,7 +489,7 @@ function update(dt) {
       else
         Colony.save();
       drops.splice(i, 1);
-      notify(I18n.t(`+${ d.qty || 1 } ${ Colony.items[d.type].name.toUpperCase() } RECOVERED`));
+      notify(`+${ d.qty || 1 } ${ Colony.items[d.type].name }`);
     } else if (d.life <= 0)
       drops.splice(i, 1);
   }

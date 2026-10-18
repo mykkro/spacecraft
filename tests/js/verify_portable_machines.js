@@ -62,3 +62,28 @@ for(const out of ['portable_furnace','fuel_optimizer','repair_controller']){
   assert.equal(factory.availableCount(out),1);
 }
 console.log('PASS: portable furnace access, independent ship queues, removal pause/reload, mobile Auto Craft, non-stacking fuel/repair bonuses and actual machine recipes. No browser started.');
+
+// A carried workshop must not hide or bypass the moon's physical workshop/hub.
+const hubSetup=boot();Object.assign(hubSetup.ctx.ship,{x:720,y:-870});hubSetup.model.Colony.land();
+hubSetup.model.Colony.surface[13][40]='bench';
+hubSetup.model.Colony.surface[13][41]='furnace';
+hubSetup.model.Colony.surface[13][42]='fabrication_hub';hubSetup.model.Colony.save();
+const hw=boot(hubSetup.store),hc=hw.model.Colony;
+assert(hc.addItem('portable_workbench',1));assert(hc.addItem('portable_furnace',1));assert(hc.addItem('ingot',8));
+let banner='';hw.ctx.document.querySelector('#slots .station-tabs').insertAdjacentHTML=(_,html)=>{banner=html;};
+hc.openInventory();assert(banner.includes('SURFACE STATIONS'));assert(banner.includes('+50% crafting speed'));assert(banner.includes('Use portable equipment'));
+choose(hc,'plate');assert(hc.craft());const localJob=hc.craftingQueue[0];assert.equal(localJob.owner,'0:0');
+assert(hc.setWorkshopSource('portable'));assert(banner.includes('PORTABLE WORKSHOP ONLINE'));assert(!banner.includes('+50% crafting speed'));
+assert(hc.craft());const portableJob=hc.craftingQueue.find(j=>j.owner==='ship');assert(portableJob);
+hc.updateCrafting(.25);
+assert.equal(hc.craftingQueue.find(j=>j.id===localJob.id).remaining,localJob.remaining-.375);
+assert.equal(hc.craftingQueue.find(j=>j.id===portableJob.id).remaining,portableJob.remaining-.25);
+choose(hc,'ingot');assert(hc.craft());assert.equal(hc.craftingQueue.at(-1).owner,'ship');
+assert(hc.setWorkshopSource('auto'));assert(hc.craft());assert.equal(hc.craftingQueue.at(-1).owner,'0:0');
+assert.equal(hc.setWorkshopSource('invalid'),false);
+hc.save();const reloadedHub=boot(hw.store).model.Colony;
+assert.deepEqual(Array.from(reloadedHub.craftingQueue,j=>j.owner),Array.from(hc.craftingQueue,j=>j.owner));
+reloadedHub.launch();reloadedHub.openInventory();choose(reloadedHub,'plate');assert(reloadedHub.craft());assert.equal(reloadedHub.craftingQueue.at(-1).owner,'0:0');
+Object.assign(hw.ctx.ship,{x:5000,y:0});hc.launch();Object.assign(hw.ctx.ship,{x:5000,y:0});
+choose(hc,'plate');assert(hc.craft());assert.equal(hc.craftingQueue.at(-1).owner,'ship');
+console.log('PASS: local workshop default, source toggle/banner, +50% local-only speed, furnace selection, fixed job ownership and portable fallback.');

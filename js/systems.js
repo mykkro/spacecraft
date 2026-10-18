@@ -559,9 +559,17 @@ const Colony = (() => {
   const craftLane = station => station === 'furnace' ? 'furnace' : 'workbench';
   // A physical workshop belongs to its moon. Handcraft/portable jobs belong to ship.
   const queueKey = (station,owner) => (owner && owner!=='portable'?owner:'ship')+'|'+craftLane(station);
+  let workshopSource = 'auto';
+  function setWorkshopSource(source) {
+    if (!['auto','portable'].includes(source)) return false;
+    workshopSource = source;
+    if (!$('#overlay').hidden) renderInventory();
+    return true;
+  }
   function craftOwner(station) {
     if(station==='hand')return null;
     const access=stationAccess();
+    if (workshopSource === 'portable' && count(station === 'furnace' ? 'portable_furnace' : 'portable_workbench') > 0) return 'portable';
     if(!(access.moon && baseRecords.get(access.moon.id)?.counts[station]>0))return 'portable';
     return access.moon?.id || null;
   }
@@ -1446,21 +1454,25 @@ const Colony = (() => {
   }
 
   function stationAccessMarkup(access) {
-    if(access.portable||access.portableFurnace) {
-      const devices=[access.portable?'portable_workbench':null,access.portableFurnace?'portable_furnace':null].filter(Boolean);
-      return '<p class="station-access" role="status"><b>'+(I18n.language==='cs'?'PŘENOSNÁ DÍLNA ONLINE':'PORTABLE WORKSHOP ONLINE')+'</b><span>'+
-        devices.map(type=>items[type].name).join(' · ')+(access.moon?' · '+access.moon.name:'')+'</span></p>';
-    }
-    const connected = [...access.stations].filter(type => type !== 'hand');
+    const tr = (en,cs) => I18n.language === 'cs' ? cs : en;
+    const base = access.moon && baseRecords.get(access.moon.id);
+    const connected = ['bench','furnace'].filter(type => access.stations.has(type));
     if (connected.length) {
-      const label = access.mode === 'orbit' ? 'ORBITAL STATION LINK' : 'SURFACE STATIONS';
-      return '<p class="station-access" role="status"><b>' + I18n.t(label) + ' · ' +
-        access.moon.name + '</b><span>' + connected.map(type => items[type].name).join(' · ') +
-        '</span></p>';
+      const details = connected.map(type => {
+        const local = craftOwner(type) !== 'portable';
+        const speed = local && base?.isBase && base.counts.fabrication_hub > 0;
+        return items[type].name + ': ' + (local ? access.moon.name + ' / ' + tr('Moon workshop','M\u011bs\u00ed\u010dn\u00ed d\u00edlna') : tr('Portable','P\u0159enosn\u00e1')) +
+          (speed ? ' / ' + tr('+50% crafting speed','+50 % rychlost v\u00fdroby') : '');
+      });
+      const local = connected.some(type => craftOwner(type) !== 'portable');
+      const heading = local ? I18n.t(access.mode === 'orbit' ? 'ORBITAL STATION LINK' : 'SURFACE STATIONS') : tr('PORTABLE WORKSHOP ONLINE','P\u0158ENOSN\u00c1 D\u00cdLNA ONLINE');
+      const canChoose = connected.some(type => base?.counts[type] > 0 && count(type === 'furnace' ? 'portable_furnace' : 'portable_workbench') > 0);
+      return '<div class="station-access" role="status"><b>' + heading + '</b><span>' + details.join('<br>') + '</span>' +
+        (canChoose ? '<button id="toggleWorkshopSource">' + (workshopSource === 'portable' ? tr('Use moon equipment','Pou\u017e\u00edt vybaven\u00ed m\u011bs\u00edce') : tr('Use portable equipment','Pou\u017e\u00edt p\u0159enosn\u00e9 vybaven\u00ed')) + '</button>' : '') +
+        '<small>' + tr('Applies to new jobs. Existing jobs keep their workshop.','Plat\u00ed pro nov\u00e9 zak\u00e1zky. Rozpracovan\u00e1 v\u00fdroba z\u016fst\u00e1v\u00e1 ve sv\u00e9 d\u00edln\u011b.') + '</small></div>';
     }
     return '<p class="station-access unavailable" role="status">' +
-      I18n.t('HANDCRAFT ONLY · Build stations on this moon, or approach a moon with built stations to low orbit.') +
-      '</p>';
+      I18n.t('HANDCRAFT ONLY \u00b7 Build stations on this moon, or approach a moon with built stations to low orbit.') + '</p>';
   }
 
   // Recipes match their exact station grid, including empty cells.
@@ -1634,6 +1646,8 @@ const Colony = (() => {
     ].map(([id, name]) => `<button data-station="${ id }" class="${ station === id ? 'active' : '' }" ${ available.has(id) ? '' : 'disabled' } title="${ available.has(id) ? name : I18n.t('Build this station on a moon, then use it on that surface or from low orbit.') }">${ name }</button>`).join('') }</div><div class="craft-layout" style="--craft-size:${ size }"><div><div class="craft-grid" style="grid-template-columns:repeat(${ size },1fr)">${ craftingCellsMarkup() }</div><button id="clearGrid" class="subtle">CLEAR GRID</button></div><div class="craft-result"><span>→</span><div class="item-slot output">${ r ? `${ icon(r.out) }<small>${ r.qty * craftQuantity }</small>` : '?' }</div><b>${ r ? items[r.out].name : I18n.t('No recipe') }</b>${craftQuantityMarkup(r)}<button id="craftItem" ${ canCraft(r) ? '' : 'disabled' }>${ r && !canCraft(r) ? I18n.t('NEED MATERIALS') : I18n.t('CRAFT') }</button></div><div class="recipe-book"><div class="eyebrow">RECIPES</div>${ recipes.filter(r => r.station === station).map(r => `<button data-recipe="${ recipes.indexOf(r) }" class="${ !hasCraftMaterials(r,1) ? 'recipe-unavailable' : '' }">${ icon(r.out) }<span>${ r.name } · ${craftSeconds(r)} s<small>${ Object.entries(costs(r.pattern)).map(([t, n]) => `${ n } ${ items[t].name }`).join(' + ') }</small></span></button>`).join('') }</div></div><p class="inventory-hint">Recipe buttons fill the grid. Right click a cell to clear it. Place workbenches and furnaces on a moon to unlock their grids. Saves automatically on this browser.</p><div id="craftQueue" class="craft-queue"></div></div><div class="inventory-ship-pane">${shipEquipmentMarkup()}</div></div>`);
     $('#sortInventory').onclick = () => sortInventory();
     $('#slots .station-tabs').insertAdjacentHTML('beforebegin', stationAccessMarkup(access));
+    const sourceToggle = $('#toggleWorkshopSource');
+    if (sourceToggle) sourceToggle.onclick = () => setWorkshopSource(workshopSource === 'portable' ? 'auto' : 'portable');
     renderQuickInventory();
     const focus = focusedStack();
     if(focus){
@@ -2672,6 +2686,8 @@ const Colony = (() => {
     scanMoonMetals, surfaceTileInfo,
     getBases,
     getStationAccess: stationAccess,
+    setWorkshopSource,
+    get workshopSource() { return workshopSource; },
     get bag() {
       return bag;
     },
