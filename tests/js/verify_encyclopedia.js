@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { boot } = require('./verify_ships.js');
-const read = name => fs.readFileSync(path.join(__dirname, name), 'utf8');
+const read = name => fs.readFileSync(path.join(__dirname, '../../js', name), 'utf8');
 
 function catalogue(czech = false) {
   const world = boot();
@@ -41,7 +41,7 @@ const entries = guide.entries();
 assert.equal(entries.length, Object.keys(model.Colony.items).length);
 for (const entry of entries) {
   assert(entry.name && entry.description.length > 20, entry.id);
-  assert(fs.existsSync(path.join(__dirname, '..', entry.icon)), entry.icon);
+  assert(fs.existsSync(path.join(__dirname, '../..', entry.icon)), entry.icon);
   assert(entry.stackLimit > 0);
 }
 assert.equal(guide.entries('', 'machines').length, 10);

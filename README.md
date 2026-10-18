@@ -54,7 +54,7 @@ A **base requires at least one placed workbench**. Multiple workbenches on one m
 
 Mining progress counts successfully collected asteroid minerals and mined moon deposits. Starter supplies, pirate salvage, crafted items, and quest rewards do not count as mining. Spending mined materials does not reduce progress, and claiming a reward does not consume the mined cargo. Mining counters start with this update; old inventory is not assumed to have been mined.
 
-Quest progress and claimed rewards are stored together with inventory in the game save. The entire reward must fit within the item's stack limits; otherwise the claim stays available until you free space. Place held items before claiming. Opening the log pauses flight and can sit above an existing inventory or map screen. The implementation is in `js/quests.js` and `quests.css`; no browser test is launched automatically.
+Quest progress and claimed rewards are stored together with inventory in the game save. The entire reward must fit within the item's stack limits; otherwise the claim stays available until you free space. Place held items before claiming. Opening the log pauses flight and can sit above an existing inventory or map screen. The implementation is in `js/quests.js` and `css/quests.css`; no browser test is launched automatically.
 
 ## Sound
 
@@ -62,7 +62,7 @@ Sound effects are synthesized locally with the Web Audio API; no audio downloads
 
 Audio starts only after a click or keypress. Header controls save volume and mute settings in this browser, and **V** toggles mute. The engine stops while paused or on a surface. Losing focus or hiding the tab silences audio. Distant combat sounds fade with distance and pan left/right. A shared noise buffer, a 24-voice limit, per-effect rate limits, and a compressor keep the sound system small and control the mix. Unsupported audio falls back to silent gameplay.
 
-The implementation is in `js/audio.js` with styles in `audio.css`. Audio changes were checked with lightweight syntax/source checks; browser playback was not tested, in accordance with the repository's testing policy.
+The implementation is in `js/audio.js` with styles in `css/audio.css`. Audio changes were checked with lightweight syntax/source checks; browser playback was not tested, in accordance with the repository's testing policy.
 
 ## Scanner, maps, and wormholes
 
@@ -88,7 +88,7 @@ Scouts and heavier raiders patrol their territory, pursue nearby ships, and fire
 
 The starting area and immediate wormhole approaches are protected. Pirates do not attack during surface exploration, and opening a map or inventory pauses combat. Defeated patrol members remain defeated across reloads and system changes; cleared zones are marked on the map. Surviving pirates reset to their patrols when a system is re-entered or the game reloads. Losing your hull uses the existing emergency recovery at the origin and clears incoming fire.
 
-Combat and patrol persistence live in `js/pirates.js`; ship models are drawn procedurally in WebGL. Run `python verify_pirates.py` for the isolated browser checks.
+Combat and patrol persistence live in `js/pirates.js`; ship models are drawn procedurally in WebGL. Run `python tests/python/verify_pirates.py` for the isolated browser checks.
 
 ## Weapons and asteroid hardness
 
@@ -150,7 +150,7 @@ You start with a small supply of regolith, ore, ice, crystal, base blocks, and o
 
 Rendering uses native WebGL with procedural volumetric asteroid meshes and no runtime JavaScript dependencies. Generated pixel-art item icons are bundled locally in `assets/items/`; their prompts are documented in `ICON_ART.md`. Google Fonts are optional; system fonts are fallbacks. Flight lives in `js/game.js`; combat and the weapon HUD live in `js/weapons.js`; item definitions, recipes, persistent moon terrain, and surface play live in `js/systems.js`; navigation and exploration knowledge live in `js/navigation.js`. Larger ships and ship equipment editing remain future work. Desktop keyboard and mouse are required.
 
-Browser regression checks: `python verify_browser.py --file`, `python verify_weapons.py`, and `python verify_navigation.py` (Python Playwright required). They use isolated contexts and leave the player's save alone.
+Browser regression checks: `python tests/python/verify_browser.py --file`, `python tests/python/verify_weapons.py`, and `python tests/python/verify_navigation.py` (Python Playwright required). They use isolated contexts and leave the player's save alone.
 
 
 Missiles use finite ammunition: you start with 8 Rockbreaker rounds. Workbenches craft separate Rockbreaker (4), Penetrator (3), and Seismic (1) ammo batches; stack limits are 16, 8, and 4. Weapon cards show remaining rounds beside the circular cooldown. Empty launchers cannot fire. Most primary weapons use energy; Fotron and Bulshitter consume their own craftable ammunition. Pirate salvage always includes basic ammo, heavy ships also carry advanced rounds, and some ships drop equipment. Fly close to collect salvage; free inventory space for each pack. Existing saves receive the starter ammo once.
@@ -163,7 +163,7 @@ Ship selection appears before your first flight (including older saves without a
 
 Bulterite (**Bulterium** in Czech) is a dense, durable resource with 8 per stack and 12 mass per unit. Find its green mineral veins in space and deep moon deposits; Fotron or Seismic equipment is required to extract it. Heavy pirates can also carry it. Use it to forge hull plates and build the **Fotron Cannon** (tier 3, stronger than Photon). **Bulshitter** (**Bulšitr** in Czech) fires five weak, rapid spread shots for small rocks and scouts; it cannot break reinforced targets. Craft the new energy weapons at a workbench. Use **Q** to cycle primaries or **1–9** to equip HUD cards.
 
-New material and weapon icons are local SVG artwork in `assets/items/`. Run `node js/verify_ships.js` and `node js/verify_localization.js` for dependency-free model checks; these start no browser or graphics context.
+New material and weapon icons are local SVG artwork in `assets/items/`. Run `node tests/js/verify_ships.js` and `node tests/js/verify_localization.js` for dependency-free model checks; these start no browser or graphics context.
 
 
 Fuel: watch the tank meter beneath hull integrity. Forward/reverse thrust burns fuel; boost burns three times as much. Coasting, rotating, pausing and surface exploration do not use flight fuel. Empty tanks leave 12% solar thrust with boost disabled. **T** or **REFUEL** uses a basic Fuel Cell first, then a green Ion Cube, then blue. You can select a specific fuel stack in inventory and press **REFUEL**. Fuel Cells provide 20 units, green **Ion Cubes / Iontové kostky** provide 80, and **Blue Ion Cubes / Modré iontové kostky** provide 320. Any charge beyond tank capacity remains in the inserted cell and feeds the tank automatically; no fuel is wasted, and another cell cannot be inserted until this charge is used. Starfox/Nomad/Kraxna tank capacities are 100/180/300. Switching ships preserves total fuel. New expeditions and older saves receive a first tank and two green cubes once. Find cubes in asteroids, deep moon deposits and pirate salvage, or craft fuel at furnaces/workbenches. Fuel and remaining cell charge persist with your expedition.
@@ -187,7 +187,7 @@ You start with **120 credits** and yourself as captain. Sell minerals to earn cr
 - **Tarek, engineer (110 cr):** 20% lower flight fuel use, including boost.
 - **Ada, mechanic (100 cr):** repairs 1% hull per five seconds after eight seconds without damage, during active flight.
 
-Each specialist can be hired once. Credits, crew and station discoveries share the expedition save with cargo. The station interface supports English and Czech. Run `node js/verify_starbases.js` for browser-free model checks.
+Each specialist can be hired once. Credits, crew and station discoveries share the expedition save with cargo. The station interface supports English and Czech. Run `node tests/js/verify_starbases.js` for browser-free model checks.
 
 Kraxna's player captain is **Jegor Kokotovič**, captain and space garbage man. Its starting two-member crew includes repair robot **Bobo**, who makes station hull repairs **50% cheaper**, rounded up to whole credits. Bobo has a separate robot berth, so Kraxna can still hire all three specialists (five crew in total). Starfox starts with captain **Mara Voss**; Nomad starts with captain **Viktor Vale**. Each begins as a one-person crew. Built-in crew follows the selected ship; hired specialists are retained when switching, and Bobo is never duplicated. The ship picker and station roster show this crew in English/Czech.
 
@@ -201,7 +201,7 @@ Open **J** for contracts, or choose **Contracts** while docked. Mining/base cont
 
 A destroyed courier or leaving system 0:0 fails the escort. Return to that system and choose **Retry Escort**; contract pirates drop no salvage to avoid restart farming. Docking, menus and surface play pause the simulation. Mission progress, courier hull, live attackers/bullets and credit rewards persist with the expedition. Full cargo holds block item payouts without losing completion; claims pay only once.
 
-Run `node js/verify_missions.js` for dependency-free mission checks without opening a browser.
+Run `node tests/js/verify_missions.js` for dependency-free mission checks without opening a browser.
 
 ## Display, realistic surfaces and outfitting
 
@@ -215,7 +215,7 @@ The ship outline has sockets for the primary cannon, cannon ammo, missile launch
 
 **Fotron** now needs **Fotron charge cells** (32 per stack): a workbench crafts **24** from two crystals, one green Ion Cube and one Bulterite. **Bulshitter** needs **cartridges** (128 per stack): a workbench crafts **80** from two iron ingots and one iron ore. A cartridge fires the whole five-projectile volley. Empty weapons cannot fire, and cooldown failures do not spend ammo. Both ammo types appear in the encyclopedia.
 
-Focused checks: `node js/verify_visual_models.js`, `node js/verify_special_ammo.js`, `node js/verify_inventory_drag.js`, and `node js/verify_display_options.js`. All run without browsers or graphics contexts.
+Focused checks: `node tests/js/verify_visual_models.js`, `node tests/js/verify_special_ammo.js`, `node tests/js/verify_inventory_drag.js`, and `node tests/js/verify_display_options.js`. All run without browsers or graphics contexts.
 
 ## Timed crafting queue
 
@@ -235,7 +235,7 @@ Fabrication continues while menus/inventory pause flight and combat. Workbench/f
 
 Ingredients leave the usable bag when queued and remain accounted for as cargo mass. **Cancel** an unfinished job to refund them; refunds that cannot fit remain safe in Saved Cargo Overflow. Completed output is delivered automatically when the entire batch fits. A full hold leaves the finished job in the queue, blocking the next job until space is freed; completed jobs cannot be cancelled into ingredients.
 
-Queue order, source workshop and remaining time save with the expedition. Reloading does not restart jobs or repeat completed output. The queue does not advance while the game is closed. Progress meters update without rebuilding inventory on every frame. Run `node js/verify_crafting_queue.js` for browser-free checks.
+Queue order, source workshop and remaining time save with the expedition. Reloading does not restart jobs or repeat completed output. The queue does not advance while the game is closed. Progress meters update without rebuilding inventory on every frame. Run `node tests/js/verify_crafting_queue.js` for browser-free checks.
 
 ## Repair packs
 
@@ -243,7 +243,7 @@ Craft a **Repair Pack** at a workbench from **1 hull plate + 1 iron ingot + 1 ic
 
 Select it in inventory and press **Use Repair Pack**, assign it to a quick slot for surface use, or press **U** during active flight/surface play. Assigning a quick slot in the editor does not use it. Partial repairs near full hull consume one pack and restore only the missing hull. Repair packs and their recipe appear in the encyclopedia under **Consumables**, with English/Czech text. Consumption and repaired hull save together.
 
-Check: `node js/verify_repair_packs.js` (no browser).
+Check: `node tests/js/verify_repair_packs.js` (no browser).
 
 ## Shield generators
 
@@ -261,7 +261,7 @@ A charged shield draws a faint blue outline around your ship and intercepts enem
 
 The HUD shows shield charge and recharge state. New generators start empty. Switching tiers preserves existing charge up to the new capacity; equipping never refills it. Unequipping drops stored charge. Upgrading consumes the old generator and removes its protection while the upgrade is in the crafting queue. Equipped generator, charge, recharge delay and hull save with the expedition.
 
-Check: `node js/verify_shields.js` (no browser).
+Check: `node tests/js/verify_shields.js` (no browser).
 
 ## Volumetric asteroids, explosions and black holes
 
@@ -275,7 +275,7 @@ Rock destruction, pirate/courier-pirate destruction, missile blasts and ship los
 
 Turn away and boost early. Shields cannot stop gravity. Crossing the event horizon triggers emergency recovery at the starting origin: you lose **35 hull points** (with a 15% floor), shields drain, and nearby transient world objects reset. Carried inventory and fuel are preserved. The force is a gameplay-scaled inverse-square attraction, not a general-relativity simulation; accretion bands and a photon ring provide the visual warning.
 
-Browser-free checks: `node js/verify_asteroids_3d.js`, `node js/verify_black_holes.js`, `node js/verify_display_options.js`. They validate geometry, render-call/state ordering using a GL spy, cache limits, gravity, capture and map integration. They do not compile shaders on a real GPU or launch a browser.
+Browser-free checks: `node tests/js/verify_asteroids_3d.js`, `node tests/js/verify_black_holes.js`, `node tests/js/verify_display_options.js`. They validate geometry, render-call/state ordering using a GL spy, cache limits, gravity, capture and map integration. They do not compile shaders on a real GPU or launch a browser.
 
 Distant scenery includes ocean planets, banded gas giants, rocky moons, luminous stars and nebula wisps. These decorative bodies sit behind the playable world and move on slow parallax layers; you fly over them. They are separate from landable moons and cannot collide with the ship. Seeded tiles preserve scenery when revisiting, and a bounded cache limits memory during long flights.
 

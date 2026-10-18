@@ -66,7 +66,7 @@ assert.equal(reloaded.run('Starbases.snapshot().credits'), stations.snapshot().c
 assert.equal(reloaded.run('Starbases.snapshot().crew.length'), 3);
 assert.equal(reloaded.model.Colony.availableCount('ammo_piercer'), 1);
 for (const match of world.ctx.document.querySelector('#stationMarket').innerHTML.matchAll(/src="([^"]+)"/g))
-  assert(fs.existsSync(path.join(__dirname, '..', match[1])), match[1]);
+  assert(fs.existsSync(path.join(__dirname, '../..', match[1])), match[1]);
 console.log('PASS: station docking, trade, cargo capacity, credit persistence, recruitment, mining hardness, fuel efficiency, passive repairs and market icons. No browser started.');
 
 // Exercise the actual map with stations present, using a lightweight canvas spy.
@@ -85,7 +85,7 @@ objects.insertAdjacentHTML = function(position, html) {
 };
 world.ctx.devicePixelRatio = 1;
 world.ctx.radar = () => {};
-world.run(fs.readFileSync(path.join(__dirname, 'navigation.js'), 'utf8'));
+world.run(fs.readFileSync(path.join(__dirname, '../../js', 'navigation.js'), 'utf8'));
 const nav = world.run('StarChart');
 nav.openMap();
 assert(objects.innerHTML.includes('data-starbase="0:0"'));
@@ -141,7 +141,7 @@ console.log('PASS: named preset captains, Kraxna + Bobo starting crew, 50% repai
 
 // Generated avatars must exist for every roster identity and ship preset.
 for (const id of ['jegor', 'bobo', 'rhea', 'tarek', 'ada', 'captain']) {
-  const png = fs.readFileSync(path.join(__dirname, '..', 'assets', 'crew', id + '.png'));
+  const png = fs.readFileSync(path.join(__dirname, '../..', 'assets', 'crew', id + '.png'));
   assert.equal(png.subarray(1, 4).toString(), 'PNG');
   assert.equal(png.readUInt32BE(16), png.readUInt32BE(20), id + ' must be square');
 }
@@ -154,6 +154,6 @@ for (const markup of [
   kraxnaWorld.ctx.document.querySelector('#stationCrew').innerHTML
 ]) {
   for (const match of markup.matchAll(/src="([^"]+)"/g))
-    assert(fs.existsSync(path.join(__dirname, '..', match[1])), match[1]);
+    assert(fs.existsSync(path.join(__dirname, '../..', match[1])), match[1]);
 }
 console.log('PASS: six valid square avatar PNGs, station image references and preset portrait selection. No browser started.');

@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
 const {boot} = require('./verify_ships.js');
-const source = fs.readFileSync(path.join(__dirname, 'display-options.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../../js', 'display-options.js'), 'utf8');
 function options(saved) {
   const w = boot(saved), values = new Map(), classes = new Map(), listeners = [];
   w.ctx.document.documentElement = {style: {setProperty(name, value) {values.set(name, value);}}};

@@ -29,7 +29,7 @@ w.ctx.paused = true; w.ctx.last = 0;
 w.ctx.render = () => {};
 w.ctx.update = () => {throw Error('Paused physics must not run');};
 w.ctx.requestAnimationFrame = () => {};
-w.run(functionSource(fs.readFileSync(path.join(__dirname, 'game.js'), 'utf8'), 'frame'));
+w.run(functionSource(fs.readFileSync(path.join(__dirname, '../../js', 'game.js'), 'utf8'), 'frame'));
 w.run('frame(1000)');
 assert(c.craftingQueue[0].remaining < .5);
 assert(c.craftingQueue[0].remaining > .4);

@@ -68,7 +68,7 @@ assert(!Fuel.insert(-1));
 assert(!Fuel.insert(Infinity));
 close(total(Fuel), 20);
 // The frame loop must not burn fuel while paused.
-const gameSource = fs.readFileSync(path.join(__dirname, 'game.js'), 'utf8');
+const gameSource = fs.readFileSync(path.join(__dirname, '../../js', 'game.js'), 'utf8');
 const frameSource = functionSource(gameSource, 'frame');
 game.ctx.last = 0;
 game.ctx.render = () => {

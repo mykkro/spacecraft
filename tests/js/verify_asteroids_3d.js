@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
 const {boot} = require('./verify_ships.js');
 const w=boot();
-w.run(fs.readFileSync(path.join(__dirname,'asteroids-3d.js'),'utf8'));
+w.run(fs.readFileSync(path.join(__dirname, '../../js', 'asteroids-3d.js'),'utf8'));
 const art=w.run('Asteroid3D');
 for(const preset of Object.keys(art.presets)){
   const model=art.buildMesh(1234,preset,'balanced',90);
@@ -65,11 +65,11 @@ console.log('PASS: nine seeded volumetric presets, normals/indices, quality leve
 
 // Exercise real render()/flush2D() orchestration with a GL spy.
 const {functionSource}=require('./test_source_utils.js');
-const game=fs.readFileSync(path.join(__dirname,'game.js'),'utf8');
+const game=fs.readFileSync(path.join(__dirname, '../../js', 'game.js'),'utf8');
 w.ctx.gl=gl;w.ctx.stars=[];w.ctx.drops=[];w.ctx.shake=0;w.ctx.mod=(a,b)=>(a%b+b)%b;
 w.run('let vertices=[]; const program={name:"2d"}, buffer={name:"batch"}, pos=0, color=1, resolution={};');
 for(const name of ['tri','triGradient','line','disc','rock','flush2D','render'])w.run(functionSource(game,name));
-w.run(fs.readFileSync(path.join(__dirname,'world-art.js'),'utf8'));
+w.run(fs.readFileSync(path.join(__dirname, '../../js', 'world-art.js'),'utf8'));
 calls.length=0;
 w.run('rocks.push(rock(100,100,80,123,"metal")); render();');
 const first2D=calls.findIndex(c=>c.key==='drawArrays'),first3D=calls.findIndex(c=>c.key==='drawElements');

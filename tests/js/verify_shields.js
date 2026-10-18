@@ -14,7 +14,7 @@ assert.equal(s.capacity, 35); assert.equal(s.charge, 0);
 s.update(5); assert.equal(s.charge, 0);
 s.update(1); close(s.charge, 1.5);
 s.update(100); assert.equal(s.charge, 35);
-w.run(functionSource(fs.readFileSync(path.join(__dirname, 'game.js'), 'utf8'), 'damageShip'));
+w.run(functionSource(fs.readFileSync(path.join(__dirname, '../../js', 'game.js'), 'utf8'), 'damageShip'));
 w.run('damageShip(10)');
 assert.equal(w.ctx.ship.hull, 73);
 assert.equal(s.charge, 25);

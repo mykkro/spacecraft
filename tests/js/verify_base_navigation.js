@@ -3,7 +3,7 @@ const assert = require('node:assert/strict'),
   fs = require('node:fs'),
   path = require('node:path');
 const {boot} = require('./verify_ships.js');
-const source = fs.readFileSync(path.join(__dirname, 'navigation.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../../js', 'navigation.js'), 'utf8');
 const base = (id, x, y, name) => ({
   id,
   x,

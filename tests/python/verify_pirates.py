@@ -1,4 +1,4 @@
-"""Isolated pirate combat and persistence checks: python verify_pirates.py."""
+"""Isolated pirate combat and persistence checks: python tests/python/verify_pirates.py."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -7,7 +7,7 @@ with sync_playwright() as p:
     page=browser.new_page(viewport={'width':1440,'height':1000})
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
-    url=(Path(__file__).parent/'index.html').as_uri()
+    url=(Path(__file__).resolve().parents[2]/'index.html').as_uri()
     page.goto(url,wait_until='networkidle')
     page.wait_for_function("typeof Raiders!=='undefined'")
     page.locator('#confirmShip').click()

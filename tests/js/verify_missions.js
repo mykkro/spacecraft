@@ -22,7 +22,7 @@ function missionWorld(saved) {
   world.ctx.devicePixelRatio = 1;
   world.ctx.radar = () => {};
   for (const file of ['navigation.js', 'pirates.js', 'quests.js'])
-    world.run(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+    world.run(fs.readFileSync(path.join(__dirname, '../../js', file), 'utf8'));
   return {...world, ...world.run('({MissionContracts, StarChart, Starbases, QuestLog, Raiders})')};
 }
 const w = missionWorld();

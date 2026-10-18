@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path');
 const {boot}=require('./verify_ships.js');
 const w=boot(undefined,{withShields:true});
 w.ctx.drops=[];
-for(const file of ['space-effects.js','black-holes.js'])w.run(fs.readFileSync(path.join(__dirname,file),'utf8'));
+for(const file of ['space-effects.js','black-holes.js'])w.run(fs.readFileSync(path.join(__dirname, '../../js', file),'utf8'));
 const holes=w.run('BlackHoles'),effects=w.run('SpaceEffects'),shields=w.run('Shields');
 const hole=holes.forSystem(0,0)[0];
 assert.deepEqual(JSON.parse(JSON.stringify(hole)),JSON.parse(JSON.stringify(holes.forSystem(0,0)[0])));
@@ -56,7 +56,7 @@ canvas.getContext=()=>chartPen;canvas.getBoundingClientRect=()=>({width:800,heig
 const objects=w.ctx.document.querySelector('#mapObjects');
 objects.insertAdjacentHTML=function(position,html){this.innerHTML=position==='afterbegin'?html+(this.innerHTML||''):(this.innerHTML||'')+html;};
 w.ctx.devicePixelRatio=1;w.ctx.radar=()=>{};
-w.run(fs.readFileSync(path.join(__dirname,'navigation.js'),'utf8'));
+w.run(fs.readFileSync(path.join(__dirname, '../../js', 'navigation.js'),'utf8'));
 const nav=w.run('StarChart');
 nav.openMap();
 assert(objects.innerHTML.includes('data-black-hole="0:0"'));

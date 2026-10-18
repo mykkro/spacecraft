@@ -1,4 +1,4 @@
-"""Isolated real-browser checks: python verify_weapons.py.
+"""Isolated real-browser checks: python tests/python/verify_weapons.py.
 
 Uses local files and a fresh context; no player save is modified.
 """
@@ -10,7 +10,7 @@ with sync_playwright() as p:
     page=browser.new_page(viewport={'width':1440,'height':1000})
     errors=[]
     page.on('pageerror',lambda e: errors.append(str(e)))
-    page.goto((Path(__file__).parent/'index.html').as_uri(),wait_until='networkidle')
+    page.goto((Path(__file__).resolve().parents[2]/'index.html').as_uri(),wait_until='networkidle')
     page.wait_for_function("typeof Colony !== 'undefined' && typeof Weapons !== 'undefined'")
     page.locator('#confirmShip').click()
     assert page.evaluate("!Weapons.unlocked('laser') && !Weapons.select('laser')")

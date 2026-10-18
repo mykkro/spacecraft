@@ -1,4 +1,4 @@
-"""Run against the local server: python verify_browser.py.
+"""Run against the local server: python tests/python/verify_browser.py.
 
 Uses an isolated browser context; the player's save is unaffected.
 """
@@ -12,13 +12,13 @@ with sync_playwright() as p:
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.on('requestfailed', lambda r: print('REQUEST FAILED:', r.url, r.failure, flush=True))
-    url = (Path(__file__).parent / 'index.html').as_uri() if '--file' in sys.argv else 'http://127.0.0.1:3333'
+    url = (Path(__file__).resolve().parents[2] / 'index.html').as_uri() if '--file' in sys.argv else 'http://127.0.0.1:3333'
     page.goto(url, wait_until='networkidle')
     page.wait_for_function("typeof Colony !== 'undefined'")
     page.locator('#confirmShip').click()
     # Every defined item has a local generated icon, including items not yet crafted.
     for item in page.evaluate("Object.entries(Colony.items).map(([type,item])=>item.asset||((item.image||type)+'.png'))"):
-        path = Path(__file__).parent / 'assets' / 'items' / item
+        path = Path(__file__).resolve().parents[2] / 'assets' / 'items' / item
         with path.open('rb') as asset:
             if path.suffix == '.png':
                 assert asset.read(8) == b'\x89PNG\r\n\x1a\n', f'Invalid PNG: {item}'

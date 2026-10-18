@@ -5,9 +5,9 @@ const {boot} = require('./verify_ships.js');
 const {functionSource} = require('./test_source_utils.js');
 const w = boot();
 w.run('let vertices = [];');
-const game = fs.readFileSync(path.join(__dirname, 'game.js'), 'utf8');
+const game = fs.readFileSync(path.join(__dirname, '../../js', 'game.js'), 'utf8');
 for (const name of ['tri', 'triGradient', 'line', 'disc', 'rock']) w.run(functionSource(game, name));
-w.run(fs.readFileSync(path.join(__dirname, 'world-art.js'), 'utf8'));
+w.run(fs.readFileSync(path.join(__dirname, '../../js', 'world-art.js'), 'utf8'));
 function validate() {
   const data = Array.from(w.run('vertices'));
   assert(data.length > 0 && data.length < 40000);

@@ -5,7 +5,7 @@ const assert = require('node:assert/strict'),
   fs = require('node:fs'),
   path = require('node:path'),
   vm = require('node:vm');
-const read = name => fs.readFileSync(path.join(__dirname, name), 'utf8');
+const read = name => fs.readFileSync(path.join(__dirname, '../../js', name), 'utf8');
 function boot(saved, { onEvent, withStarbases = false, withMissions = false, withShields = false, withTracker = false, withSalvage = false } = {}) {
   const store = new Map(saved || []),
     elements = new Map();

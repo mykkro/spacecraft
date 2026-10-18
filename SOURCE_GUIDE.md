@@ -1,7 +1,8 @@
 # Working on SPACECRAFT
 
-All JavaScript lives in `js/`, including the lightweight check scripts. HTML,
-stylesheets, and assets remain at the project root. Runtime image URLs are relative
+Game JavaScript lives in `js/`, stylesheets in `css/`, and lightweight JavaScript
+checks in `tests/js/`. Python browser checks live in `tests/python/`. HTML remains
+at the project root, with artwork in `assets/`. Runtime image URLs are relative
 to `index.html`, so moving scripts does not change their `assets/items/` URLs.
 
 The game is dependency-free browser JavaScript. `index.html` loads scripts with
@@ -25,7 +26,7 @@ modules. Keep that order when adding a system that depends on another one.
 | `js/encyclopedia.js` | Searchable item guide, descriptions, stats and recipe diagrams |
 | `js/ships-ui.js` | Startup ship selection and coordinated ship changes |
 
-Feature stylesheets follow the same names. `style.css` holds shared layout and
+Feature stylesheets follow the same names. `css/style.css` holds shared layout and
 older feature rules. Preserve CSS rule order: later declarations intentionally
 override earlier ones. Local item artwork is in `assets/items/`.
 
@@ -81,21 +82,21 @@ The user reported that browser/WebGL tests clogged their PC. Default to these
 small checks, run sequentially:
 
 ```powershell
-node js/verify_ships.js
-node js/verify_fuel.js
-node js/verify_base_navigation.js
-node js/verify_localization.js
-node js/verify_encyclopedia.js
-node js/verify_quick_inventory.js
-node js/verify_stations.js
+node tests/js/verify_ships.js
+node tests/js/verify_fuel.js
+node tests/js/verify_base_navigation.js
+node tests/js/verify_localization.js
+node tests/js/verify_encyclopedia.js
+node tests/js/verify_quick_inventory.js
+node tests/js/verify_stations.js
 ```
 
 They use in-memory models and canvas spies; they start no browser, graphics
 context, or server. For a simple edit, `node --check js/game.js` checks syntax.
-`js/test_source_utils.js` lets VM checks extract named functions without depending
+`tests/js/test_source_utils.js` lets VM checks extract named functions without depending
 on exact whitespace or minified source snippets.
 
-Browser checks in `verify_*.py` are opt-in under `AGENTS.md`. Ask for the user's
+Browser checks in `tests/python/verify_*.py` are opt-in under `AGENTS.md`. Ask for the user's
 go-ahead before running them, use one browser at a time, and close its processes.
 
 ## Editing style
@@ -108,7 +109,7 @@ separate from formatting changes whenever possible.
 
 ## Civilian stations
 
-`js/starbases.js` loads between fuel and Colony. It generates station locations on demand, owns credits and crew, renders installations through the existing WebGL primitives, and supplies the docking UI and map markers. Its initialization reads only its saved state; Colony is accessed later during gameplay. `Colony.save()` stores `Starbases.snapshot()` alongside cargo. Sales call `consumeItem(type, quantity, false)` to defer saving until credits and cargo have both changed. Mining bonuses apply only after the hardness gate, engineering modifies fuel consumption, and repair runs only in the active simulation. `starbases.css` styles the dock dialog.
+`js/starbases.js` loads between fuel and Colony. It generates station locations on demand, owns credits and crew, renders installations through the existing WebGL primitives, and supplies the docking UI and map markers. Its initialization reads only its saved state; Colony is accessed later during gameplay. `Colony.save()` stores `Starbases.snapshot()` alongside cargo. Sales call `consumeItem(type, quantity, false)` to defer saving until credits and cargo have both changed. Mining bonuses apply only after the hardness gate, engineering modifies fuel consumption, and repair runs only in the active simulation. `css/starbases.css` styles the dock dialog.
 
 ## Mission contracts
 
@@ -120,9 +121,9 @@ Escort pirates are separate from territorial patrols, but `Raiders.sweep/hit/bla
 
 `js/world-art.js` loads immediately after game.js. It caches normalized asteroid meshes in a WeakMap, shades per-vertex normals against a fixed world light, and emits models through `triGradient` into the existing interleaved vertex buffer. Player hulls, territorial pirates and courier encounters share `WorldArt.drawShip`. The current asteroid renderer uses the separate depth-tested pass described below; ships and the fallback asteroid renderer use this batch.
 
-`js/display-options.js` loads last, owns the paused options dialog and the `spacecraft-display-v1` preference record, and updates the `--hud-scale` CSS variable. `display-options.css` contains readable HUD baselines and options layout.
+`js/display-options.js` loads last, owns the paused options dialog and the `spacecraft-display-v1` preference record, and updates the `--hud-scale` CSS variable. `css/display-options.css` contains readable HUD baselines and options layout.
 
-Inventory drag payloads carry a real source index and an optional split quantity. `moveInventoryStack` validates and mutates stacks, while `applyInventoryDrop` routes bag, crafting-cell and ship-socket drops. Recipe and quick slots stay references; only bag moves, crafting, firing or explicit refuelling consume/change cargo. Outfitting reads existing weapon selection and fuel state rather than introducing a second equipment inventory. Inventory scroll positions survive DOM rebuilds. Layout rules at the end of inventory.css keep the shell fixed and give its content regions independent scrolling.
+Inventory drag payloads carry a real source index and an optional split quantity. `moveInventoryStack` validates and mutates stacks, while `applyInventoryDrop` routes bag, crafting-cell and ship-socket drops. Recipe and quick slots stay references; only bag moves, crafting, firing or explicit refuelling consume/change cargo. Outfitting reads existing weapon selection and fuel state rather than introducing a second equipment inventory. Inventory scroll positions survive DOM rebuilds. Layout rules at the end of css/inventory.css keep the shell fixed and give its content regions independent scrolling.
 
 ## Fabrication queue
 

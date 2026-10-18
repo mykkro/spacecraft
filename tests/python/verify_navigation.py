@@ -1,6 +1,6 @@
 """Isolated browser checks for scanner, maps, discovery, and wormhole travel.
 
-Run: python verify_navigation.py
+Run: python tests/python/verify_navigation.py
 """
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -10,7 +10,7 @@ with sync_playwright() as p:
     page=browser.new_page(viewport={'width':1440,'height':1000})
     errors=[]
     page.on('pageerror',lambda e: errors.append(str(e)))
-    url=(Path(__file__).parent/'index.html').as_uri()
+    url=(Path(__file__).resolve().parents[2]/'index.html').as_uri()
     page.goto(url,wait_until='networkidle')
     page.wait_for_function("typeof StarChart !== 'undefined'")
     page.locator('#confirmShip').click()

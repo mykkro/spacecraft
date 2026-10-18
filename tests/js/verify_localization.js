@@ -5,9 +5,9 @@ const assert = require('node:assert/strict'),
   fs = require('node:fs'),
   vm = require('node:vm'),
   path = require('node:path');
-// Scripts sit beside this check; HTML and artwork remain at the project root.
+// Resolve game scripts, HTML and artwork from the repository root.
 const read = file => fs.readFileSync(
-  path.join(__dirname, file.endsWith('.js') ? '' : '..', file),
+  path.join(__dirname, '../..', file.endsWith('.js') ? 'js' : '', file),
   'utf8'
 );
 const source = read('i18n.js');
@@ -163,7 +163,7 @@ assert.equal(invariant(csEconomy), invariant(enEconomy));
 assert.equal(csEconomy.items.crystal.name, 'Krystal');
 assert.equal(csEconomy.items.ammo_seismic.maxStack, 4);
 for (const [type, item] of Object.entries(csEconomy.items))
-  assert(fs.existsSync(path.join(__dirname, '..', 'assets/items', item.asset || (item.image || type) + '.png')));
+  assert(fs.existsSync(path.join(__dirname, '../..', 'assets/items', item.asset || (item.image || type) + '.png')));
 assert.equal(csEconomy.items.bulterite.name, 'Bulterium');
 assert.equal(csEconomy.items.bulshitter.name, 'Bulšitr');
 assert.equal(csEconomy.items.ion_cube.name, 'Iontová kostka');
